@@ -1,0 +1,128 @@
+{
+  "schema": "smart-classroom-week-evidence/v0.1",
+  "weekId": "week-2",
+  "label": "Class · Implicit interactions",
+  "subtitle": "Wendy Ju framework, affordances, smart classroom design",
+  "date": "2026-04-21",
+  "duration": "1:59:37",
+  "format": "Lecture + Group Activity + Demos",
+  "instructor": "Brett",
+  "verdict": "Strong week 2 lecture. Theoretical framework established, students primed for project work. Pacing uneven — first half rich, second half rushed.",
+  "sections": [
+    { "id": "warmup",          "label": "Warm-up · current events",        "minutes": 10, "summary": "AI agents discussion (the “clodbots” article); developer turning their own agent off because it took agency away — perfect framing for the class theme.", "engagement": "high" },
+    { "id": "history",         "label": "History of smart objects",        "minutes": 15, "summary": "Mechanical Turk, the 1960s home computer, Xerox PARC. Sets the lineage.", "engagement": "med" },
+    { "id": "theory",          "label": "Core theory · Wendy Ju framework","minutes": 30, "summary": "Implicit/explicit interaction quadrant chart. Axis labels swapped on the slide — caused visible confusion mid-lecture.", "engagement": "med", "issue": "axis-error" },
+    { "id": "group-activity",  "label": "Group activity · quadrant mapping","minutes": 25, "summary": "Three groups mapped interactions onto the chart. Worked beautifully — substantive ideas across all groups.", "engagement": "high" },
+    { "id": "presentations",   "label": "Group presentations",             "minutes": 20, "summary": "Each team shared. Genuine discoveries surfaced — the “terminal as the new smart object” insight came from a student.", "engagement": "high" },
+    { "id": "tools",           "label": "Tools demo",                      "minutes": 15, "summary": "Simulators, data streams, interaction designer.", "engagement": "med" },
+    { "id": "affordances",     "label": "Affordances · Gibson, Norman",    "minutes": 15, "summary": "Compressed. Should arguably be its own session.", "engagement": "low", "issue": "rushed" },
+    { "id": "ai-paradigm",     "label": "AI as material vs agent",         "minutes": 10, "summary": "Real paradigm-shift discussion. ~10 min on AI affordances pulled away from the framework.", "engagement": "med", "issue": "tangent" },
+    { "id": "wrap",            "label": "Wrap-up & homework",              "minutes": 10, "summary": "Homework explanation; canvas access flagged at the very end.", "engagement": "med", "issue": "ambiguous-homework" }
+  ],
+  "assignments": [
+    {
+      "id": "w2-sketches",
+      "title": "Interaction sketches",
+      "type": "sketch",
+      "due": "Week 3",
+      "spec": "3–5 sketches of smart-classroom interactions; at least one strong, all three should explore implicit/explicit positioning.",
+      "rubric": [
+        "Maps onto the Wendy Ju quadrant",
+        "Names a beneficiary and a possible harm",
+        "Identifies signifiers, feedback, and failure mode"
+      ],
+      "ambiguity": "Original brief said “3–5”, then “at least one good”, then “at least three”. Clarify on Slack."
+    },
+    {
+      "id": "w2-reading",
+      "title": "Conversation design PDF",
+      "type": "reading",
+      "due": "Week 3",
+      "spec": "Read the conversation-design PDF; come prepared to discuss who benefits and who is harmed.",
+      "rubric": [
+        "One paragraph response per question",
+        "Quote at least one passage from the PDF"
+      ]
+    },
+    {
+      "id": "w2-reflection",
+      "title": "Who benefits / who is harmed?",
+      "type": "reflection",
+      "due": "Week 3",
+      "spec": "Pick one of your sketches and write the harm side honestly — not a marketing pitch.",
+      "rubric": [
+        "Names a specific population at risk",
+        "Names the assumption the design hides"
+      ]
+    }
+  ],
+  "grammar": [
+    {
+      "moment": "00:31:09",
+      "section": "theory",
+      "issue": "Slide axis labels swapped (person aware ↔ unaware)",
+      "fix": "Update the master deck; re-render before week 3.",
+      "severity": "warn",
+      "category": "clarity"
+    },
+    {
+      "moment": "wrap-up",
+      "section": "wrap",
+      "issue": "Homework brief ambiguous — count of sketches drifted (3–5, then 1, then 3)",
+      "fix": "Pin the count to “3 sketches, one developed”. Clarify on Slack.",
+      "severity": "warn",
+      "category": "clarity"
+    },
+    {
+      "moment": "01:58:00",
+      "section": "wrap",
+      "issue": "Canvas course wasn't published — student raised at end of class",
+      "fix": "Publish Canvas before next class; verify at start of week-3 session.",
+      "severity": "bad",
+      "category": "logistics"
+    },
+    {
+      "moment": "≈01:40–01:45",
+      "section": "ai-paradigm",
+      "issue": "AI affordances tangent (~10 min) drifted from the implicit/explicit framework",
+      "fix": "Move AI material to its own scheduled session (“The Elephant in the Room”).",
+      "severity": "info",
+      "category": "pacing"
+    },
+    {
+      "moment": "Recurring",
+      "section": "—",
+      "issue": "“The Elephant in the Room” AI talk teased multiple times, never given",
+      "fix": "Schedule it (week 4 or 5).",
+      "severity": "info",
+      "category": "expectation"
+    }
+  ],
+  "ideas": [
+    { "title": "Culture Translator",       "by": "Group 2",                  "quadrant": "system · unaware",  "summary": "Detect American cultural references, surface context for international students.", "followup": true },
+    { "title": "Who Presents First Spinner","by": "Group 1",                  "quadrant": "system · aware",    "summary": "When nobody volunteers, the room reads silence and picks someone gently.", "followup": false },
+    { "title": "Energy/Fatigue Detection", "by": "Group 2",                  "quadrant": "system · unaware",  "summary": "Order coffee or snacks when students look tired — implicit care.", "followup": true },
+    { "title": "Communal Note-Taking",     "by": "Group 2",                  "quadrant": "person · aware",    "summary": "Shared, projected workspace — replace siloed laptops with one canvas.", "followup": true },
+    { "title": "CR Cleanup Reminder",      "by": "Group 2",                  "quadrant": "system · aware",    "summary": "Alert the class rep before they leave without cleaning up.", "followup": false },
+    { "title": "Smart glasses / Adaptive lighting", "by": "Group 3",         "quadrant": "system · unaware",  "summary": "Glasses, language translation, light adapting to mood.", "followup": false }
+  ],
+  "engagement": [
+    { "label": "Clarifying questions", "value": "5+", "tone": "good", "note": "Gesture-vs-implicit, home-assistant-vs-smart-home." },
+    { "label": "Group output",         "value": "3 / 3", "tone": "good", "note": "All groups produced substantive ideas." },
+    { "label": "Personal connection",  "value": "1+", "tone": "good", "note": "International student tied culture-translator idea to lived experience." },
+    { "label": "Ethical thinking",     "value": "yes",  "tone": "good", "note": "Class flagged the “embarrassing the sleeper” problem unprompted." }
+  ],
+  "actions": [
+    { "id": "fix-axis",     "title": "Fix the X/Y axis error in the quadrant slide", "owner": "Brett", "due": "before week 3", "status": "open" },
+    { "id": "publish-canvas","title": "Verify Canvas course is published",            "owner": "Brett", "due": "immediately",  "status": "open" },
+    { "id": "clarify-hw",   "title": "Clarify homework requirements on Slack",       "owner": "Brett", "due": "this week",    "status": "open" },
+    { "id": "schedule-ai",  "title": "Schedule “Elephant in the Room” AI talk",      "owner": "Brett", "due": "week 4–5",    "status": "open" },
+    { "id": "followup-ideas","title": "Follow up on Culture Translator + Communal Notes",      "owner": "Brett", "due": "this week", "status": "open" }
+  ],
+  "quotes": [
+    { "speaker": "Mark Weiser",   "text": "The most profound technologies are those that disappear." },
+    { "speaker": "Brett (paraphrase)", "text": "The best interaction is no interaction." },
+    { "speaker": "Tobias Revell", "text": "Technologies don't preexist or emerge autonomously. They are products of social dynamics, atmospheres, aspirations." },
+    { "speaker": "Brett",         "text": "We're not talking about building apps. We're talking about building connections and experiences between people." }
+  ]
+}

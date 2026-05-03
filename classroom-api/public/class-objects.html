@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Class Object Workbench</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .sim-shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr) 360px;
+      gap: 14px;
+      padding: 18px;
+    }
+    .object-picker .panel-body { padding: 6px 8px; max-height: calc(100vh - 150px); overflow: auto; }
+    .object-button {
+      width: 100%;
+      display: grid;
+      gap: 2px;
+      padding: 7px 10px;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: transparent;
+      text-align: left;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .object-button:hover {
+      border-color: var(--line);
+      color: var(--ink);
+    }
+    .object-button.active {
+      border-color: var(--amber);
+      color: var(--ink);
+      background: rgba(224, 168, 94, 0.05);
+    }
+    .object-button strong {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink);
+    }
+    .object-button .small { font-size: 10px; letter-spacing: 0.04em; }
+    .sim-stage {
+      display: grid;
+      gap: 12px;
+    }
+    .sim-map {
+      position: relative;
+      aspect-ratio: 1.25;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        var(--bg-soft);
+      background-size: 10% 10%;
+      overflow: hidden;
+      touch-action: none;
+    }
+    .space-tabs { display: inline-flex; gap: 4px; }
+    .space-tabs button.active {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: rgba(224, 168, 94, 0.05);
+    }
+    .space-view { position: relative; }
+    #sim3d {
+      display: none;
+      width: 100%;
+      aspect-ratio: 1.25;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: var(--bg-soft);
+    }
+    .is-3d #simMap { display: none; }
+    .is-3d #sim3d { display: block; }
+    .sim-zone,
+    .sim-device,
+    .sim-object {
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+    .sim-device {
+      pointer-events: none;
+      border: 1px solid rgba(224, 168, 94, 0.5);
+      background: rgba(224, 168, 94, 0.06);
+      border-radius: 3px;
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 4px;
+      transform: none;
+    }
+    .sim-device.camera {
+      border-color: rgba(116, 198, 157, 0.5);
+      background: rgba(116, 198, 157, 0.06);
+      color: var(--green);
+    }
+    .sim-zone {
+      transform: none;
+      border: 1px solid rgba(127, 188, 210, 0.4);
+      background: rgba(127, 188, 210, 0.06);
+      border-radius: 3px;
+      color: var(--cyan);
+      padding: 5px 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .sim-object {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid var(--cyan);
+      background: var(--bg-soft);
+      box-shadow: 0 0 14px rgba(127, 188, 210, 0.2);
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--ink);
+      cursor: grab;
+    }
+    .sim-object.active {
+      width: 50px;
+      height: 50px;
+      border-color: var(--amber);
+      background: rgba(224, 168, 94, 0.08);
+      z-index: 5;
+    }
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .event-preview pre {
+      margin: 0;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 420px;
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-soft);
+      background: var(--bg-input);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      line-height: 1.55;
+    }
+    .space-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body data-page="class-object-simulator">
+  <header class="topbar">
+    <div class="brand">Smart Classroom</div>
+    <nav class="nav">
+      <a href="/start.html">Start</a>
+      <a href="/">Console</a>
+      <a href="/class-objects.html" class="active">Objects</a>
+      <a href="/projects.html">Projects</a>
+      <a href="/report.html">Report</a>
+      <a href="/cameras.html">Cameras</a>
+      <a href="/events.html">Events</a>
+      <a href="/projector.html">Projector</a>
+      <a href="/camera.html">Camera</a>
+      <a href="/board.html">Board</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="status-dot" data-connection-dot></span>
+  </header>
+
+  <main class="sim-shell">
+    <section class="panel object-picker">
+      <h2>Objects</h2>
+      <div id="objectList" class="panel-body stack"></div>
+    </section>
+
+    <section class="panel">
+      <h2 id="objectTitle">Object</h2>
+      <div class="panel-body stack sim-stage">
+        <div id="objectDescription" class="small"></div>
+        <div id="projectContext" class="target-card small" hidden></div>
+        <div class="space-header">
+          <div class="space-tabs">
+            <button id="view2dBtn" class="active">2D Map</button>
+            <button id="view3dBtn">3D Space</button>
+          </div>
+          <div class="row">
+            <span id="spaceLabel" class="eyebrow">room coordinates</span>
+            <a href="/ideas/virtualroom/" target="_blank"><button type="button">Open Viewer</button></a>
+          </div>
+        </div>
+        <div id="spaceView" class="space-view">
+          <div id="simMap" class="sim-map"></div>
+          <canvas id="sim3d"></canvas>
+        </div>
+        <div class="stack" style="gap:6px">
+          <span class="eyebrow">Scenarios</span>
+          <div id="scenarioButtons" class="scenario-grid"></div>
+        </div>
+        <div class="row">
+          <button id="emitBtn" class="primary">Emit Event</button>
+          <button id="projectBtn">Project</button>
+          <button id="detectBtn">Detect</button>
+          <button id="cycleBtn">Cycle Value</button>
+          <button id="resetBtn" class="warn">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel event-preview">
+      <h2>Event</h2>
+      <div class="panel-body stack">
+        <span class="eyebrow">Live Controls</span>
+        <div id="controlForm" class="control-form stack"></div>
+        <span class="eyebrow">Payload Preview</span>
+        <pre id="eventPreview"></pre>
+        <div id="lastResult" class="small">No event emitted yet.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/class-objects.js"></script>
+</body>
+</html>

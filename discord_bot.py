@@ -528,7 +528,7 @@ async def toggle_notifications(ctx):
         await ctx.send(f"❌ Error toggling notifications: {str(e)}")
 
 
-# --- Classroom API Commands (reads from Supabase via classroom_api.py) ---
+# --- Classroom API Commands (talks to the Node room server in classroom-api/) ---
 
 CLASSROOM_API_URL = os.getenv("CLASSROOM_API_URL", "")
 CLASSROOM_API_KEY = os.getenv("CLASSROOM_API_KEY", "")

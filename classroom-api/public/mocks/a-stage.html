@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage instrument · Smart Classroom (mock A)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #f5efe2;
+      --ink-soft: rgba(245, 239, 226, 0.72);
+      --ink-faint: rgba(245, 239, 226, 0.30);
+      --ink-dim: rgba(245, 239, 226, 0.16);
+      --bg: #060709;
+      --amber: #ffb360;
+      --amber-glow: rgba(255, 179, 96, 0.5);
+      --cyan: #7fbcd2;
+      --emerald: #74c896;
+      --coral: #ff7a6b;
+      --serif: 'Fraunces', Georgia, serif;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      overflow: hidden;
+      cursor: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* warm-cool field + grain */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(1300px 800px at 50% 50%, rgba(255, 179, 96, 0.045), transparent 60%),
+        radial-gradient(900px 600px at 12% 8%, rgba(127, 188, 210, 0.035), transparent 60%);
+      z-index: 0;
+    }
+    body::after {
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.96  0 0 0 0 0.94  0 0 0 0 0.86  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      opacity: 0.45;
+      mix-blend-mode: screen;
+      z-index: 90;
+    }
+
+    /* corner registration marks */
+    .reg {
+      position: fixed;
+      width: 18px; height: 18px;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .reg::before, .reg::after {
+      content: "";
+      position: absolute;
+      background: var(--ink-faint);
+    }
+    .reg::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .reg::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .reg.tl { top: 28px; left: 28px; }
+    .reg.tr { top: 28px; right: 28px; }
+    .reg.bl { bottom: 28px; left: 28px; }
+    .reg.br { bottom: 28px; right: 28px; }
+
+    /* mock badge */
+    .mock-badge {
+      position: fixed;
+      top: 60px;
+      left: 60px;
+      z-index: 5;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--amber);
+      pointer-events: none;
+    }
+    .mock-badge::after {
+      content: "";
+      display: inline-block;
+      width: 32px; height: 1px; background: var(--amber);
+      margin-left: 12px; vertical-align: middle;
+    }
+
+    /* margin metadata in 4 corners */
+    .meta {
+      position: fixed;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      z-index: 4;
+      pointer-events: none;
+      line-height: 1.7;
+    }
+    .meta .key { color: var(--ink-faint); margin-right: 8px; }
+    .meta strong { color: var(--ink); font-weight: 500; font-feature-settings: "tnum"; }
+    .meta .sep {
+      display: inline-block;
+      width: 18px; height: 1px;
+      background: var(--ink-faint);
+      margin: 0 10px;
+      vertical-align: middle;
+    }
+    .meta.tl { top: 76px; left: 64px; }
+    .meta.tr { top: 76px; right: 64px; text-align: right; }
+    .meta.bl { bottom: 90px; left: 64px; }
+    .meta.br { bottom: 90px; right: 64px; text-align: right; }
+
+    /* dial top-right */
+    .dial {
+      position: fixed;
+      top: 60px;
+      right: 60px;
+      width: 84px; height: 84px;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .dial circle { fill: none; stroke: var(--ink-faint); stroke-width: 0.5; }
+    .dial .arc { stroke: var(--amber); stroke-width: 0.8; }
+    .dial .needle { stroke: var(--ink); stroke-width: 0.8; transform-origin: 50% 50%; animation: spin 36s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* central instrument */
+    .stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+    }
+    .plate {
+      position: relative;
+      width: min(760px, 76vh);
+      aspect-ratio: 1;
+    }
+    .plate svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* hairline polar grid */
+    .grid line, .grid circle {
+      stroke: rgba(245, 239, 226, 0.05);
+      stroke-width: 0.5;
+      fill: none;
+    }
+    .grid .heavy { stroke: rgba(245, 239, 226, 0.10); }
+
+    /* phase arcs */
+    .phase-arc {
+      fill: none;
+      stroke-width: 14;
+      stroke-linecap: butt;
+      opacity: 0.42;
+    }
+    .phase-arc.active {
+      opacity: 1;
+      filter: drop-shadow(0 0 12px var(--amber-glow));
+    }
+    .phase-tick {
+      stroke: var(--ink-soft);
+      stroke-width: 0.9;
+    }
+    .phase-label {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      fill: var(--ink-soft);
+    }
+    .phase-label.active { fill: var(--amber); }
+
+    /* center readout */
+    .center-readout {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+    .center-readout .eyebrow {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--amber);
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      align-items: center;
+    }
+    .center-readout .eyebrow::before,
+    .center-readout .eyebrow::after {
+      content: "";
+      width: 28px; height: 1px;
+      background: var(--amber);
+      opacity: 0.55;
+    }
+    .center-readout h1 {
+      margin: 14px 0 10px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(40px, 6vw, 76px);
+      line-height: 0.96;
+      letter-spacing: -0.018em;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+    .center-readout h1 em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--amber);
+    }
+    .center-readout .now {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .center-readout .now strong { color: var(--ink); font-weight: 500; }
+
+    /* project orbits */
+    .orbit-group { pointer-events: none; }
+    .orbit-node {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .orbit-node circle {
+      stroke: var(--ink-faint);
+      stroke-width: 0.8;
+      fill: var(--bg);
+      transition: stroke .2s ease, fill .2s ease;
+    }
+    .orbit-node.live circle {
+      stroke: var(--emerald);
+      fill: rgba(116, 200, 150, 0.08);
+    }
+    .orbit-node.silent circle { stroke: var(--coral); }
+    .orbit-node:hover circle { stroke: var(--ink); }
+    .orbit-node text {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      fill: var(--ink-soft);
+    }
+    .orbit-node.live text { fill: var(--emerald); }
+
+    /* leader lines (annotation hairlines from arc to label) */
+    .leader { stroke: var(--ink-faint); stroke-width: 0.5; fill: none; }
+
+    /* now-pointer (radial line indicating current minute) */
+    .now-pointer {
+      stroke: var(--amber);
+      stroke-width: 1.2;
+      filter: drop-shadow(0 0 6px var(--amber-glow));
+    }
+    .now-dot {
+      fill: var(--amber);
+      filter: drop-shadow(0 0 8px var(--amber-glow));
+    }
+
+    /* cue strip at the bottom */
+    .cues {
+      position: fixed;
+      left: 50%; bottom: 28px;
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: repeat(6, minmax(140px, 1fr));
+      width: min(1100px, 92vw);
+      border: 1px solid var(--ink-dim);
+      background: rgba(10, 12, 16, 0.82);
+      backdrop-filter: blur(8px);
+      z-index: 5;
+    }
+    .cue {
+      padding: 14px 18px 16px;
+      border-right: 1px solid var(--ink-dim);
+      cursor: pointer;
+      display: grid; gap: 4px;
+      transition: background .2s ease;
+    }
+    .cue:last-child { border-right: 0; }
+    .cue:hover { background: rgba(245, 239, 226, 0.025); }
+    .cue .num {
+      font-family: var(--mono);
+      font-size: 9px; letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .cue .name {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 18px;
+      line-height: 1.05;
+      color: var(--ink-soft);
+      letter-spacing: -0.005em;
+    }
+    .cue .desc {
+      font-family: var(--mono);
+      font-size: 9px; letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      line-height: 1.5;
+    }
+    .cue.active { background: rgba(255, 179, 96, 0.05); }
+    .cue.active .num { color: var(--amber); }
+    .cue.active .name { color: var(--ink); font-style: italic; }
+    .cue.active::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -1px;
+      height: 2px;
+      background: var(--amber);
+      box-shadow: 0 0 12px var(--amber-glow);
+    }
+    .cue { position: relative; }
+
+    /* custom cursor */
+    .cursor {
+      position: fixed;
+      pointer-events: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--ink-faint);
+      transform: translate(-50%, -50%);
+      z-index: 99;
+      transition: transform 0.12s ease-out, border-color 0.2s, width 0.2s, height 0.2s;
+      mix-blend-mode: difference;
+    }
+    .cursor::before {
+      content: "";
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 2px; height: 2px;
+      background: var(--ink);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    @media (max-width: 900px) {
+      .meta.tr, .meta.br { display: none; }
+      .dial { display: none; }
+      .cues { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="cursor" id="cursor"></div>
+
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+
+  <div class="mock-badge">Stage instrument · Mock A</div>
+
+  <div class="meta tl">
+    <div><span class="key">Class</span><strong>Smart Objects</strong></div>
+    <div><span class="key">Lab</span><strong>02 · Procession</strong></div>
+  </div>
+  <div class="meta tr" id="metaClock">
+    <div><span class="key">T</span><strong id="clock">— —</strong></div>
+    <div><span class="key">Sess</span><strong>0x4af1·c2</strong></div>
+  </div>
+  <div class="meta bl">
+    <div><span class="key">Phase</span><strong style="color: var(--amber)">Lecture mode</strong></div>
+    <div><span class="key">Cue</span><strong>16:48 Group activity</strong></div>
+  </div>
+  <div class="meta br">
+    <div><span class="key">Roster</span><strong>8 projects</strong></div>
+    <div><span class="key">Live</span><strong style="color: var(--emerald)">6 / 8</strong></div>
+  </div>
+
+  <svg class="dial" viewBox="0 0 84 84" aria-hidden="true">
+    <circle cx="42" cy="42" r="34"/>
+    <circle cx="42" cy="42" r="26"/>
+    <path class="arc" d="M 42 8 A 34 34 0 0 1 76 42" fill="none"/>
+    <line class="needle" x1="42" y1="42" x2="42" y2="14"/>
+    <circle cx="42" cy="42" r="2" fill="var(--amber)"/>
+  </svg>
+
+  <main class="stage">
+    <div class="plate">
+      <svg viewBox="-400 -400 800 800" preserveAspectRatio="xMidYMid meet">
+        <!-- polar grid -->
+        <g class="grid">
+          <circle r="80"/>
+          <circle r="160"/>
+          <circle r="240" class="heavy"/>
+          <circle r="320"/>
+          <line x1="-340" y1="0" x2="340" y2="0"/>
+          <line x1="0" y1="-340" x2="0" y2="340"/>
+        </g>
+
+        <!-- phase arcs at radius 240; full class = 180min mapped to 360deg.
+             Pre-arrival 15 / Arrival 10 / Lecture 50 / Activity 70 / Wrap 35
+             ratios (15+10+50+70+35 = 180). Render each as an arc segment. -->
+        <!-- starting at top (-90deg), clockwise -->
+        <g id="phaseArcs"></g>
+
+        <!-- now pointer at minute 65 (mid-Lecture) -->
+        <line class="now-pointer" id="nowPointer" x1="0" y1="0" x2="0" y2="-300"/>
+        <circle class="now-dot" id="nowDot" cx="0" cy="-300" r="4"/>
+
+        <!-- project orbit at radius 320 -->
+        <g class="orbit-group" id="projects"></g>
+
+        <!-- phase labels at radius 280 -->
+        <g id="phaseLabels"></g>
+      </svg>
+
+      <div class="center-readout">
+        <div class="eyebrow"><span>Tuesday · April 28</span></div>
+        <h1>16:48<em>'</em></h1>
+        <div class="now"><span class="key">Now</span> <strong>Lecture · group activity</strong></div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="cues" id="cues">
+    <div class="cue" data-scene="warmup">
+      <span class="num">01</span>
+      <span class="name">Warmup</span>
+      <span class="desc">Settle, current events</span>
+    </div>
+    <div class="cue" data-scene="theory">
+      <span class="num">02</span>
+      <span class="name">Theory</span>
+      <span class="desc">Wendy Ju framework</span>
+    </div>
+    <div class="cue active" data-scene="activity">
+      <span class="num">03</span>
+      <span class="name">Activity</span>
+      <span class="desc">Quadrant mapping</span>
+    </div>
+    <div class="cue" data-scene="presents">
+      <span class="num">04</span>
+      <span class="name">Present</span>
+      <span class="desc">Group share-back</span>
+    </div>
+    <div class="cue" data-scene="affordances">
+      <span class="num">05</span>
+      <span class="name">Affordances</span>
+      <span class="desc">Gibson, Norman</span>
+    </div>
+    <div class="cue" data-scene="wrap">
+      <span class="num">06</span>
+      <span class="name">Wrap</span>
+      <span class="desc">Quests, dismissal</span>
+    </div>
+  </nav>
+
+  <script>
+    // clock
+    function tick() {
+      const d = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    setInterval(tick, 1000); tick();
+
+    // custom cursor
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+    document.querySelectorAll('a, button, .cue, .orbit-node').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.style.width = cursor.style.height = '36px');
+      el.addEventListener('mouseleave', () => cursor.style.width = cursor.style.height = '22px');
+    });
+
+    // === phase arcs ===
+    const PHASES = [
+      { id: 'pre',     label: 'Pre-arrival',  minutes: 15, color: 'rgba(127, 188, 210, 0.55)' },
+      { id: 'arrival', label: 'Arrival',      minutes: 10, color: 'rgba(127, 188, 210, 0.7)' },
+      { id: 'lecture', label: 'Lecture',      minutes: 50, color: 'rgba(255, 179, 96, 0.85)', active: true },
+      { id: 'activity',label: 'Activity',     minutes: 70, color: 'rgba(116, 200, 150, 0.7)' },
+      { id: 'wrap',    label: 'Wrap',         minutes: 35, color: 'rgba(127, 188, 210, 0.45)' },
+    ];
+    const TOTAL = PHASES.reduce((a, p) => a + p.minutes, 0); // 180
+    const NOW_MIN = 65; // 25 (pre+arrival) + 40 (into lecture)
+    const R = 240;
+
+    // angles measured from the top, going clockwise (SVG: angle = -90 + (frac * 360))
+    function polarToXY(angDeg, r = R) {
+      const rad = (angDeg - 90) * Math.PI / 180;
+      return { x: r * Math.cos(rad), y: r * Math.sin(rad) };
+    }
+    function arcPath(startAng, endAng, r) {
+      const s = polarToXY(startAng, r);
+      const e = polarToXY(endAng, r);
+      const largeArc = (endAng - startAng) > 180 ? 1 : 0;
+      return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+    }
+
+    const arcsG = document.getElementById('phaseArcs');
+    const labelsG = document.getElementById('phaseLabels');
+    let cursorMin = 0;
+    PHASES.forEach((p) => {
+      const startA = (cursorMin / TOTAL) * 360;
+      const endA = ((cursorMin + p.minutes) / TOTAL) * 360;
+      cursorMin += p.minutes;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', arcPath(startA, endA, R));
+      path.setAttribute('class', 'phase-arc' + (p.active ? ' active' : ''));
+      path.setAttribute('stroke', p.color);
+      arcsG.appendChild(path);
+
+      // label at midpoint
+      const midA = (startA + endA) / 2;
+      const labelXY = polarToXY(midA, R + 40);
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', labelXY.x);
+      text.setAttribute('y', labelXY.y);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'middle');
+      text.setAttribute('class', 'phase-label' + (p.active ? ' active' : ''));
+      text.textContent = p.label;
+      labelsG.appendChild(text);
+    });
+
+    // now pointer at NOW_MIN
+    const nowAng = (NOW_MIN / TOTAL) * 360;
+    const tipR = 300;
+    const nowXY = polarToXY(nowAng, tipR);
+    document.getElementById('nowPointer').setAttribute('x2', nowXY.x);
+    document.getElementById('nowPointer').setAttribute('y2', nowXY.y);
+    document.getElementById('nowDot').setAttribute('cx', nowXY.x);
+    document.getElementById('nowDot').setAttribute('cy', nowXY.y);
+
+    // === projects orbit ===
+    const PROJECTS = [
+      { id: 'smart-stage',     label: 'Smart stage',  status: 'live' },
+      { id: 'forest',          label: 'Forest',       status: 'live' },
+      { id: 'gus',             label: 'Gus',          status: 'live' },
+      { id: 'seren',           label: 'Seren',        status: 'live' },
+      { id: 'gesture-timer',   label: 'Timer',        status: 'live' },
+      { id: 'focus-beam',      label: 'Focus beam',   status: 'live' },
+      { id: 'imprint',         label: 'Imprint',      status: 'idle' },
+      { id: 'grammar-coach',   label: 'Grammar',      status: 'silent' },
+    ];
+
+    const projG = document.getElementById('projects');
+    const PROJ_R = 360;
+    PROJECTS.forEach((p, i) => {
+      const angle = (i / PROJECTS.length) * 360;
+      const xy = polarToXY(angle, PROJ_R);
+
+      // leader line from arc edge to project
+      const inner = polarToXY(angle, R + 22);
+      const leader = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      leader.setAttribute('x1', inner.x); leader.setAttribute('y1', inner.y);
+      leader.setAttribute('x2', xy.x);    leader.setAttribute('y2', xy.y);
+      leader.setAttribute('class', 'leader');
+      projG.appendChild(leader);
+
+      const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      node.setAttribute('transform', `translate(${xy.x} ${xy.y})`);
+      node.setAttribute('class', 'orbit-node ' + p.status);
+      node.innerHTML = `
+        <circle r="14"/>
+        <text y="${xy.y > 0 ? 32 : -22}" text-anchor="middle">${p.label}</text>
+      `;
+      projG.appendChild(node);
+    });
+  </script>
+</body>
+</html>

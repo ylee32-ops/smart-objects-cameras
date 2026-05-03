@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Phone — Lens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #f5efe2;
+      --ink-soft: rgba(245, 239, 226, 0.65);
+      --ink-faint: rgba(245, 239, 226, 0.22);
+      --ink-rule: rgba(245, 239, 226, 0.10);
+      --bg: #0a0b0d;
+      --device-bg: #050608;
+      --bezel: #0d0f12;
+      --amber: #ffb360;
+      --amber-glow: rgba(255, 179, 96, 0.45);
+      --cyan: #7fbcd2;
+      --coral: #ff7a6b;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0;
+      padding: 32px 28px;
+      background:
+        radial-gradient(900px 700px at 18% 30%, rgba(255, 179, 96, 0.05), transparent 60%),
+        radial-gradient(900px 700px at 82% 70%, rgba(111, 185, 201, 0.04), transparent 60%),
+        var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 0.96  0 0 0 0 0.94  0 0 0 0 0.86  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      opacity: 0.55;
+      mix-blend-mode: screen;
+      z-index: 90;
+    }
+
+    /* corner registration on the page */
+    .reg {
+      position: fixed;
+      width: 16px; height: 16px;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .reg::before, .reg::after {
+      content: "";
+      position: absolute;
+      background: var(--ink-faint);
+    }
+    .reg::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .reg::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .reg.tl { top: 22px; left: 22px; }
+    .reg.tr { top: 22px; right: 22px; }
+    .reg.bl { bottom: 22px; left: 22px; }
+    .reg.br { bottom: 22px; right: 22px; }
+
+    /* page captions */
+    .specimen {
+      max-width: 280px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      line-height: 1.7;
+      letter-spacing: 0.12em;
+      color: var(--ink-soft);
+      align-self: start;
+      padding-top: 96px;
+    }
+    .specimen.left  { padding-left: 60px; padding-right: 16px; }
+    .specimen.right {
+      padding-right: 60px;
+      padding-left: 16px;
+      text-align: right;
+      justify-self: end;
+    }
+    .specimen .num {
+      font-family: 'Fraunces', serif;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 32px;
+      color: var(--amber);
+      letter-spacing: 0;
+      display: block;
+      margin-bottom: 12px;
+    }
+    .specimen p { margin: 0 0 18px; color: var(--ink-soft); letter-spacing: 0.04em; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; line-height: 1.55; text-transform: none; }
+    .specimen h4 {
+      margin: 0 0 8px;
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: 0.32em;
+      font-size: 10.5px;
+      text-transform: uppercase;
+    }
+    .specimen .rule { display: block; width: 38px; height: 1px; background: var(--ink-faint); margin: 18px 0; }
+    .specimen.right .rule { margin-left: auto; }
+
+    /* device shell */
+    .device {
+      width: 380px;
+      height: 800px;
+      border-radius: 52px;
+      background: var(--bezel);
+      padding: 14px;
+      position: relative;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 -1px 0 rgba(255, 255, 255, 0.02) inset,
+        0 60px 120px -20px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+      z-index: 5;
+    }
+    .device::before {
+      content: "";
+      position: absolute;
+      top: 12px; left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 28px;
+      background: var(--bezel);
+      border-radius: 0 0 18px 18px;
+      z-index: 30;
+    }
+    .device::after {
+      content: "";
+      position: absolute;
+      right: -2px; top: 180px;
+      width: 2px; height: 80px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 38px;
+      background: var(--device-bg);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* === FULLSCREEN CAMERA FEED === */
+    .feed {
+      position: absolute;
+      inset: 0;
+      /* faux dim warm-lit table scene */
+      background:
+        radial-gradient(circle at 50% 56%, rgba(255, 179, 96, 0.16), transparent 38%),
+        radial-gradient(circle at 50% 80%, rgba(255, 179, 96, 0.06), transparent 60%),
+        radial-gradient(180% 100% at 50% 100%, #1c1611 0%, #0c0a09 50%, #050608 100%);
+      overflow: hidden;
+    }
+    /* a slow drifting noise to feel "live" */
+    .feed::before {
+      content: "";
+      position: absolute;
+      inset: -10%;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.32  0 0 0 0 0.30  0 0 0 0 0.26  0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      animation: drift 14s linear infinite;
+      opacity: 0.7;
+      mix-blend-mode: screen;
+    }
+    /* faint table wood-grain horizon */
+    .feed::after {
+      content: "";
+      position: absolute;
+      left: -10%; right: -10%;
+      top: 56%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255, 179, 96, 0.18), transparent);
+    }
+    @keyframes drift {
+      0% { transform: translate(0,0); }
+      100% { transform: translate(-12px, -8px); }
+    }
+
+    /* faux mirror card sitting on the table */
+    .scene-object {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      transform: translate(-50%, -50%) perspective(900px) rotateX(58deg);
+      transform-origin: center center;
+      transition: transform 0.6s ease;
+    }
+    .scene-object .card {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 246, 226, 0.96), rgba(245, 232, 208, 0.92));
+      border-radius: 6px;
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.55),
+        0 2px 0 rgba(255, 255, 255, 0.06) inset;
+    }
+    /* faux AprilTag pattern on the card */
+    .scene-object .tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 56px;
+      height: 56px;
+      background:
+        repeating-conic-gradient(#0a0a0a 0% 25%, #f5efe2 0% 50%) 50% 50% / 16px 16px;
+      border: 6px solid #f5efe2;
+      outline: 3px solid #0a0a0a;
+    }
+    .scene-object .role {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: #1a1410;
+    }
+    .scene-object .glyph {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 100px; height: 1.5px;
+      background: #1a1410;
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+    .scene-object .glyph::after {
+      content: "";
+      position: absolute;
+      top: -4px; left: 0; right: 0;
+      height: 1px;
+      background: rgba(26, 20, 16, 0.4);
+    }
+
+    /* === OVERLAYS === */
+
+    /* top status — minimal, transparent over feed */
+    .top-strip {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 14px 28px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.06em;
+      color: var(--ink-soft);
+      z-index: 10;
+      pointer-events: none;
+    }
+    .top-strip .clock { letter-spacing: 0; }
+    .top-strip .right { display: flex; gap: 6px; align-items: center; }
+
+    /* lab badge (under the status row) */
+    .lab-badge {
+      position: absolute;
+      top: 56px;
+      left: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      z-index: 10;
+      pointer-events: none;
+    }
+    .lab-badge .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber-glow);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50%      { opacity: 1; transform: scale(1.2); }
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 50px;
+      right: 22px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--ink-rule);
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(8px);
+      display: grid;
+      place-items: center;
+      z-index: 10;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .close-btn:hover { border-color: var(--ink-soft); }
+    .close-btn::before, .close-btn::after {
+      content: "";
+      position: absolute;
+      width: 12px; height: 1px;
+      background: var(--ink);
+    }
+    .close-btn::before { transform: rotate(45deg); }
+    .close-btn::after  { transform: rotate(-45deg); }
+
+    /* reticle: locks onto the object, then dissolves */
+    .reticle {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 220px;
+      height: 132px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 11;
+    }
+    .reticle .corner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 1.2px solid var(--amber);
+    }
+    .reticle .corner.tl { top: 0; left: 0; border-right: none; border-bottom: none; animation: lock 0.7s cubic-bezier(.2,.8,.2,1) both; }
+    .reticle .corner.tr { top: 0; right: 0; border-left: none; border-bottom: none; animation: lock 0.7s cubic-bezier(.2,.8,.2,1) 0.06s both; }
+    .reticle .corner.bl { bottom: 0; left: 0; border-right: none; border-top: none; animation: lock 0.7s cubic-bezier(.2,.8,.2,1) 0.12s both; }
+    .reticle .corner.br { bottom: 0; right: 0; border-left: none; border-top: none; animation: lock 0.7s cubic-bezier(.2,.8,.2,1) 0.18s both; }
+    @keyframes lock {
+      0% { opacity: 0; transform: scale(2.4); filter: blur(6px); }
+      100% { opacity: 0.7; transform: scale(1); filter: blur(0); }
+    }
+
+    /* tag annotation hovering near the object */
+    .tag-annot {
+      position: absolute;
+      top: calc(50% - 100px);
+      left: calc(50% + 80px);
+      z-index: 12;
+      pointer-events: none;
+      animation: fadeInDown 0.8s ease 0.5s both;
+    }
+    .tag-annot .leader {
+      position: absolute;
+      top: 38px;
+      right: 100%;
+      width: 56px;
+      height: 1px;
+      background: var(--amber);
+      opacity: 0.5;
+    }
+    .tag-annot .leader::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: -2px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber-glow);
+    }
+    .tag-annot .label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 4px;
+    }
+    .tag-annot .conf {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--ink-faint);
+    }
+
+    /* ARC DIAL — wraps the recognized object */
+    .arc-control {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 320px;
+      height: 320px;
+      transform: translate(-50%, -50%);
+      z-index: 13;
+      animation: fadeIn 1.0s ease 0.4s both;
+    }
+    .arc-control svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      cursor: grab;
+      touch-action: none;
+    }
+    .arc-control svg:active { cursor: grabbing; }
+
+    .arc-bg { fill: none; stroke: rgba(245, 239, 226, 0.12); stroke-width: 1; }
+    .arc-fill { fill: none; stroke: var(--amber); stroke-width: 1.2; stroke-linecap: round; filter: drop-shadow(0 0 8px var(--amber-glow)); }
+    .arc-handle-glow { fill: var(--amber); opacity: 0.35; filter: blur(8px); }
+    .arc-handle { fill: var(--amber); stroke: #fff7e0; stroke-width: 0.8; }
+    .arc-tick { stroke: var(--ink-soft); stroke-width: 1; stroke-linecap: round; }
+    .arc-tick-major { stroke: var(--ink); stroke-width: 1.2; }
+
+    /* the big serif reading floating below the object */
+    .reading {
+      position: absolute;
+      top: calc(50% + 130px);
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 12;
+      pointer-events: none;
+      animation: fadeInUp 0.9s ease 0.7s both;
+    }
+    .reading .label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 8px;
+    }
+    .reading .value {
+      font-family: 'Fraunces', serif;
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 64px;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+    .reading .delta {
+      margin-top: 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--amber);
+      text-transform: uppercase;
+    }
+
+    /* === BOTTOM ACTION ZONE — thumb reach === */
+    .action-zone {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 0 18px 28px;
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      animation: fadeInUp 0.9s ease 0.9s both;
+    }
+
+    .action-zone::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 80px;
+      background: linear-gradient(to top, rgba(5, 6, 8, 0.85), transparent);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Ask button — circular, sits ABOVE the row */
+    .ask-btn {
+      position: absolute;
+      left: 50%;
+      top: -28px;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 1px solid var(--ink-rule);
+      background: rgba(8, 10, 14, 0.85);
+      backdrop-filter: blur(10px);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, transform 0.25s;
+      z-index: 2;
+    }
+    .ask-btn:active {
+      transform: translateX(-50%) scale(0.96);
+      border-color: var(--amber);
+    }
+    .ask-btn .ring {
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px solid var(--ink-rule);
+      animation: askPulse 2.6s ease-in-out infinite;
+    }
+    @keyframes askPulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50%      { opacity: 0.7; transform: scale(1.05); }
+    }
+    .ask-btn span {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      align-items: stretch;
+    }
+    .btn {
+      flex: 1;
+      min-height: 64px;
+      padding: 0 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(8, 10, 14, 0.7);
+      border: 1px solid var(--ink-rule);
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink);
+      transition: border-color 0.25s, background 0.25s, color 0.25s, transform 0.15s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:hover { border-color: var(--ink-soft); }
+    .btn.ghost { flex: 0 0 64px; min-width: 64px; padding: 0; }
+    .btn.primary {
+      flex: 1.6;
+      background: var(--amber);
+      border-color: var(--amber);
+      color: #1a1410;
+      box-shadow: 0 0 28px rgba(255, 179, 96, 0.25);
+    }
+    .btn.primary:hover { background: #ffc685; border-color: #ffc685; }
+    .btn .arrow { font-family: 'Fraunces', serif; font-size: 18px; line-height: 1; font-weight: 300; }
+
+    /* hint strip below buttons */
+    .hint {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* home indicator */
+    .home-bar {
+      position: absolute;
+      bottom: 8px; left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(245, 239, 226, 0.6);
+      z-index: 25;
+    }
+
+    @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+    @keyframes fadeInUp { from {opacity:0; transform: translate(var(--tx, 0), 8px);} to {opacity:1; transform: translate(var(--tx, 0), 0);} }
+    @keyframes fadeInDown { from {opacity:0; transform: translateY(-6px);} to {opacity:1; transform: translateY(0);} }
+    .reading { --tx: -50%; }
+    .ask-btn { --tx: -50%; }
+
+    /* state alternate toggles outside device */
+    .state-toggle {
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      z-index: 6;
+    }
+    .state-toggle button {
+      background: none;
+      border: none;
+      color: var(--ink-soft);
+      font: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      cursor: pointer;
+      padding: 8px 0;
+      border-bottom: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .state-toggle button:hover { color: var(--ink); }
+    .state-toggle button.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+    /* idle state styles */
+    .screen[data-state="idle"] .reticle,
+    .screen[data-state="idle"] .tag-annot,
+    .screen[data-state="idle"] .arc-control,
+    .screen[data-state="idle"] .reading { opacity: 0; }
+    .screen[data-state="idle"] .scene-object { opacity: 0.25; }
+    .screen[data-state="idle"] .idle-prompt { opacity: 1; }
+
+    .idle-prompt {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 14;
+      pointer-events: none;
+    }
+    .idle-prompt .ring {
+      width: 140px; height: 140px;
+      border: 1px solid var(--ink-faint);
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      position: relative;
+      animation: spinSlow 12s linear infinite;
+    }
+    .idle-prompt .ring::before {
+      content: "";
+      position: absolute;
+      top: -4px; left: 50%;
+      transform: translateX(-50%);
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--ink-soft);
+    }
+    @keyframes spinSlow { to { transform: rotate(360deg); } }
+    .idle-prompt .text {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 22px;
+      color: var(--ink-soft);
+      letter-spacing: -0.005em;
+    }
+    .idle-prompt .sub {
+      margin-top: 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    @media (max-width: 1100px) {
+      body { grid-template-columns: 1fr; justify-items: center; padding-bottom: 130px; }
+      .specimen { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+
+  <aside class="specimen left">
+    <span class="num">i.</span>
+    <h4>The Lens</h4>
+    <span class="rule"></span>
+    <p>The phone is not a dashboard. It is a lens. The thing being looked at is the interface — controls live on the object, not in a panel.</p>
+    <h4>Touch · Aim · Tune</h4>
+    <span class="rule"></span>
+    <p>Aim to acquire. Drag the arc to tune. Tap once to send. The whole hand stays at the bottom; the eye stays at the top.</p>
+  </aside>
+
+  <div class="device">
+    <div class="screen" id="screen" data-state="acquired" data-object="mirror">
+      <!-- camera feed -->
+      <div class="feed"></div>
+
+      <!-- the recognized object as it appears in the feed -->
+      <div class="scene-object" id="sceneObject">
+        <div class="card">
+          <div class="tag"></div>
+          <div class="glyph"></div>
+          <div class="role" id="sceneRole">Mirror</div>
+        </div>
+      </div>
+
+      <!-- top status / lab badge / close -->
+      <div class="top-strip">
+        <span class="clock" id="clock">9:41</span>
+        <div class="right">
+          <span style="letter-spacing:0.4em;">LAB</span>
+          <svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true">
+            <rect x="0.5" y="0.5" width="11" height="9" rx="1.5" fill="none" stroke="currentColor"/>
+            <rect x="2" y="2" width="8" height="6" fill="currentColor"/>
+            <rect x="12.5" y="3.5" width="1.5" height="3" rx="0.5" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="lab-badge">
+        <span class="dot"></span>
+        <span>Light Lab · 02</span>
+      </div>
+
+      <button class="close-btn" aria-label="Close lens"></button>
+
+      <!-- locking reticle around the object -->
+      <div class="reticle" id="reticle">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+      </div>
+
+      <!-- tag annotation, hovers above the object -->
+      <div class="tag-annot" id="tagAnnot">
+        <div class="leader"></div>
+        <div class="label" id="annotLabel">Mirror · 11</div>
+        <div class="conf" id="annotConf">conf 0.94</div>
+      </div>
+
+      <!-- the arc control wrapping the object -->
+      <div class="arc-control" id="arcControl">
+        <svg viewBox="0 0 320 320" id="arcSvg">
+          <!-- background ring (270deg arc, opens at the bottom toward thumb) -->
+          <path class="arc-bg"
+                d="M 70 230 A 110 110 0 1 1 250 230" />
+          <!-- minor ticks -->
+          <g id="ticks"></g>
+          <!-- value arc -->
+          <path class="arc-fill" id="arcFill"
+                d="" />
+          <!-- handle glow -->
+          <circle id="handleGlow" class="arc-handle-glow" cx="160" cy="50" r="14"/>
+          <!-- handle -->
+          <circle id="handle" class="arc-handle" cx="160" cy="50" r="8"/>
+        </svg>
+      </div>
+
+      <!-- the big serif reading below -->
+      <div class="reading">
+        <div class="label" id="readingLabel">Angle</div>
+        <div class="value" id="readingValue">−45°</div>
+        <div class="delta" id="readingDelta">Δ +2.0° · reflects 605 nm</div>
+      </div>
+
+      <!-- idle state prompt -->
+      <div class="idle-prompt">
+        <div class="ring"></div>
+        <div class="text">Aim at an object</div>
+        <div class="sub">No card in lens</div>
+      </div>
+
+      <!-- bottom action zone — thumb reach -->
+      <div class="action-zone">
+        <button class="ask-btn" aria-label="Ask the room">
+          <span class="ring"></span>
+          <span>Ask</span>
+        </button>
+        <div class="row">
+          <button class="btn">Bind</button>
+          <button class="btn primary">
+            <span>Send to Board</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+        <div class="hint">Long-press · Ask the room</div>
+      </div>
+
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <aside class="specimen right">
+    <span class="num">ii.</span>
+    <h4>Object · Specific</h4>
+    <span class="rule"></span>
+    <p>Mirror exposes angle. Filter exposes wavelength. Emitter exposes heading. The control is what the object does.</p>
+    <h4>Quiet by default</h4>
+    <span class="rule"></span>
+    <p>No tabs, no toolbars. The lens stays out of the way until it sees something to act on.</p>
+  </aside>
+
+  <div class="state-toggle">
+    <button class="active" data-obj="mirror">Mirror</button>
+    <button data-obj="filter">Filter</button>
+    <button data-obj="emitter">Emitter</button>
+    <button data-obj="idle">Idle</button>
+  </div>
+
+  <script>
+    // tick clock
+    const clockEl = document.getElementById('clock');
+    function tick() {
+      const d = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      clockEl.textContent = `${d.getHours()}:${pad(d.getMinutes())}`;
+    }
+    setInterval(tick, 30000); tick();
+
+    // ARC DIAL ---------------------
+    // The arc spans 270° (from -135° to +135°, opening at the bottom toward the thumb).
+    // angleValue maps from -90 to +90 (mirror angle in degrees).
+    const svg     = document.getElementById('arcSvg');
+    const arcFill = document.getElementById('arcFill');
+    const handle  = document.getElementById('handle');
+    const handleGlow = document.getElementById('handleGlow');
+    const ticksG  = document.getElementById('ticks');
+    const readingValue = document.getElementById('readingValue');
+
+    const cx = 160, cy = 160, r = 110;
+    // arc opens at the bottom: covers from 135° to 405° (going clockwise)
+    // We map angleValue ∈ [-90, +90] onto arc [-135°, +135°] from top.
+    // It's simpler to map: tNorm in [0, 1] → arc angle from start (bottom-left) to end (bottom-right)
+    // start angle = 135° (measured from positive x-axis, clockwise → SVG)
+    // sweep total = 270°, so end at 135 + 270 = 405 (= 45)
+
+    // We'll position by SVG coordinates where 0° = right, 90° = down (SVG convention).
+    // Build path point from polar.
+    function polar(angDeg) {
+      const a = angDeg * Math.PI / 180;
+      return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+    }
+    // Map mirror angle (-90..90) to a position on the 270°-arc.
+    // We want -90° (left) to map to bottom-left (angDeg = 135°)
+    // and +90° (right) to map to bottom-right (angDeg = 45°)
+    // So normalized t = (mirrorAngle + 90) / 180 → [0,1]
+    // Arc start = 135°, end (at t=1) = 135 + 270 = 405° (going clockwise)
+    function angDegFor(mirror) {
+      const t = (mirror + 90) / 180; // 0..1
+      return 135 + 270 * t;
+    }
+
+    let angleValue = -45;
+    function setAngle(v) {
+      angleValue = Math.max(-90, Math.min(90, v));
+      const ang = angDegFor(angleValue);
+
+      // Draw arc fill from arc start (135°) to current angle
+      const start = polar(135);
+      const end   = polar(ang);
+      // sweep is from 135 to ang, going clockwise (i.e., increasing in SVG conventions)
+      // Determine large arc flag based on sweep size
+      let sweep = ang - 135;
+      const largeArc = sweep > 180 ? 1 : 0;
+      arcFill.setAttribute('d', `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`);
+
+      // Position handle
+      handle.setAttribute('cx', end.x);
+      handle.setAttribute('cy', end.y);
+      handleGlow.setAttribute('cx', end.x);
+      handleGlow.setAttribute('cy', end.y);
+
+      // Update reading
+      readingValue.textContent = (angleValue >= 0 ? '+' : '−') + Math.abs(angleValue).toFixed(0) + '°';
+
+      // Rotate the scene object to match (visual feedback in the feed)
+      const sceneObject = document.getElementById('sceneObject');
+      // Only rotate when current object is mirror
+      if (sceneObject.parentElement.parentElement.dataset.object === 'mirror') {
+        sceneObject.style.transform = `translate(-50%, -50%) perspective(900px) rotateX(58deg) rotateZ(${angleValue}deg)`;
+      }
+    }
+    setAngle(-45);
+
+    // Build tick marks along the arc
+    (function ticks() {
+      let s = "";
+      for (let v = -90; v <= 90; v += 15) {
+        const ang = angDegFor(v);
+        const major = (v % 45 === 0);
+        const tickLen = major ? 12 : 7;
+        const inner = polar(ang);
+        const outerA = ang * Math.PI / 180;
+        const outerR = r + tickLen;
+        const ox = cx + outerR * Math.cos(outerA);
+        const oy = cy + outerR * Math.sin(outerA);
+        const cls = major ? 'arc-tick arc-tick-major' : 'arc-tick';
+        const op = major ? 0.55 : 0.25;
+        s += `<line x1="${inner.x}" y1="${inner.y}" x2="${ox}" y2="${oy}" class="${cls}" style="opacity:${op}"/>`;
+      }
+      ticksG.innerHTML = s;
+    })();
+
+    // pointer interaction on the SVG → set angle from pointer position
+    function getMirrorAngleFromPointer(ev) {
+      const rect = svg.getBoundingClientRect();
+      const px = ev.clientX - rect.left;
+      const py = ev.clientY - rect.top;
+      // convert to viewBox coordinates
+      const vx = (px / rect.width) * 320 - cx;
+      const vy = (py / rect.height) * 320 - cy;
+      // angle in SVG degrees (0 = right, 90 = down)
+      let ang = Math.atan2(vy, vx) * 180 / Math.PI;
+      if (ang < 0) ang += 360;
+      // arc spans 135..405; clamp pointer to that
+      let arcAng = ang;
+      if (arcAng < 135) arcAng += 360;
+      arcAng = Math.max(135, Math.min(405, arcAng));
+      // map back to mirror angle (-90..90)
+      const t = (arcAng - 135) / 270;
+      return -90 + t * 180;
+    }
+
+    let dragging = false;
+    function onDown(ev) {
+      dragging = true;
+      svg.setPointerCapture && svg.setPointerCapture(ev.pointerId);
+      setAngle(getMirrorAngleFromPointer(ev));
+      ev.preventDefault();
+    }
+    function onMove(ev) {
+      if (!dragging) return;
+      setAngle(getMirrorAngleFromPointer(ev));
+    }
+    function onUp(ev) { dragging = false; }
+    svg.addEventListener('pointerdown', onDown);
+    svg.addEventListener('pointermove', onMove);
+    svg.addEventListener('pointerup', onUp);
+    svg.addEventListener('pointercancel', onUp);
+
+    // OBJECT SWITCHER ---------------------
+    const objects = {
+      mirror:  { name: 'Mirror',     id: '11',
+                 readingLabel: 'Angle',    fmt: a => (a>=0?'+':'−') + Math.abs(a).toFixed(0) + '°', start: -45, range: [-90, 90],
+                 delta: 'Δ +2.0° · reflects 605 nm',
+                 role:'Mirror', conf: '0.94', show: true,
+                 accent: '#ffb360',
+                 sceneRotateAxis: 'rotateZ' },
+      filter:  { name: 'Blue Filter', id: '12',
+                 readingLabel: 'λ pass',   fmt: a => Math.round(420 + (a+90)/180 * 60) + ' nm', start: -36, range: [-90, 90],
+                 delta: 'narrow band · −1.4 stops',
+                 role:'Blue', conf: '0.91', show: true,
+                 accent: '#7fbcd2',
+                 sceneRotateAxis: 'rotateZ' },
+      emitter: { name: 'Emitter',     id: '10',
+                 readingLabel: 'Heading',  fmt: a => (a>=0?'+':'−') + Math.abs(a).toFixed(0) + '°', start: 0, range: [-90, 90],
+                 delta: '605 nm · 1.00 power',
+                 role:'Emitter', conf: '0.97', show: true,
+                 accent: '#ffb360',
+                 sceneRotateAxis: 'rotateZ' },
+      idle:    { name: '—', id: '—',
+                 readingLabel: 'Awaiting', fmt: a => '—', start: 0, range: [-90, 90],
+                 delta: '',
+                 role:'—', conf: '—', show: false,
+                 accent: '#ffb360' },
+    };
+
+    const screenEl = document.getElementById('screen');
+    const annotLabel = document.getElementById('annotLabel');
+    const annotConf  = document.getElementById('annotConf');
+    const readingLabel = document.getElementById('readingLabel');
+    const readingDelta = document.getElementById('readingDelta');
+    const sceneRoleEl  = document.getElementById('sceneRole');
+
+    // Override the value display to use object's formatter when relevant
+    let currentObj = 'mirror';
+    function applyObject(key) {
+      const o = objects[key];
+      currentObj = key;
+      screenEl.dataset.object = key;
+      screenEl.dataset.state = o.show ? 'acquired' : 'idle';
+      annotLabel.textContent = o.name + ' · ' + o.id;
+      annotConf.textContent  = 'conf ' + o.conf;
+      readingLabel.textContent = o.readingLabel;
+      readingDelta.textContent = o.delta;
+      sceneRoleEl.textContent = o.role;
+      document.documentElement.style.setProperty('--amber', o.accent);
+      document.documentElement.style.setProperty('--amber-glow', o.accent + '70');
+      // restart reticle animation
+      document.querySelectorAll('#reticle .corner').forEach(c => {
+        c.style.animation = 'none';
+        void c.offsetWidth;
+        c.style.animation = '';
+      });
+      // reset value to start
+      angleValue = o.start;
+      setAngle(angleValue);
+      // override reading display
+      const v = o.fmt(angleValue);
+      readingValue.textContent = v;
+    }
+
+    // Patch setAngle to apply object's formatter
+    const _setAngle = setAngle;
+    setAngle = function(v) {
+      _setAngle(v);
+      const o = objects[currentObj];
+      if (o && o.fmt) {
+        readingValue.textContent = o.fmt(angleValue);
+      }
+    };
+
+    document.querySelectorAll('.state-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.state-toggle button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyObject(btn.dataset.obj);
+      });
+    });
+
+    // initial
+    applyObject('mirror');
+  </script>
+</body>
+</html>

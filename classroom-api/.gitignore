@@ -1,0 +1,17 @@
+.env
+.local/
+.codex_tmp/
+.claude/
+.venv-detector/
+node_modules/
+public/generated-tags/
+public/smart-room-dev.cer
+public/captures/
+__pycache__/
+*.pyc
+
+# Stray captures and large media that shouldn't be tracked
+ideas/*.mp4
+ideas/*.mov
+ideas/*.mkv
+*.log

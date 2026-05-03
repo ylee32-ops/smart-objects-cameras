@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marker Cards</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    @page { size: letter; margin: .35in; }
+    .cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .print-card { min-height:220px; border:1px solid #29313b; background:#fff; color:#111827; display:grid; grid-template-columns:112px 1fr; gap:14px; padding:14px; border-left:10px solid var(--card-color,#9ca3af); break-inside:avoid; }
+    .mock-tag { width:96px; height:96px; background:#fff; border:10px solid #000; display:grid; grid-template-columns:repeat(6,1fr); grid-template-rows:repeat(6,1fr); padding:0; }
+    .mock-tag span.black { background:#000; }
+    .print-card h2 { margin:6px 0 4px; font-size:20px; line-height:1; }
+    .print-card p { margin:0; color:#4b5563; text-transform:uppercase; font-size:11px; letter-spacing:.08em; }
+    .print-card .tag-id { font-weight:800; color:#6b7280; }
+    .screen-note { margin-bottom:16px; }
+    @media print {
+      body { background:#fff; color:#111827; }
+      .topbar, .screen-note { display:none; }
+      .page { padding:0; }
+      .cards { gap:.18in; }
+      .print-card { box-shadow:none; }
+    }
+  </style>
+</head>
+<body data-page="cards">
+  <header class="topbar">
+    <div class="brand">Marker Cards</div>
+    <nav class="nav">
+      <a href="/">Control</a>
+      <a href="/projector.html">Projector</a>
+      <a href="/camera.html">Camera</a>
+      <a href="/tag-reference.html">Reference</a>
+      <a class="active" href="/cards.html">Cards</a>
+    </nav>
+    <div class="spacer"></div>
+    <button onclick="window.print()">Print Mock Sheet</button>
+  </header>
+  <main class="page">
+    <div class="screen-note quiet-card">
+      <strong>Mock card layout.</strong>
+      This page previews the designed cards. For real AprilTag detection, run
+      <code>python scripts/generate-apriltag-cards.py</code> after detector setup and print
+      <code>public/generated-tags/cards.html</code>. For the board-first set, open
+      <code>public/generated-tags/board-tags.html</code>.
+    </div>
+    <section id="cards" class="cards"></section>
+  </main>
+  <script src="/shared.js"></script>
+  <script src="/cards.js"></script>
+</body>
+</html>

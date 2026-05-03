@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Camera Setup</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .setup-shell {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .tag-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .tag-cell {
+      border: 1px solid var(--line);
+      padding: 12px;
+      background: #0d1117;
+      min-height: 80px;
+    }
+    .tag-cell.visible {
+      border-color: var(--green);
+    }
+    .tag-cell.missing {
+      border-color: var(--red);
+      color: var(--muted);
+    }
+    .tag-cell strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+    .setup-status {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    @media (max-width: 820px) {
+      .setup-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-page="setup">
+  <header class="topbar">
+    <div class="brand">Camera Setup</div>
+    <nav class="nav">
+      <a href="/">Control</a>
+      <a href="/setup.html" class="active">Setup</a>
+      <a href="/camera.html">Camera</a>
+      <a href="/projector.html">Projector</a>
+      <a href="/ideas/virtualroom/">Virtual Room</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="status-dot" data-connection-dot></span>
+  </header>
+
+  <main class="setup-shell">
+    <section class="panel">
+      <h2>Calibration Source</h2>
+      <div class="panel-body stack">
+        <div class="row">
+          <label class="small">Surface</label>
+          <select id="surfaceSelect">
+            <option value="board">board</option>
+          </select>
+          <label class="small">Source</label>
+          <select id="sourceSelect">
+            <option value="camera">camera pixels</option>
+            <option value="surface">surface coords</option>
+          </select>
+          <button id="refreshBtn">Refresh</button>
+          <button id="calibrateBtn" class="primary">Calibrate From Visible Tags</button>
+        </div>
+        <div id="setupStatus" class="setup-status">Waiting for detections</div>
+      </div>
+    </section>
+
+    <section class="setup-grid">
+      <article class="panel">
+        <h2>Corner Tags</h2>
+        <div class="panel-body">
+          <div id="cornerGrid" class="tag-grid"></div>
+        </div>
+      </article>
+      <article class="panel">
+        <h2>Visible Tags</h2>
+        <div class="panel-body">
+          <div id="visibleTags" class="object-list"></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Steps</h2>
+      <div class="panel-body small">
+        <div>1. Print marker cards.</div>
+        <div>2. Put board tags 4,5,6,7 on the whiteboard calibration points.</div>
+        <div>3. Open <code>/tag-debugger.html</code>, start the C920, and wait until all four corner tags are visible.</div>
+        <div>4. Click <strong>Calibrate Board</strong> in the tag debugger, or use this page and click <strong>Calibrate From Visible Tags</strong>.</div>
+        <div>5. Keep the camera fixed after calibration.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/setup.js"></script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Calibration Checker Board</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    body.clean .checker-ui,
+    body.clean .tag-label,
+    body.clean .coord-label,
+    body.clean .axis-line {
+      display: none;
+    }
+    .checker-board {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(15, 23, 42, 0.055) 1px, transparent 1px),
+        linear-gradient(rgba(15, 23, 42, 0.055) 1px, transparent 1px),
+        linear-gradient(45deg, rgba(15, 23, 42, 0.025) 25%, transparent 25%, transparent 75%, rgba(15, 23, 42, 0.025) 75%),
+        linear-gradient(45deg, rgba(15, 23, 42, 0.025) 25%, transparent 25%, transparent 75%, rgba(15, 23, 42, 0.025) 75%),
+        #fffef8;
+      background-position: 0 0, 0 0, 0 0, 32px 32px;
+      background-size: 8.333% 12.5%, 8.333% 12.5%, 64px 64px, 64px 64px;
+    }
+    .board-frame {
+      position: absolute;
+      inset: 12%;
+      border: 2px dashed rgba(15, 23, 42, 0.28);
+      pointer-events: none;
+    }
+    .axis-line {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(14, 165, 233, 0.24);
+    }
+    .axis-line.x {
+      left: 12%;
+      right: 12%;
+      top: 50%;
+      height: 2px;
+    }
+    .axis-line.y {
+      top: 12%;
+      bottom: 12%;
+      left: 50%;
+      width: 2px;
+    }
+    .coord-label {
+      position: absolute;
+      padding: 4px 7px;
+      border-radius: 3px;
+      background: rgba(15, 23, 42, 0.78);
+      color: #f8fafc;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .coord-label.center { left: 50%; top: 50%; }
+    .coord-label.tl { left: 12%; top: 12%; }
+    .coord-label.tr { left: 88%; top: 12%; }
+    .coord-label.br { left: 88%; top: 88%; }
+    .coord-label.bl { left: 12%; top: 88%; }
+    .cal-tag {
+      --x: 50%;
+      --y: 50%;
+      --size: min(12vw, 17vh);
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size);
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      padding: max(6px, calc(var(--size) * 0.075));
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      box-shadow: 0 3px 14px rgba(15, 23, 42, 0.14);
+    }
+    .cal-tag img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      image-rendering: pixelated;
+    }
+    .cal-tag.focus {
+      --size: min(16vw, 22vh);
+      outline: 2px solid rgba(14, 165, 233, 0.64);
+      outline-offset: 8px;
+    }
+    .tag-label {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translateX(-50%);
+      white-space: nowrap;
+      padding: 4px 7px;
+      border-radius: 3px;
+      background: rgba(15, 23, 42, 0.84);
+      color: #f8fafc;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .checker-ui {
+      position: fixed;
+      left: 50%;
+      bottom: max(10px, env(safe-area-inset-bottom));
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      transform: translateX(-50%);
+      padding: 8px;
+      border: 1px solid rgba(15, 23, 42, 0.16);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(8px);
+    }
+    .checker-ui button,
+    .checker-ui a {
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid rgba(15, 23, 42, 0.18);
+      border-radius: 3px;
+      background: transparent;
+      color: #0f172a;
+      text-decoration: none;
+      font: 12px var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+  <main class="checker-board">
+    <div class="board-frame"></div>
+    <div class="axis-line x"></div>
+    <div class="axis-line y"></div>
+    <div class="coord-label tl">0.12,0.12</div>
+    <div class="coord-label tr">0.88,0.12</div>
+    <div class="coord-label br">0.88,0.88</div>
+    <div class="coord-label bl">0.12,0.88</div>
+    <div class="coord-label center">0.50,0.50</div>
+
+    <div class="cal-tag" style="--x:12%;--y:12%">
+      <img src="/generated-tags/tag-4.png" alt="AprilTag 4">
+      <span class="tag-label">#4 top left</span>
+    </div>
+    <div class="cal-tag" style="--x:88%;--y:12%">
+      <img src="/generated-tags/tag-5.png" alt="AprilTag 5">
+      <span class="tag-label">#5 top right</span>
+    </div>
+    <div class="cal-tag" style="--x:88%;--y:88%">
+      <img src="/generated-tags/tag-6.png" alt="AprilTag 6">
+      <span class="tag-label">#6 bottom right</span>
+    </div>
+    <div class="cal-tag" style="--x:12%;--y:88%">
+      <img src="/generated-tags/tag-7.png" alt="AprilTag 7">
+      <span class="tag-label">#7 bottom left</span>
+    </div>
+    <div class="cal-tag focus" style="--x:50%;--y:50%">
+      <img src="/generated-tags/tag-23.png" alt="AprilTag 23">
+      <span class="tag-label">#23 focus center</span>
+    </div>
+  </main>
+
+  <nav class="checker-ui">
+    <button id="cleanToggle" type="button">Clean</button>
+    <button id="fullScreen" type="button">Full</button>
+    <a href="/tag-board.html">Tag Board</a>
+    <a href="/ideas/virtualroom/">Viewer</a>
+  </nav>
+
+  <script>
+    document.getElementById("cleanToggle").addEventListener("click", () => {
+      document.body.classList.toggle("clean");
+    });
+    document.getElementById("fullScreen").addEventListener("click", async () => {
+      if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+      document.body.classList.add("clean");
+    });
+  </script>
+</body>
+</html>

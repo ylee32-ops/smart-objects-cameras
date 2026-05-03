@@ -1,0 +1,615 @@
+{
+  "projects": [
+    {
+      "id": "smart-stage",
+      "title": "Smart Stage",
+      "owner": "Gordon Cheng",
+      "surface": "board",
+      "kind": "system",
+      "fallbackObjectId": "rule-engine",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #1 + classroom-api roster",
+      "description": "Room's brain; orchestrates ambience, captions, and state management.",
+      "modes": ["stage", "focus"],
+      "boardRoles": ["orchestrates board scenes"],
+      "reads": ["board zones", "board tags", "presence", "room mode"],
+      "writes": ["projected scene state", "captions", "timer offers"],
+      "canonicalSubscribes": ["board.zone.activated", "board.tag.detected", "session.mode.changed"],
+      "canonicalEmits": ["board.scene.requested", "session.timer.offered"],
+      "subscribes": ["board.zone.activated", "board.tag.detected", "class.presence.changed", "session.mode.changed"],
+      "emits": ["board.scene.requested", "stage.ready", "timer.offer"],
+      "explicitInteractions": ["drop a stage tag into a board zone", "select a presentation scene"],
+      "implicitInteractions": ["facilitator presence near board center", "room mode suggests readiness"],
+      "combos": ["focus-beam", "gus-mode", "gesture-timer"],
+      "bridgeNotes": "Use Smart Stage as the scene controller for the one-projector whiteboard setup.",
+      "eventType": "board.scene.requested",
+      "state": { "scene": "presentation", "captions": true, "timerOffer": true },
+      "controls": [
+        { "id": "scene", "label": "Scene", "type": "select", "options": ["presentation", "lecture", "demo", "qa"] },
+        { "id": "captions", "label": "Captions", "type": "toggle" },
+        { "id": "timerOffer", "label": "Timer Offer", "type": "toggle" }
+      ],
+      "acceptance": {
+        "setup": "Set scene to presentation and leave captions on.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["board.scene.requested", "session.timer.offered"],
+        "visibleResult": "Projector and events show the active board scene and timer offer.",
+        "realInput": "Replace mock emit with board-zone tags or a presentation controller.",
+        "realOutput": "Drive projector scene selection and timer offers."
+      },
+      "scenario": {
+        "featured": true,
+        "label": "Smart Stage",
+        "events": [
+          { "event_type": "board.zone.activated", "payload": { "zone": "stage-left", "state": { "zone": "stage-left" } } },
+          { "event_type": "board.scene.requested", "payload": { "scene": "presentation", "state": { "scene": "presentation", "captions": true } } },
+          { "event_type": "session.timer.offered", "payload": { "duration": 5, "state": { "timerOffer": true } } }
+        ]
+      },
+      "success": "Presentation cues produce a scene request and a timer or ready signal.",
+      "scenarioHint": "presentation"
+    },
+    {
+      "id": "focus-beam",
+      "title": "Focus Beam",
+      "owner": "Feifey Wang",
+      "surface": "board",
+      "kind": "assistive-light",
+      "fallbackObjectId": "gesture-response",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #7/#11 + retro",
+      "description": "Gesture-driven slide region highlighting with MediaPipe.",
+      "modes": ["focus", "stage"],
+      "boardRoles": ["guides attention on the board"],
+      "reads": ["pointer intent", "board zones", "gesture input"],
+      "writes": ["beam target", "focus ring", "reveal state"],
+      "canonicalSubscribes": ["board.pointer.moved", "board.gesture.detected", "board.focus.requested"],
+      "canonicalEmits": ["board.focus.changed"],
+      "subscribes": ["board.pointer.moved", "board.gesture.detected", "session.mode.changed"],
+      "emits": ["beam.pointed", "board.focus.changed", "beam.off"],
+      "explicitInteractions": ["point at a whiteboard region", "toggle the beam"],
+      "implicitInteractions": ["dwell time on one region", "gesture confidence stabilizes a target"],
+      "combos": ["smart-stage", "grammar-coach", "imprint"],
+      "bridgeNotes": "Focus Beam is the cleanest board-first attention tool. Keep it tied to wall content, not the table.",
+      "eventType": "board.focus.changed",
+      "state": { "active": true, "target": "board-center", "intensity": 72 },
+      "controls": [
+        { "id": "active", "label": "Beam Active", "type": "toggle" },
+        { "id": "target", "label": "Target", "type": "select", "options": ["board-center", "top-left", "right-column", "sticky-cluster"] },
+        { "id": "intensity", "label": "Intensity", "type": "range", "min": 0, "max": 100, "step": 1 }
+      ],
+      "acceptance": {
+        "setup": "Set beam active and choose a target zone.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["board.focus.changed"],
+        "visibleResult": "Board and projector show a focus ring on the chosen target.",
+        "realInput": "Replace mock emit with pointing or gesture detection.",
+        "realOutput": "Drive the real spotlight or projected focus ring."
+      },
+      "scenario": {
+        "featured": true,
+        "label": "Focus Beam",
+        "events": [
+          { "event_type": "board.pointer.moved", "payload": { "target": "right-column", "state": { "target": "right-column" } } },
+          { "event_type": "board.focus.changed", "payload": { "target": "right-column", "state": { "target": "right-column", "intensity": 72 } } }
+        ]
+      },
+      "success": "Focus inputs produce a beam target or clean beam-off event.",
+      "scenarioHint": "whiteboard"
+    },
+    {
+      "id": "forest-classroom",
+      "title": "Forest in the Classroom",
+      "owner": "Sophie Lee",
+      "surface": "projection",
+      "kind": "ambient-media",
+      "fallbackObjectId": "ambient-light",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #6 + retro",
+      "description": "Generative landscape responding to voices.",
+      "modes": ["explore", "character"],
+      "boardRoles": ["projects ambient board scenes"],
+      "reads": ["presence", "voice activity", "board scene requests"],
+      "writes": ["ambient projection", "scene mood", "background motion"],
+      "canonicalSubscribes": ["board.scene.requested", "class.energy.changed", "session.mode.changed"],
+      "canonicalEmits": ["projection.scene.changed", "projection.ambient.pulsed"],
+      "subscribes": ["class.presence.changed", "session.mode.changed", "board.scene.requested"],
+      "emits": ["forest.mood.changed", "forest.pulse", "board.media.opened"],
+      "explicitInteractions": ["drop a forest tag", "choose a habitat scene"],
+      "implicitInteractions": ["room energy raises or calms forest motion", "voice activity changes mood"],
+      "combos": ["smart-stage", "gus-mode", "seren-room"],
+      "bridgeNotes": "Use this as a scene package layered onto the board projection, not as a separate runtime.",
+      "eventType": "projection.scene.changed",
+      "state": { "mood": "calm", "energy": 42, "layer": "canopy" },
+      "controls": [
+        { "id": "mood", "label": "Mood", "type": "select", "options": ["calm", "lively", "storm", "night"] },
+        { "id": "energy", "label": "Energy", "type": "range", "min": 0, "max": 100, "step": 1 },
+        { "id": "layer", "label": "Layer", "type": "select", "options": ["canopy", "forest-floor", "river", "creatures"] }
+      ],
+      "acceptance": {
+        "setup": "Pick a mood and set energy above 40.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["projection.scene.changed"],
+        "visibleResult": "Projector shows the forest scene card and ambient layer.",
+        "realInput": "Replace mock emit with room presence, voice, or scene requests.",
+        "realOutput": "Drive a projected ambient layer on the board wall."
+      },
+      "scenario": {
+        "featured": false,
+        "label": "Forest Classroom",
+        "events": [
+          { "event_type": "board.scene.requested", "payload": { "scene": "forest", "state": { "layer": "canopy" } } },
+          { "event_type": "projection.scene.changed", "payload": { "scene": "forest", "state": { "mood": "calm", "energy": 42, "layer": "canopy" } } },
+          { "event_type": "board.media.opened", "payload": { "media": "forest-layer", "state": { "layer": "canopy" } } }
+        ]
+      },
+      "success": "Activity changes produce a forest mood or pulse event.",
+      "scenarioHint": "collaboration"
+    },
+    {
+      "id": "imprint",
+      "title": "Imprint",
+      "owner": "Darren Chia",
+      "surface": "board",
+      "kind": "capture",
+      "fallbackObjectId": "ocr-board-reader",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #8 + retro",
+      "description": "Handwriting recognition from any classroom surface.",
+      "modes": ["write"],
+      "boardRoles": ["reads board writing", "writes saved notes"],
+      "reads": ["board text", "board strokes", "fiducials"],
+      "writes": ["saved notes", "captured handwriting", "projected annotations"],
+      "canonicalSubscribes": ["board.text.detected", "board.stroke.added", "board.tag.detected"],
+      "canonicalEmits": ["board.note.saved", "board.annotation.created"],
+      "subscribes": ["whiteboard.changed", "fiducial.detected", "board.text.detected"],
+      "emits": ["handwriting.captured", "note.saved", "board.annotation.created"],
+      "explicitInteractions": ["write on the board", "tag a region for capture", "save the captured note"],
+      "implicitInteractions": ["dense writing cluster suggests a note region", "repeated underlines imply emphasis"],
+      "combos": ["grammar-coach", "focus-beam", "smart-stage"],
+      "bridgeNotes": "Imprint is a direct board-state project. It should read and write the canonical board layers.",
+      "eventType": "board.note.saved",
+      "state": { "captureMode": "handwriting", "saveTo": "board-notes", "projection": true },
+      "controls": [
+        { "id": "captureMode", "label": "Capture Mode", "type": "select", "options": ["handwriting", "diagram", "sticky"] },
+        { "id": "saveTo", "label": "Save To", "type": "select", "options": ["board-notes", "lesson-summary", "student-feed"] },
+        { "id": "projection", "label": "Project Back", "type": "toggle" }
+      ],
+      "acceptance": {
+        "setup": "Leave capture mode on handwriting and project back enabled.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["board.note.saved"],
+        "visibleResult": "Board and projector show the captured note card.",
+        "realInput": "Replace mock emit with OCR, stroke capture, or tag-based region selection.",
+        "realOutput": "Save notes and optionally project them back onto the board."
+      },
+      "scenario": {
+        "featured": true,
+        "label": "Imprint",
+        "events": [
+          { "event_type": "board.text.detected", "payload": { "text": "LIGHT PATH", "state": { "text": "LIGHT PATH" } } },
+          { "event_type": "board.note.saved", "payload": { "text": "LIGHT PATH", "state": { "captureMode": "handwriting", "saveTo": "board-notes" } } },
+          { "event_type": "board.annotation.created", "payload": { "text": "LIGHT PATH", "state": { "projection": true } } }
+        ]
+      },
+      "success": "Board or fiducial input produces a captured handwriting or saved-note event.",
+      "scenarioHint": "whiteboard"
+    },
+    {
+      "id": "nodcheck",
+      "title": "NodCheck",
+      "owner": "Kathy Choi",
+      "surface": "camera",
+      "kind": "feedback",
+      "fallbackObjectId": "face-attention",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #3 + retro",
+      "description": "Gesture-driven comprehension polling, opt-in activation.",
+      "modes": ["check-understanding"],
+      "boardRoles": ["interprets class response around the board"],
+      "reads": ["head pose", "teacher prompts", "attention direction"],
+      "writes": ["nod summary", "comprehension score", "teacher feedback"],
+      "canonicalSubscribes": ["class.prompt.started", "class.attention.changed"],
+      "canonicalEmits": ["class.comprehension.sampled", "class.comprehension.low", "class.comprehension.high"],
+      "subscribes": ["session.prompt.started", "attention.direction.changed", "session.mode.changed"],
+      "emits": ["nodcheck.yes", "nodcheck.no", "nodcheck.summary"],
+      "explicitInteractions": ["teacher asks a yes/no prompt", "start a nod check window"],
+      "implicitInteractions": ["nod rate", "stillness", "gaze drift during question window"],
+      "combos": ["gesture-timer", "gus-mode", "tony-ramon"],
+      "bridgeNotes": "NodCheck is not a projector feature. It is a room feedback signal that should feed timer, Tony, and Gus.",
+      "eventType": "class.comprehension.sampled",
+      "state": { "prompt": "got_it", "yesRate": 64, "classState": "mixed" },
+      "controls": [
+        { "id": "prompt", "label": "Prompt", "type": "select", "options": ["got_it", "too_fast", "need_repeat"] },
+        { "id": "yesRate", "label": "Yes Rate", "type": "range", "min": 0, "max": 100, "step": 1 },
+        { "id": "classState", "label": "Class State", "type": "select", "options": ["high-confidence", "mixed", "confused"] }
+      ],
+      "acceptance": {
+        "setup": "Set prompt and class state.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["class.comprehension.sampled"],
+        "visibleResult": "Projector status shows the comprehension sample and class state.",
+        "realInput": "Replace mock emit with head pose or nod detection from cameras.",
+        "realOutput": "Feed class-comprehension summaries into timer, Tony, or Gus."
+      },
+      "scenario": {
+        "featured": true,
+        "label": "NodCheck",
+        "events": [
+          { "event_type": "class.prompt.started", "payload": { "prompt": "got_it", "state": { "prompt": "got_it" } } },
+          { "event_type": "class.attention.changed", "payload": { "direction": "center", "state": { "classState": "mixed" } } },
+          { "event_type": "class.comprehension.sampled", "payload": { "state": { "prompt": "got_it", "yesRate": 64, "classState": "mixed" } } }
+        ]
+      },
+      "success": "A teacher check prompt results in a nod summary output.",
+      "scenarioHint": "presentation"
+    },
+    {
+      "id": "tony-ramon",
+      "title": "Tony the Bot",
+      "owner": "Ramon Naula",
+      "surface": "room",
+      "kind": "agent",
+      "fallbackObjectId": "room-character",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #2 + retro",
+      "description": "Classroom agent using YOLO and object detection for emotional register.",
+      "modes": ["character", "check-understanding"],
+      "boardRoles": ["reacts to room and board activity"],
+      "reads": ["presence", "attention", "emotion estimates"],
+      "writes": ["character prompts", "health signals", "help responses"],
+      "canonicalSubscribes": ["class.comprehension.low", "class.attention.changed", "board.note.saved"],
+      "canonicalEmits": ["character.prompt.requested"],
+      "subscribes": ["class.presence.changed", "emotion.estimated", "attention.direction.changed"],
+      "emits": ["tony.health", "tony.present", "tony.responds"],
+      "explicitInteractions": ["summon Tony for help", "drop a help tag"],
+      "implicitInteractions": ["confusion cluster triggers help", "attention drift lowers confidence"],
+      "combos": ["nodcheck", "grammar-coach", "gus-mode"],
+      "bridgeNotes": "Treat Tony as a helper character that reacts to room signals, not as a separate app.",
+      "eventType": "character.prompt.requested",
+      "state": { "mood": "curious", "health": "good", "helpMode": "ambient" },
+      "controls": [
+        { "id": "mood", "label": "Mood", "type": "select", "options": ["curious", "calm", "alert", "excited"] },
+        { "id": "health", "label": "Health", "type": "select", "options": ["good", "watch", "needs-attention"] },
+        { "id": "helpMode", "label": "Help Mode", "type": "select", "options": ["ambient", "hint", "prompted"] }
+      ],
+      "acceptance": {
+        "setup": "Pick a mood and help mode.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["character.prompt.requested"],
+        "visibleResult": "Projector character line shows Tony offering help.",
+        "realInput": "Replace mock emit with attention, emotion, or comprehension signals.",
+        "realOutput": "Drive Tony prompts, speech, or robot write requests."
+      },
+      "scenario": {
+        "featured": false,
+        "label": "Tony Helper",
+        "events": [
+          { "event_type": "class.comprehension.low", "payload": { "state": { "health": "watch" } } },
+          { "event_type": "character.prompt.requested", "payload": { "prompt": "Try rotating the board object once more.", "state": { "mood": "curious", "helpMode": "hint" } } }
+        ]
+      },
+      "success": "Room cues produce Tony reaction or health events.",
+      "scenarioHint": "safety"
+    },
+    {
+      "id": "tony-shuyang",
+      "title": "Tony the Bot (Emotion Layer)",
+      "owner": "Shuyang Tian",
+      "surface": "camera",
+      "kind": "agent",
+      "fallbackObjectId": "teachable-classifier",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #9 + retro",
+      "description": "Emotion and expression layer feeding Tony, helpers, and room adaptation.",
+      "modes": ["character", "check-understanding"],
+      "boardRoles": ["interprets room emotion for helpers"],
+      "reads": ["emotion estimates", "presence", "distance cues"],
+      "writes": ["emotion summaries", "alerts", "Tony state changes"],
+      "canonicalSubscribes": ["class.emotion.sampled", "class.presence.changed"],
+      "canonicalEmits": ["class.emotion.changed", "character.alerted"],
+      "subscribes": ["class.presence.changed", "emotion.estimated"],
+      "emits": ["tony.emotion", "tony.health", "tony.alert"],
+      "explicitInteractions": ["arm emotion watch", "test an alert threshold"],
+      "implicitInteractions": ["facial expression shifts", "low-confidence emotion becomes watch-only"],
+      "combos": ["tony-ramon", "nodcheck", "seren-room"],
+      "bridgeNotes": "Keep this as an emotion signal layer feeding other helpers rather than another full runtime.",
+      "eventType": "class.emotion.changed",
+      "state": { "emotion": "engaged", "alert": false, "confidence": 82 },
+      "controls": [
+        { "id": "emotion", "label": "Emotion", "type": "select", "options": ["engaged", "neutral", "confused", "tired"] },
+        { "id": "alert", "label": "Alert", "type": "toggle" },
+        { "id": "confidence", "label": "Confidence", "type": "range", "min": 0, "max": 100, "step": 1 }
+      ],
+      "acceptance": {
+        "setup": "Set an emotion and confidence level.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["class.emotion.changed"],
+        "visibleResult": "Projector shows the current class emotion state.",
+        "realInput": "Replace mock emit with facial expression or mood estimation.",
+        "realOutput": "Feed alerts into Tony, Gus, or room adaptation."
+      },
+      "scenario": {
+        "featured": false,
+        "label": "Tony Emotion",
+        "events": [
+          { "event_type": "class.emotion.changed", "payload": { "emotion": "confused", "state": { "emotion": "confused", "confidence": 82 } } },
+          { "event_type": "character.alerted", "payload": { "emotion": "confused", "state": { "alert": true, "emotion": "confused" } } }
+        ]
+      },
+      "success": "Emotion or presence signals produce Tony emotion or alert events.",
+      "scenarioHint": "safety"
+    },
+    {
+      "id": "grammar-coach",
+      "title": "English Communication Coach (Lumi)",
+      "owner": "Yuxuan Chen",
+      "surface": "board",
+      "kind": "agent",
+      "fallbackObjectId": "ocr-board-reader",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #10 + retro",
+      "description": "Private, delayed feedback on ESL patterns.",
+      "modes": ["write", "character"],
+      "boardRoles": ["reads board writing and gives feedback"],
+      "reads": ["board text", "speech transcription", "selected sentence region"],
+      "writes": ["grammar suggestions", "rewrites", "quiet summaries"],
+      "canonicalSubscribes": ["board.text.detected", "voice.turn.transcribed", "board.selection.changed"],
+      "canonicalEmits": ["board.text.feedback.created"],
+      "subscribes": ["board.text.detected", "voice.turn", "speech.transcribed"],
+      "emits": ["grammar.suggestion", "grammar.summary", "board.text.feedback.created"],
+      "explicitInteractions": ["underline a phrase", "request a rewrite"],
+      "implicitInteractions": ["repeated grammar patterns", "hesitation before speaking or writing"],
+      "combos": ["imprint", "focus-beam", "tony-ramon"],
+      "bridgeNotes": "Lumi should read canonical board text and return feedback into the same board layers.",
+      "eventType": "board.text.feedback.created",
+      "state": { "text": "We was drawing a forest.", "privacy": "private", "tone": "gentle" },
+      "controls": [
+        { "id": "text", "label": "Sample Text", "type": "text" },
+        { "id": "privacy", "label": "Privacy", "type": "select", "options": ["private", "teacher-only", "public"] },
+        { "id": "tone", "label": "Tone", "type": "select", "options": ["gentle", "direct", "playful"] }
+      ],
+      "acceptance": {
+        "setup": "Enter sample text and keep tone gentle.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["board.text.feedback.created"],
+        "visibleResult": "Board and projector show grammar feedback as a card.",
+        "realInput": "Replace mock emit with OCR or speech transcription.",
+        "realOutput": "Write feedback onto the board or speak it privately."
+      },
+      "scenario": {
+        "featured": true,
+        "label": "Lumi",
+        "events": [
+          { "event_type": "board.text.detected", "payload": { "text": "We was drawing a forest.", "state": { "text": "We was drawing a forest." } } },
+          { "event_type": "board.text.feedback.created", "payload": { "text": "Use 'were' instead of 'was'.", "state": { "tone": "gentle" } } }
+        ]
+      },
+      "success": "Speech or text input produces grammar suggestions or a summary event.",
+      "scenarioHint": "whiteboard"
+    },
+    {
+      "id": "gesture-timer",
+      "title": "Timer",
+      "owner": "Phil Cote",
+      "surface": "room",
+      "kind": "utility",
+      "fallbackObjectId": "gesture-response",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #12/#14 + classroom-api roster",
+      "description": "ArUco marker-based countdown for activity scoping.",
+      "modes": ["safety-control", "check-understanding"],
+      "boardRoles": ["paces classroom interaction"],
+      "reads": ["timer offers", "gesture commands", "session changes"],
+      "writes": ["timer lifecycle", "pacing status", "timer decline"],
+      "canonicalSubscribes": ["session.timer.offered", "board.gesture.detected", "session.mode.changed"],
+      "canonicalEmits": ["session.timer.started", "session.timer.finished"],
+      "subscribes": ["timer.offer", "timer.command", "board.gesture.detected"],
+      "emits": ["timer.started", "timer.done", "timer.declined"],
+      "explicitInteractions": ["start timer", "pause by gesture", "accept an offered timer"],
+      "implicitInteractions": ["idle room may auto-offer timing", "short prompt windows pace checks"],
+      "combos": ["nodcheck", "smart-stage", "gus-mode"],
+      "bridgeNotes": "Use Timer as a pacing primitive. It should subscribe to room offers, not own presentation state.",
+      "eventType": "session.timer.started",
+      "state": { "duration": 5, "running": false, "gesture": "open_palm" },
+      "controls": [
+        { "id": "duration", "label": "Minutes", "type": "range", "min": 1, "max": 15, "step": 1 },
+        { "id": "running", "label": "Running", "type": "toggle" },
+        { "id": "gesture", "label": "Gesture", "type": "select", "options": ["open_palm", "fist", "pointing"] }
+      ],
+      "acceptance": {
+        "setup": "Set duration and leave running off.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["session.timer.started"],
+        "visibleResult": "Projector shows the active timer card and duration.",
+        "realInput": "Replace mock emit with gesture input or timer offers.",
+        "realOutput": "Drive countdown UI and completion events."
+      },
+      "scenario": {
+        "featured": false,
+        "label": "Timer",
+        "events": [
+          { "event_type": "session.timer.offered", "payload": { "duration": 5, "state": { "duration": 5 } } },
+          { "event_type": "session.timer.started", "payload": { "duration": 5, "state": { "running": true, "duration": 5 } } }
+        ]
+      },
+      "success": "Timer offer leads to a timer started or done lifecycle.",
+      "scenarioHint": "presentation"
+    },
+    {
+      "id": "gus-mode",
+      "title": "Gus Mode / Virtual Gus",
+      "owner": "Juju Kim, Kathy Choi, Seren Kim",
+      "surface": "projection",
+      "kind": "telepresence",
+      "fallbackObjectId": "room-character",
+      "submittedProject": true,
+      "source": "smart-objects-cameras PR #5/#15/#16 + GUSINCLASS doc",
+      "description": "Segmented rover video projection from a remote location.",
+      "modes": ["character", "stage"],
+      "boardRoles": ["projects a room character on the wall"],
+      "reads": ["presence", "room mode", "attention samples"],
+      "writes": ["character projection", "audio prompts", "Gus presence state"],
+      "canonicalSubscribes": ["class.attention.sampled", "session.mode.changed", "board.scene.requested"],
+      "canonicalEmits": ["character.state.changed", "projection.character.opened"],
+      "subscribes": ["class.presence.changed", "session.mode.changed", "class.attention.sampled"],
+      "emits": ["gus.present", "gus.excited", "gus.sleeping"],
+      "explicitInteractions": ["summon Gus", "switch Gus state"],
+      "implicitInteractions": ["room energy changes Gus state", "quiet room makes Gus settle"],
+      "combos": ["smart-stage", "nodcheck", "forest-classroom"],
+      "bridgeNotes": "Gus should read room state and project character presence; it should not fork the core runtime.",
+      "eventType": "character.state.changed",
+      "state": { "state": "present", "energy": "playful", "wallProjection": true },
+      "controls": [
+        { "id": "state", "label": "Gus State", "type": "select", "options": ["present", "excited", "sleeping"] },
+        { "id": "energy", "label": "Energy", "type": "select", "options": ["calm", "playful", "wild"] },
+        { "id": "wallProjection", "label": "Wall Projection", "type": "toggle" }
+      ],
+      "acceptance": {
+        "setup": "Set Gus state to present and wall projection on.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["character.state.changed"],
+        "visibleResult": "Projector character area shows Gus state and energy.",
+        "realInput": "Replace mock emit with attention or room-mode signals.",
+        "realOutput": "Drive the wall projection and any Gus audio state."
+      },
+      "scenario": {
+        "featured": true,
+        "label": "Gus Mode",
+        "events": [
+          { "event_type": "class.attention.sampled", "payload": { "state": { "energy": "playful" } } },
+          { "event_type": "character.state.changed", "payload": { "characterState": "present", "state": { "state": "present", "energy": "playful", "wallProjection": true } } }
+        ]
+      },
+      "success": "Presence or activity changes trigger a Gus state event on the wall.",
+      "scenarioHint": "collaboration"
+    },
+    {
+      "id": "seren-room",
+      "title": "A Room (Context-Aware Classroom)",
+      "owner": "Seren Kim",
+      "surface": "room",
+      "kind": "ambient-system",
+      "fallbackObjectId": "rule-engine",
+      "submittedProject": true,
+      "source": "smart-objects-cameras classroom-api roster + bus guide",
+      "description": "Context layer that reads occupancy and activity and recommends room-mode changes.",
+      "modes": ["character", "safety-control"],
+      "boardRoles": ["adapts the room around the board"],
+      "reads": ["occupancy", "probe classifications", "room mode", "attention cues"],
+      "writes": ["ambience changes", "mode recommendations", "adaptation events"],
+      "canonicalSubscribes": ["class.presence.changed", "class.activity.changed", "session.mode.changed"],
+      "canonicalEmits": ["room.adapted", "session.mode.recommended"],
+      "subscribes": ["class.presence.changed", "classifier.probe.changed", "session.mode.changed", "class.attention.sampled"],
+      "emits": ["ambience.changed", "room.adapted", "mode.recommended"],
+      "explicitInteractions": ["choose an ambience preset", "apply a recommended mode"],
+      "implicitInteractions": ["occupancy and activity quietly reshape the room"],
+      "combos": ["smart-stage", "forest-classroom", "tony-shuyang"],
+      "bridgeNotes": "A Room should remain a quiet inference layer that recommends changes rather than owning UI flows.",
+      "eventType": "room.adapted",
+      "state": { "ambience": "focused", "occupancy": "medium", "adaptation": "lighting" },
+      "controls": [
+        { "id": "ambience", "label": "Ambience", "type": "select", "options": ["focused", "warm", "calm", "energetic"] },
+        { "id": "occupancy", "label": "Occupancy", "type": "select", "options": ["low", "medium", "high"] },
+        { "id": "adaptation", "label": "Adaptation", "type": "select", "options": ["lighting", "audio", "projection", "mixed"] }
+      ],
+      "acceptance": {
+        "setup": "Pick ambience and occupancy.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["room.adapted", "session.mode.recommended"],
+        "visibleResult": "Projector shows the room adaptation card and recommended mode.",
+        "realInput": "Replace mock emit with occupancy, activity, and attention signals.",
+        "realOutput": "Drive ambience, recommendations, or projection tone changes."
+      },
+      "scenario": {
+        "featured": false,
+        "label": "A Room",
+        "events": [
+          { "event_type": "class.activity.changed", "payload": { "state": { "occupancy": "medium" } } },
+          { "event_type": "room.adapted", "payload": { "state": { "ambience": "focused", "adaptation": "lighting" } } },
+          { "event_type": "session.mode.recommended", "payload": { "mode": "focus", "state": { "ambience": "focused" } } }
+        ]
+      },
+      "success": "Occupancy and activity signals produce ambience adaptation events.",
+      "scenarioHint": "presentation"
+    },
+    {
+      "id": "library-ambient-light",
+      "title": "Ambient Light Sensor (Library)",
+      "owner": "Reference / Lab Layer",
+      "surface": "room",
+      "kind": "sensor",
+      "fallbackObjectId": "ambient-light",
+      "submittedProject": false,
+      "source": "student-project-sim library layer",
+      "description": "Generic simulation primitive kept under the student packets as a reusable reference layer.",
+      "modes": ["library"],
+      "boardRoles": ["supports room sensing"],
+      "reads": ["light level"],
+      "writes": ["sensor.light.changed"],
+      "canonicalSubscribes": ["room.light.sampled"],
+      "canonicalEmits": ["room.light.changed"],
+      "subscribes": ["room.light.sampled"],
+      "emits": ["sensor.light.changed"],
+      "explicitInteractions": ["set room light level"],
+      "implicitInteractions": ["none"],
+      "combos": ["smart-stage", "seren-room"],
+      "bridgeNotes": "Library primitives stay available for reference but are not the real student roster.",
+      "eventType": "sensor.light.changed",
+      "state": { "level": 32, "mode": "dusk" },
+      "controls": [
+        { "id": "level", "label": "Light Level", "type": "range", "min": 0, "max": 100, "step": 1 },
+        { "id": "mode", "label": "Mode", "type": "select", "options": ["night", "dusk", "class", "bright"] }
+      ],
+      "acceptance": {
+        "setup": "Set the light level and mode.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["sensor.light.changed"],
+        "visibleResult": "Packet shows the light-change event.",
+        "realInput": "Replace mock emit with a real light sensor.",
+        "realOutput": "Feed Smart Stage or A Room."
+      },
+      "success": "Room light level changes and the event reaches the bus.",
+      "scenarioHint": "presentation"
+    },
+    {
+      "id": "library-zone-response",
+      "title": "Zone Response Map (Library)",
+      "owner": "Reference / Lab Layer",
+      "surface": "room",
+      "kind": "zone",
+      "fallbackObjectId": "zone-response",
+      "submittedProject": false,
+      "source": "student-project-sim library layer",
+      "description": "Generic zone-response primitive useful underneath board-first student projects.",
+      "modes": ["library"],
+      "boardRoles": ["supports zone triggers"],
+      "reads": ["object position", "presence"],
+      "writes": ["zone.entered", "zone.exited"],
+      "canonicalSubscribes": ["room.object.moved", "class.presence.changed"],
+      "canonicalEmits": ["board.zone.activated", "board.zone.cleared"],
+      "subscribes": ["object.position.updated", "presence.changed"],
+      "emits": ["zone.entered", "zone.exited"],
+      "explicitInteractions": ["move a virtual object into a zone"],
+      "implicitInteractions": ["presence changes trigger zone transitions"],
+      "combos": ["smart-stage", "focus-beam", "seren-room"],
+      "bridgeNotes": "Keep this as a low-level primitive underneath board-first scenes.",
+      "eventType": "zone.entered",
+      "state": { "zone": "whiteboard", "object": "Instructor" },
+      "controls": [
+        { "id": "zone", "label": "Zone", "type": "select", "options": ["podium", "whiteboard", "collaboration", "entrance"] },
+        { "id": "object", "label": "Object", "type": "select", "options": ["Instructor", "Whiteboard Marker", "Student Notebook", "Coffee Mug"] }
+      ],
+      "acceptance": {
+        "setup": "Pick a zone and object.",
+        "trigger": "Run Mock Emit.",
+        "expectEvents": ["zone.entered"],
+        "visibleResult": "Packet shows the zone event with the selected object.",
+        "realInput": "Replace mock emit with tracked object positions.",
+        "realOutput": "Feed zone-based board or room logic."
+      },
+      "success": "An object entering a named zone emits the zone event.",
+      "scenarioHint": "presentation"
+    }
+  ]
+}

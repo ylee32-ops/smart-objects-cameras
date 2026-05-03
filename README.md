@@ -1,5 +1,20 @@
 # OAK-D + Raspberry Pi 5 — Smart Objects Template
 
+## Smart Classroom API / Demo Room
+
+The current classroom bus and demo orchestrator live in [classroom-api/](classroom-api/README.md).
+It replaces the old FastAPI classroom API with a Node room server on port `4177`.
+
+Use it for the timeline, student project packets, mock events, OAK-D state pushes,
+and critique readiness report:
+
+```powershell
+cd classroom-api
+npm start
+```
+
+Then open `http://localhost:4177`.
+
 This is a **template project** for building Discord bots that communicate with Luxonis OAK-D cameras. Use this as a starting point to create your own smart object systems with computer vision and interactive communication.
 
 **What's Included:**
@@ -794,7 +809,7 @@ Once basic detection is working, you might want to explore:
    - Use DepthAI 3.x VideoEncoder node
    - See examples in depthai-python repository
 
-5. **Web dashboard** — Flask/FastAPI server to view status remotely
+5. **Classroom dashboard** - use `classroom-api/` on port `4177` for the timeline, project bus, and readiness report
 
 6. **Multiple cameras** — Run detection on multiple OAK-D cameras
    - Coordinate them via Discord commands

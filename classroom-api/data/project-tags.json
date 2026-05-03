@@ -1,0 +1,19 @@
+{
+  "tagFamily": "tag36h11",
+  "range": [100, 199],
+  "assignments": {
+    "100": "smart-stage",
+    "101": "focus-beam",
+    "102": "forest-classroom",
+    "103": "imprint",
+    "104": "nodcheck",
+    "105": "tony-ramon",
+    "106": "tony-shuyang",
+    "107": "grammar-coach",
+    "108": "gesture-timer",
+    "109": "gus-mode",
+    "110": "seren-room",
+    "111": "library-ambient-light",
+    "112": "library-zone-response"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "smart-classroom-device-specs/v0.1",
+  "note": "Official values come from manufacturer specs or manuals. Horizontal and vertical FOV values for the Razer Kiyo Pro are inferred from the official diagonal FOV options assuming a 16:9 active image.",
+  "cameras": {
+    "razer-kiyo-pro": {
+      "label": "Razer Kiyo Pro",
+      "status": "official-plus-inferred",
+      "sourceUrl": "https://www.razer.com/streaming-cameras/razer-kiyo-pro",
+      "resolution": { "width": 1920, "height": 1080 },
+      "videoModes": ["1080p60", "1080p30", "1080p24", "720p60", "480p30", "360p30"],
+      "fovDegrees": {
+        "diagonalOptions": [80, 90, 103],
+        "horizontalInferred": [72.36, 82.15, 95.23],
+        "verticalInferred": [44.72, 52.23, 63.29]
+      },
+      "notes": "Official spec exposes 80, 90, and 103 degree diagonal FOV modes. For a 4.6 m full-wall board, those modes cover that width at about 3.14 m, 2.64 m, and 2.11 m respectively. The virtual room starts farther back so all calibration tags are comfortably in frame."
+    },
+    "logitech-c920": {
+      "label": "Logitech C920 / C920e family",
+      "status": "official-family-reference",
+      "sourceUrl": "https://hub.sync.logitech.com/c920e/post/specifications---c920e-business-webcam-TKnike7FetCzuAt",
+      "resolution": { "width": 1920, "height": 1080 },
+      "videoModes": ["1080p30", "720p30"],
+      "fovDegrees": {
+        "diagonal": 78,
+        "horizontal": 70.42,
+        "vertical": 43.3
+      },
+      "notes": "Using Logitech's C920e optical spec as the closest official family reference. A 4.6 m full-wall board fills the horizontal frame at about 3.26 m camera-to-board distance. The virtual room starts farther back so the full board and inboard calibration tags are visible."
+    },
+    "virtual-overhead": {
+      "label": "Virtual Overhead Camera",
+      "status": "placeholder",
+      "resolution": { "width": 1280, "height": 960 },
+      "fovDegrees": { "vertical": 52 },
+      "notes": "Current virtual room placeholder."
+    },
+    "virtual-wall": {
+      "label": "Virtual Wall Camera",
+      "status": "placeholder",
+      "resolution": { "width": 1280, "height": 960 },
+      "fovDegrees": { "vertical": 48 },
+      "notes": "Current virtual room placeholder."
+    }
+  },
+  "projectors": {
+    "epson-co-fh02": {
+      "label": "Epson CO-FH02",
+      "status": "official-plus-inferred",
+      "sourceUrl": "https://files.support.epson.com/docid/cpd6/cpd62252/source/setup/reference/projection_distance_cofh02.html",
+      "nativeResolution": { "width": 1920, "height": 1080 },
+      "brightnessLumens": 3000,
+      "throwRatioRangeInferred": [1.19, 1.61],
+      "boardWidthReferenceMm": 4600,
+      "distanceForBoardWidthM": [5.47, 7.41],
+      "notes": "Official Epson distance table gives 104-141 in lens-to-screen distance for a 100 in 16:9 image, which is about 1.19-1.61 throw ratio. Scaled to a 4.6 m full-wall board, the practical lens-to-board range is about 5.47-7.41 m."
+    },
+    "aaxa-p6": {
+      "label": "AAXA P6 Ultimate",
+      "model": "HP-P6U-01",
+      "status": "official-retailer-plus-database",
+      "sourceUrl": "https://www.bhphotovideo.com/c/product/1776832-REG/aaxa_technologies_hp_p6u_01_p6_ultimate_1100_lumen_wxga.html",
+      "nativeResolution": { "width": 1280, "height": 800 },
+      "supportedResolutionMax": { "width": 3840, "height": 2160, "refreshHz": 30 },
+      "displayTechnology": "DLP",
+      "brightnessLumens": 1100,
+      "brightnessBatteryLumens": 500,
+      "batteryMah": 20000,
+      "batteryRuntimeHours": 6,
+      "throwRatio": 1.2,
+      "boardWidthReferenceMm": 4600,
+      "distanceForBoardWidthM": 5.52,
+      "inputs": ["USB-C video", "HDMI", "USB-A", "microSD/TF"],
+      "wireless": ["Wi-Fi", "Bluetooth", "iPhone mirroring"],
+      "notes": "P6 Ultimate is the HP-P6U-01 1100-lumen WXGA DLP smart projector, not the older 600-lumen P6. Throw ratio remains 1.2, putting a 4.6 m full-wall board image at roughly 5.52 m lens-to-board distance. Native resolution is 1280x800; 4K is accepted/scaled input, not native output."
+    }
+  }
+}

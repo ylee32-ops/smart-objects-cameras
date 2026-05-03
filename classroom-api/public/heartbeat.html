@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project Heartbeat</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .heartbeat-shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 24px 56px;
+      display: grid;
+      gap: 14px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .form-row {
+      display: grid;
+      gap: 5px;
+    }
+    .form-row.wide {
+      grid-column: 1 / -1;
+    }
+    .form-row label {
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: 3px;
+      padding: 12px;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 5px;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+    pre {
+      min-height: 220px;
+      max-height: 420px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    @media (max-width: 760px) {
+      .form-grid,
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-page="heartbeat">
+  <header class="topbar">
+    <div class="brand">Smart Classroom</div>
+    <nav class="nav"></nav>
+    <div class="spacer"></div>
+    <span class="status-dot" data-connection-dot></span>
+  </header>
+
+  <main class="heartbeat-shell">
+    <section class="hero-line">
+      <div class="eyebrow">Minimum student check-in</div>
+      <h1>Project heartbeat.</h1>
+      <p>If hardware or code is not ready, this page still records the project contract, keeps the row live, and gives the room something to route to.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Check In</h2>
+      <div class="panel-body stack">
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="projectId">Project ID</label>
+            <input id="projectId" value="smart-stage">
+          </div>
+          <div class="form-row">
+            <label for="interval">Interval seconds</label>
+            <input id="interval" type="number" min="5" value="30">
+          </div>
+          <div class="form-row wide">
+            <label for="capabilities">Capabilities</label>
+            <input id="capabilities" value="">
+          </div>
+          <div class="form-row wide">
+            <label for="consumes">Consumes</label>
+            <input id="consumes" value="">
+          </div>
+          <div class="form-row wide">
+            <label for="emits">Emits</label>
+            <input id="emits" value="">
+          </div>
+          <div class="form-row wide">
+            <label for="message">Message</label>
+            <input id="message" value="manual heartbeat from browser">
+          </div>
+          <div class="form-row wide">
+            <label for="mockEvent">Optional mock event JSON</label>
+            <textarea id="mockEvent">{"event_type":"project.mock","payload":{"mock":true,"message":"manual evidence"}}</textarea>
+          </div>
+        </div>
+        <div class="row">
+          <button id="loadContract">Load Contract</button>
+          <button id="sendOnce" class="primary">Send Heartbeat</button>
+          <button id="startLoop">Start Loop</button>
+          <button id="stopLoop">Stop</button>
+          <button id="sendEvent">Send Mock Event</button>
+          <a href="/report.html"><button>Open Report</button></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="metrics">
+      <article class="metric"><span class="eyebrow">Status</span><strong id="status">idle</strong></article>
+      <article class="metric"><span class="eyebrow">Live</span><strong id="live">false</strong></article>
+      <article class="metric"><span class="eyebrow">Last Seen</span><strong id="lastSeen">never</strong></article>
+      <article class="metric"><span class="eyebrow">Count</span><strong id="count">0</strong></article>
+    </section>
+
+    <section class="panel">
+      <h2>Log</h2>
+      <pre id="log">Ready.</pre>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script>
+    "use strict";
+
+    const fields = ["projectId", "interval", "capabilities", "consumes", "emits", "message", "mockEvent"];
+    let timer = null;
+    let count = 0;
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function csv(value) {
+      return String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+    }
+
+    function log(message, data) {
+      const line = `[${new Date().toLocaleTimeString()}] ${message}`;
+      $("log").textContent = `${line}${data ? "\n" + JSON.stringify(data, null, 2) : ""}\n\n${$("log").textContent}`;
+    }
+
+    function save() {
+      for (const id of fields) localStorage.setItem(`smart-classroom.heartbeat.${id}`, $(id).value);
+    }
+
+    function load() {
+      for (const id of fields) {
+        const saved = localStorage.getItem(`smart-classroom.heartbeat.${id}`);
+        if (saved !== null) $(id).value = saved;
+        $(id).addEventListener("input", save);
+      }
+      const params = new URLSearchParams(location.search);
+      if (params.get("project")) $("projectId").value = params.get("project");
+      if (params.get("project_id")) $("projectId").value = params.get("project_id");
+    }
+
+    async function loadContract() {
+      save();
+      const projectId = $("projectId").value.trim();
+      const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/contract`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      $("capabilities").value = (data.emits || data.alsoSends || []).join(",");
+      $("consumes").value = (data.consumes || data.alsoListens || []).join(",");
+      $("emits").value = (data.emits || data.alsoSends || []).join(",");
+      const eventType = (data.emits || data.alsoSends || ["project.mock"])[0] || "project.mock";
+      $("mockEvent").value = JSON.stringify({
+        event_type: eventType,
+        payload: { mock: true, message: `manual evidence from ${projectId}` },
+      }, null, 2);
+      save();
+      log("contract loaded", { projectId, title: data.title, emits: data.emits });
+    }
+
+    async function sendHeartbeat() {
+      save();
+      const projectId = $("projectId").value.trim();
+      const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/heartbeat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "online",
+          capabilities: csv($("capabilities").value),
+          consumes: csv($("consumes").value),
+          emits: csv($("emits").value),
+          message: $("message").value,
+          meta: { client: "heartbeat.html" },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      count += 1;
+      $("status").textContent = data.status?.status || "online";
+      $("live").textContent = String(data.status?.live ?? data.status?.is_live ?? false);
+      $("lastSeen").textContent = data.status?.lastSeen ? new Date(data.status.lastSeen).toLocaleTimeString() : "now";
+      $("count").textContent = String(count);
+      log("heartbeat ok", data.status);
+    }
+
+    async function sendMockEvent() {
+      save();
+      const projectId = $("projectId").value.trim();
+      let event;
+      try {
+        event = JSON.parse($("mockEvent").value || "{}");
+      } catch (error) {
+        throw new Error(`Mock event JSON is invalid: ${error.message}`);
+      }
+      const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(event),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      log("mock event ok", data.event);
+    }
+
+    async function run(label, fn) {
+      try {
+        await fn();
+      } catch (error) {
+        $("status").textContent = "error";
+        log(`${label} failed: ${error.message || error}`);
+      }
+    }
+
+    function startLoop() {
+      stopLoop();
+      run("heartbeat", sendHeartbeat);
+      const interval = Math.max(5, Number($("interval").value) || 30) * 1000;
+      timer = setInterval(() => run("heartbeat", sendHeartbeat), interval);
+      log("heartbeat loop started");
+    }
+
+    function stopLoop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
+
+    load();
+    $("loadContract").addEventListener("click", () => run("contract", loadContract));
+    $("sendOnce").addEventListener("click", () => run("heartbeat", sendHeartbeat));
+    $("startLoop").addEventListener("click", startLoop);
+    $("stopLoop").addEventListener("click", () => {
+      stopLoop();
+      log("heartbeat loop stopped");
+    });
+    $("sendEvent").addEventListener("click", () => run("mock event", sendMockEvent));
+  </script>
+</body>
+</html>

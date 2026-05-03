@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Labs · Smart Classroom</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    body { padding: 0; }
+    .labs-shell {
+      max-width: var(--shell-width);
+      margin: 0 auto;
+      padding: var(--shell-pad-y) var(--shell-pad-x) var(--shell-pad-y-bottom);
+      display: grid;
+      gap: 0;
+    }
+
+    .labs-meta {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 28px;
+      padding: 0 0 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .labs-meta .eyebrow {
+      display: flex; align-items: center; gap: 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .labs-meta .eyebrow::after { content: ""; flex: 0 0 56px; height: 1px; background: var(--line-hi); }
+    .labs-meta h1 {
+      margin: 6px 0 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(28px, 3.6vw, 44px);
+      line-height: 1;
+      letter-spacing: -0.012em;
+      color: var(--ink);
+    }
+    .labs-meta h1 em { font-style: italic; color: var(--ink-soft); }
+    .labs-meta .meta {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      line-height: 1.85;
+    }
+    .labs-meta .meta .key { color: var(--ink-faint); margin-right: 8px; }
+    .labs-meta .meta strong { color: var(--ink); font-weight: 500; }
+
+    .labs-list {
+      display: grid;
+      gap: 0;
+      padding-top: 8px;
+    }
+    .tool {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1.5fr) minmax(220px, 0.9fr) auto;
+      gap: 28px;
+      align-items: baseline;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
+      text-decoration: none;
+      color: inherit;
+      transition: padding-left .25s ease;
+    }
+    .tool:first-child { border-top: 1px solid var(--line); }
+    .tool:hover { padding-left: 8px; }
+    .tool .num {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      color: var(--ink-faint);
+      padding-top: 8px;
+      font-feature-settings: "tnum";
+    }
+    .tool .name {
+      display: grid;
+      gap: 4px;
+    }
+    .tool .name h3 {
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 26px;
+      line-height: 1.05;
+      letter-spacing: -0.012em;
+      color: var(--ink);
+    }
+    .tool .name h3 em { font-style: italic; color: var(--ink-soft); }
+    .tool:hover .name h3 { color: var(--amber); }
+    .tool .blurb {
+      color: var(--ink-soft);
+      font-size: 13.5px;
+      line-height: 1.55;
+      max-width: 56ch;
+    }
+    .tool .ext {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      white-space: nowrap;
+      padding-top: 8px;
+    }
+    .tool .ext strong { color: var(--ink); font-weight: 500; }
+    .tool .arrow {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 22px;
+      color: var(--ink-faint);
+      padding-top: 6px;
+    }
+    .tool:hover .arrow { color: var(--amber); }
+
+    @media (max-width: 920px) {
+      .labs-shell { padding: 36px 22px 64px; }
+      .tool { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 14px; }
+      .tool .blurb { display: none; }
+      .labs-meta { grid-template-columns: 1fr; gap: 14px; }
+      .labs-meta .meta { text-align: left; }
+    }
+  </style>
+</head>
+<body data-page="labs">
+  <header class="topbar">
+    <a class="brand" href="/">Smart Classroom</a>
+    <nav class="nav nav-primary"></nav>
+    <nav class="nav-secondary"></nav>
+    <button class="log-toggle" type="button" data-log-toggle>
+      <span class="live-dot"></span><span>Log</span><span class="count" data-log-count>0</span>
+    </button>
+  </header>
+
+  <main class="labs-shell">
+    <section class="labs-meta">
+      <div>
+        <div class="eyebrow">Labs · Runtime tools</div>
+        <h1>The room's instruments.</h1>
+      </div>
+      <div class="meta">
+        <div><span class="key">Cameras</span><strong>3 · OAK-D</strong></div>
+        <div><span class="key">Surfaces</span><strong>Board · Projector</strong></div>
+      </div>
+    </section>
+
+    <header class="zone-head">
+      <span class="zone-label">Surfaces &amp; cameras</span>
+      <span class="zone-rule"></span>
+    </header>
+
+    <nav class="labs-list">
+      <a class="tool" href="/cameras.html">
+        <span class="num">01</span>
+        <div class="name">
+          <h3>Cameras <em>· OAK-D bench</em></h3>
+        </div>
+        <span class="blurb">Send directed commands to Orbit, Gravity, or Horizon. Switch detector mode, capture, run fiducial.</span>
+        <span class="arrow">→</span>
+      </a>
+      <a class="tool" href="/projector.html?map=1&amp;status=1" target="_blank" rel="noopener">
+        <span class="num">02</span>
+        <div class="name">
+          <h3>Projector <em>· stage output</em></h3>
+        </div>
+        <span class="blurb">Open the projector surface in a new window. Map overlay and status overlay toggle from the page.</span>
+        <span class="ext"><strong>↗ new window</strong></span>
+        <span class="arrow">→</span>
+      </a>
+      <a class="tool" href="/board.html">
+        <span class="num">03</span>
+        <div class="name">
+          <h3>Board <em>· semantic whiteboard</em></h3>
+        </div>
+        <span class="blurb">Notes, tags, focus, strokes. The room's working surface — drag, draw, bind to slides.</span>
+        <span class="arrow">→</span>
+      </a>
+    </nav>
+
+    <header class="zone-head">
+      <span class="zone-label">Project workbench</span>
+      <span class="zone-rule"></span>
+    </header>
+
+    <nav class="labs-list">
+      <a class="tool" href="/heartbeat">
+        <span class="num">04</span>
+        <div class="name">
+          <h3>Heartbeat <em>· no-code check-in</em></h3>
+        </div>
+        <span class="blurb">Minimum student check-in. Sends heartbeats and mock evidence even when the project's code isn't ready yet.</span>
+        <span class="arrow">→</span>
+      </a>
+      <a class="tool" href="/class-objects.html">
+        <span class="num">05</span>
+        <div class="name">
+          <h3>Class objects <em>· simulator</em></h3>
+        </div>
+        <span class="blurb">Drag objects onto the board, fire mock detections, rehearse class-time interactions without hardware.</span>
+        <span class="arrow">→</span>
+      </a>
+    </nav>
+
+    <header class="zone-head">
+      <span class="zone-label">Tags &amp; calibration</span>
+      <span class="zone-rule"></span>
+    </header>
+
+    <nav class="labs-list">
+      <a class="tool" href="/tag-reference.html">
+        <span class="num">06</span>
+        <div class="name">
+          <h3>Tag reference <em>· grammar</em></h3>
+        </div>
+        <span class="blurb">The seven cards: roles, glyphs, IDs, projector hints. Print or scan from this page.</span>
+        <span class="arrow">→</span>
+      </a>
+      <a class="tool" href="/tag-debugger.html">
+        <span class="num">07</span>
+        <div class="name">
+          <h3>Tag debugger</h3>
+        </div>
+        <span class="blurb">Live AprilTag detection in the browser. Useful when calibration drifts.</span>
+        <span class="arrow">→</span>
+      </a>
+      <a class="tool" href="/calibration-board.html">
+        <span class="num">08</span>
+        <div class="name">
+          <h3>Calibration board</h3>
+        </div>
+        <span class="blurb">Reference checker board for camera calibration. Print at 100% — no scaling.</span>
+        <span class="arrow">→</span>
+      </a>
+      <a class="tool" href="/setup.html">
+        <span class="num">09</span>
+        <div class="name">
+          <h3>Setup <em>· room calibration</em></h3>
+        </div>
+        <span class="blurb">Calibration source picker, projector mapping, tag-board confirmation flow.</span>
+        <span class="arrow">→</span>
+      </a>
+    </nav>
+
+    <header class="zone-head">
+      <span class="zone-label">Phone &amp; devices</span>
+      <span class="zone-rule"></span>
+    </header>
+
+    <nav class="labs-list">
+      <a class="tool" href="/phone.html">
+        <span class="num">10</span>
+        <div class="name">
+          <h3>Phone <em>· lens</em></h3>
+        </div>
+        <span class="blurb">Phone-as-camera. Open on a phone and aim at an object — the room reads what it sees.</span>
+        <span class="arrow">→</span>
+      </a>
+      <a class="tool" href="/camera.html">
+        <span class="num">11</span>
+        <div class="name">
+          <h3>Camera</h3>
+        </div>
+        <span class="blurb">Browser camera viewer with target reticle. Useful for one-off captures during demo.</span>
+        <span class="arrow">→</span>
+      </a>
+    </nav>
+  </main>
+
+  <script src="/shared.js"></script>
+</body>
+</html>

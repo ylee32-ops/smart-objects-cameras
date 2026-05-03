@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Semantic Board</title>
+  <link rel="stylesheet" href="/shared.css">
+</head>
+<body data-page="board">
+  <header class="topbar">
+    <div class="brand">Semantic Board</div>
+    <nav class="nav">
+      <a href="/">Control</a>
+      <a href="/projector.html">Projector</a>
+      <a href="/camera.html">Camera</a>
+      <a class="active" href="/board.html">Board</a>
+      <a href="/phone.html">Phone</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="identity">
+      <span class="status-dot" data-connection-dot></span>
+      <input data-user-input placeholder="Your name">
+      <button data-join-button>Join</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="grid">
+      <article class="panel span-9">
+        <h2>Whiteboard Surface</h2>
+        <div class="panel-body">
+          <div id="boardSurface" class="surface board-surface-real">
+            <div id="boardSurfaceLabel" class="surface-label">4.6m x 2.4m board / draw, place notes, move cards</div>
+            <div class="board-real-corner top-left">tag 4</div>
+            <div class="board-real-corner top-right">tag 5</div>
+            <div class="board-real-corner bottom-right">tag 6</div>
+            <div class="board-real-corner bottom-left">tag 7</div>
+            <svg id="strokeLayer" class="stroke-layer"></svg>
+            <div id="boardObjectLayer"></div>
+            <div id="boardTagLayer" class="board-tag-layer"></div>
+            <div id="boardFocus"></div>
+            <div id="boardRecovery" class="board-recovery-layer"></div>
+            <div id="boardDebug"></div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel span-3">
+        <h2>Board Tools</h2>
+        <div class="panel-body stack">
+          <div class="row">
+            <button id="modeMove" class="primary">Move</button>
+            <button id="modeDraw">Draw</button>
+            <button id="modeFocus">Focus</button>
+          </div>
+          <div class="sticky-tools">
+            <div class="small mono">Marker ink</div>
+            <div id="markerColorSwatches" class="color-swatches">
+              <button data-marker-color="#111827" title="black"></button>
+              <button data-marker-color="#2563eb" title="blue"></button>
+              <button data-marker-color="#dc2626" title="red"></button>
+              <button data-marker-color="#16a34a" title="green"></button>
+              <button data-marker-color="#7c3aed" title="purple"></button>
+              <button data-marker-color="#ea580c" title="orange"></button>
+            </div>
+          </div>
+          <textarea id="noteText" rows="4">Sticky note as a movable room object.</textarea>
+          <div class="row">
+            <button id="addSticky" class="primary">Add Sticky</button>
+            <button id="addNumber">Add Number</button>
+            <button id="addShape">Add Shape</button>
+          </div>
+          <div class="sticky-tools">
+            <div class="small mono">Sticky color sample</div>
+            <div id="stickyColorSwatches" class="color-swatches">
+              <button data-sticky-color="#facc15" title="standard yellow"></button>
+              <button data-sticky-color="#fde68a" title="pale yellow"></button>
+              <button data-sticky-color="#bfdbfe" title="blue"></button>
+              <button data-sticky-color="#f9a8d4" title="pink"></button>
+              <button data-sticky-color="#a7f3d0" title="green"></button>
+              <button data-sticky-color="#ffb360" title="orange"></button>
+            </div>
+            <button id="sampleSelectedColor">Sample Selected Note</button>
+          </div>
+          <button id="sendClipboard">Receive Clipboard</button>
+          <button id="copySelected">Copy Selected</button>
+          <button id="bindSelected">Bind Selected To Slide</button>
+          <button id="clearFocus">Clear Focus Nodes</button>
+          <button id="clearStrokes" class="warn">Clear Drawings</button>
+          <button id="debugToggle">Toggle Reveal</button>
+          <div class="board-tag-tools">
+            <div class="small mono">Room tags</div>
+            <div id="boardTagPad" class="board-tag-pad"></div>
+            <button id="clearBoardTags" class="warn">Clear Tags (Keep Corners)</button>
+            <div id="boardTagList" class="board-tag-list"></div>
+          </div>
+          <div id="selectedInfo" class="target-card small">No board object selected.</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/class-event-effects.js"></script>
+  <script src="/board.js"></script>
+</body>
+</html>

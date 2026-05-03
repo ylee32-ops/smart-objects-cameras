@@ -2,41 +2,27 @@
 """
 Minimum Smart Classroom heartbeat client.
 
-This is the smallest useful student integration:
-  1. Pick a PROJECT_ID.
-  2. Say what your project can handle.
-  3. Keep sending a heartbeat so the orchestrator knows you exist.
-
 Run:
-    set CLASSROOM_API=http://localhost:8766
-    set PROJECT_ID=gesture-timer
-    set PROJECT_API_KEY=testkey
+    set CLASSROOM_API=http://localhost:4177
+    set PROJECT_ID=smart-stage
+    set CAPABILITIES=board.scene.requested,session.timer.offered
+    set CONSUMES=board.zone.activated,board.tag.detected,session.mode.changed
+    set EMITS=board.scene.requested,session.timer.offered
     python student_heartbeat.py
-
-Optional:
-    set CAPABILITIES=timer,timer.offer,timer.command
-    set CONSUMES=timer.offer,timer.command
-    set EMITS=timer.started,timer.done
-    set MESSAGE=timer prototype running on my laptop
 """
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import time
 from datetime import datetime
-
-try:
-    import requests
-except ImportError:
-    sys.stderr.write("Install requests first: pip install requests\n")
-    sys.exit(2)
+from urllib import request, error
 
 
-API_BASE = os.getenv("CLASSROOM_API", "http://localhost:8766").rstrip("/")
+API_BASE = os.getenv("CLASSROOM_API", "http://localhost:4177").rstrip("/")
 PROJECT_ID = os.getenv("PROJECT_ID", "student-project")
-API_KEY = os.getenv("PROJECT_API_KEY", os.getenv("CLASSROOM_API_KEY", "testkey"))
 INTERVAL_SEC = float(os.getenv("HEARTBEAT_INTERVAL_SEC", "30"))
 
 
@@ -45,17 +31,32 @@ def csv_env(name: str, default: str = "") -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
-CAPABILITIES = csv_env("CAPABILITIES", "student-project")
+CAPABILITIES = csv_env("CAPABILITIES")
 CONSUMES = csv_env("CONSUMES")
-EMITS = csv_env("EMITS", "project.heartbeat")
+EMITS = csv_env("EMITS")
 MESSAGE = os.getenv("MESSAGE", f"{PROJECT_ID} heartbeat running")
 
 
+def post_json(path: str, payload: dict) -> dict:
+    data = json.dumps(payload).encode("utf-8")
+    req = request.Request(
+        f"{API_BASE}{path}",
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with request.urlopen(req, timeout=10) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"HTTP {exc.code}: {body}") from exc
+
+
 def heartbeat() -> dict:
-    response = requests.post(
-        f"{API_BASE}/projects/{PROJECT_ID}/heartbeat",
-        headers={"X-API-Key": API_KEY, "Content-Type": "application/json"},
-        json={
+    return post_json(
+        f"/api/projects/{PROJECT_ID}/heartbeat",
+        {
             "status": "online",
             "capabilities": CAPABILITIES,
             "consumes": CONSUMES,
@@ -66,17 +67,15 @@ def heartbeat() -> dict:
                 "hostname": os.getenv("COMPUTERNAME") or os.getenv("HOSTNAME"),
             },
         },
-        timeout=10,
     )
-    response.raise_for_status()
-    return response.json()
 
 
 def main() -> int:
     print("Smart Classroom heartbeat")
     print(f"  API: {API_BASE}")
     print(f"  project: {PROJECT_ID}")
-    print(f"  capabilities: {', '.join(CAPABILITIES) or '(none)'}")
+    print(f"  consumes: {', '.join(CONSUMES) or '(none)'}")
+    print(f"  emits: {', '.join(EMITS) or '(none)'}")
     print()
 
     while True:
@@ -84,21 +83,18 @@ def main() -> int:
             result = heartbeat()
             status = result.get("status", {})
             ts = datetime.now().strftime("%H:%M:%S")
-            age = status.get("age_sec")
-            age_text = f"{age:.1f}s" if isinstance(age, (int, float)) else "unknown"
             print(
                 f"[{ts}] heartbeat ok: "
-                f"{status.get('project_id', PROJECT_ID)} "
-                f"status={status.get('status')} "
-                f"live={status.get('is_live')} "
-                f"age={age_text}"
+                f"{status.get('projectId', PROJECT_ID)} "
+                f"live={status.get('live')} "
+                f"lastSeen={status.get('lastSeen')}"
             )
         except KeyboardInterrupt:
             print("\nStopped")
             return 0
         except Exception as exc:
             ts = datetime.now().strftime("%H:%M:%S")
-            print(f"[{ts}] heartbeat failed: {exc}")
+            print(f"[{ts}] heartbeat failed: {exc}", file=sys.stderr)
         time.sleep(INTERVAL_SEC)
 
 

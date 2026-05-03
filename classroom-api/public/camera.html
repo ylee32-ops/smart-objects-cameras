@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Camera Detector Simulator</title>
+  <link rel="stylesheet" href="/shared.css">
+</head>
+<body data-page="camera">
+  <header class="topbar">
+    <div class="brand">Camera Detector</div>
+    <nav class="nav">
+      <a href="/">Control</a>
+      <a href="/projector.html">Projector</a>
+      <a class="active" href="/camera.html">Camera</a>
+      <a href="/rgb-demo.html">RGB</a>
+      <a href="/board.html">Board</a>
+      <a href="/phone.html">Phone</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="identity">
+      <span class="status-dot" data-connection-dot></span>
+      <input data-user-input placeholder="Your name">
+      <button data-join-button>Join</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="camera-stage">
+      <div id="cameraSim" class="camera-sim">
+        <video id="cameraPreview" class="camera-video" playsinline muted></video>
+        <div class="camera-reticle-grid"></div>
+        <div class="surface-label">Camera view: drag simulated AprilTags</div>
+        <div id="markerLayer"></div>
+      </div>
+      <aside class="panel">
+        <h2>Detector Controls</h2>
+        <div class="panel-body stack">
+          <div class="row">
+            <button id="startCamera" class="primary">Preview Webcam</button>
+            <button id="stopCamera">Stop</button>
+          </div>
+          <button id="snapPuzzle">Snap Light Layout</button>
+          <button id="scatterTags">Scatter Tags</button>
+          <button id="lostTag">Simulate Lost Tag</button>
+          <button id="sampleCalibration">Sample Board Corners</button>
+          <button id="ingestDetection">Ingest Camera Detection</button>
+          <button id="clearCalibration">Clear Calibration</button>
+          <button id="toggleDebug">Reveal</button>
+          <div class="small">This page is the stand-in for real board AprilTag detection. Dragging a marker emits `fiducial.detected` through `token.move`.</div>
+          <div id="cameraStatus" class="target-card small"></div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/camera.js"></script>
+</body>
+</html>

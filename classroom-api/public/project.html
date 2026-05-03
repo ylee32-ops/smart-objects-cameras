@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Classroom Project</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .pkt-shell {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px 22px 80px;
+      display: grid;
+      gap: 16px;
+    }
+    .pkt-hero h1 {
+      margin: 0 0 4px;
+      font-size: 28px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .pkt-hero .by {
+      margin: 0;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .pkt-hero .desc {
+      margin: 10px 0 0;
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .pkt-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 700px) { .pkt-row { grid-template-columns: 1fr; } }
+
+    .pkt-card {
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: 3px;
+      padding: 16px;
+      display: grid;
+      gap: 6px;
+    }
+    .pkt-card .lbl {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-faint);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .pkt-tag-id {
+      font-family: var(--mono);
+      font-size: 56px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .pkt-tag-id.unset { color: var(--ink-faint); font-size: 32px; }
+    .pkt-tag-hint {
+      font-size: 12px;
+      color: var(--ink-soft);
+      line-height: 1.4;
+    }
+
+    .pkt-status .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--ink);
+    }
+    .pkt-status .row.faint { color: var(--ink-soft); font-family: var(--mono); font-size: 11px; }
+    .pkt-status .pips {
+      font-family: var(--mono);
+      color: var(--green);
+      letter-spacing: 2px;
+      font-size: 13px;
+    }
+    .pkt-status .pips .off { color: var(--line-hi); }
+    .pkt-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--ink-faint); flex: 0 0 8px;
+    }
+    .pkt-dot.ok { background: var(--green); }
+    .pkt-dot.warn { background: var(--amber); }
+
+    .pkt-test {
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: 3px;
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+    }
+    .pkt-test-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pkt-test button {
+      font-size: 14px;
+      padding: 12px 18px;
+    }
+    .pkt-test .hint {
+      font-size: 12px;
+      color: var(--ink-soft);
+      flex: 1;
+      min-width: 220px;
+    }
+    .pkt-test #liveMockStatus {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-faint);
+      min-height: 14px;
+    }
+
+    .pkt-contract {
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: 3px;
+      padding: 18px;
+    }
+    .pkt-contract h3 {
+      margin: 14px 0 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .pkt-contract h3:first-child { margin-top: 0; }
+    .pkt-contract ul {
+      margin: 0;
+      padding-left: 18px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink);
+      line-height: 1.7;
+    }
+    .pkt-contract ul li.empty { color: var(--ink-faint); list-style: none; padding-left: 0; }
+    .pkt-contract .open-md {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--cyan);
+      text-decoration: none;
+      font-size: 12px;
+      font-family: var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .pkt-contract .open-md:hover { text-decoration: underline; }
+
+    .pkt-events {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+    .pkt-events h2 {
+      margin: 0 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    details.pkt-qr,
+    details.pkt-advanced {
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: 3px;
+      padding: 12px 16px;
+    }
+    details.pkt-qr summary,
+    details.pkt-advanced summary {
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    details.pkt-qr[open] > summary,
+    details.pkt-advanced[open] > summary {
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+    .pkt-qr-body {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+    .pkt-qr-body img {
+      width: 200px;
+      height: 200px;
+      background: #fff;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .pkt-qr-info {
+      display: grid;
+      gap: 8px;
+    }
+    .pkt-qr-url {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink);
+      word-break: break-all;
+    }
+    .pkt-qr-hint {
+      color: var(--ink-soft);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    @media (max-width: 600px) {
+      .pkt-qr-body { grid-template-columns: 1fr; }
+      .pkt-qr-body img { justify-self: center; }
+    }
+    .pkt-advanced .field {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr);
+      gap: 10px;
+      padding: 6px 0;
+      border-top: 1px solid var(--line);
+    }
+    .pkt-advanced .field:first-of-type { border-top: 0; }
+    .pkt-advanced .field > strong {
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      padding-top: 2px;
+    }
+    .pkt-advanced .field > .small,
+    .pkt-advanced .field > div,
+    .pkt-advanced .field > pre { color: var(--ink); font-size: 12px; line-height: 1.55; }
+    .pkt-advanced .field > pre { margin: 0; }
+
+    .pkt-not-found {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--ink-soft);
+    }
+  </style>
+</head>
+<body data-page="project-packet">
+  <header class="topbar">
+    <div class="brand">Smart Classroom</div>
+    <nav class="nav"></nav>
+  </header>
+
+  <main class="pkt-shell">
+    <section class="pkt-hero">
+      <h1 id="packetTitle">Project</h1>
+      <p class="by" id="contractMeta">Loading…</p>
+      <p class="desc" id="packetSummary"></p>
+    </section>
+
+    <section class="pkt-row">
+      <article class="pkt-card pkt-tag" id="projectTagCard">
+        <span class="lbl">Your tag</span>
+        <strong class="pkt-tag-id unset" id="projectTagId">—</strong>
+        <span class="pkt-tag-hint" id="projectTagHint">Place this tag on the board to fire your project's demo.</span>
+      </article>
+
+      <article class="pkt-card pkt-status">
+        <span class="lbl">Readiness</span>
+        <div class="row">
+          <span class="pips" id="readinessPips"><span class="off">●●●●●</span></span>
+          <span id="readinessScore">0/5</span>
+        </div>
+        <div class="row">
+          <span class="pkt-dot" id="liveDot"></span>
+          <span id="liveStatus">no heartbeat</span>
+        </div>
+        <div class="row faint" id="lastSeen">last event: none</div>
+      </article>
+    </section>
+
+    <section class="pkt-test">
+      <div class="pkt-test-row">
+        <button id="liveMockBtn" class="primary">Start Live Test</button>
+        <span class="hint">Sends heartbeats and your scenario events every 3 s. Use this in class to make your project show up live on the dashboard.</span>
+      </div>
+      <div id="liveMockStatus"></div>
+    </section>
+
+    <section class="pkt-contract">
+      <h3>What the room sends to your project</h3>
+      <ul id="canonicalSubscribes"><li class="empty">none</li></ul>
+      <h3>What your project sends back</h3>
+      <ul id="canonicalEmits"><li class="empty">none</li></ul>
+      <a class="open-md" id="openContractBtn" href="#" target="_blank" rel="noopener">Open contract.md → paste into Claude / Codex</a>
+    </section>
+
+    <section class="pkt-events">
+      <h2>Recent events from your project</h2>
+      <div id="recentEvents" class="event-list"></div>
+    </section>
+
+    <details class="pkt-qr">
+      <summary>Scan to open this project on your phone</summary>
+      <div class="pkt-qr-body">
+        <img id="projectQrImg" alt="QR code for this project page">
+        <div class="pkt-qr-info">
+          <div class="pkt-qr-url" id="projectQrUrl">computing URL…</div>
+          <div class="pkt-qr-hint">Hold your phone camera up to the QR code, or tap a classmate's screen and type the URL. Phone needs to be on the same Wi-Fi as the room laptop.</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="pkt-advanced">
+      <summary>Advanced</summary>
+      <div class="field"><strong>Source</strong><div id="contractSource" class="small"></div></div>
+      <div class="field"><strong>Modes</strong><div id="modes" class="small"></div></div>
+      <div class="field"><strong>Board role</strong><div id="boardRoles" class="small"></div></div>
+      <div class="field"><strong>Reads</strong><div id="reads" class="small"></div></div>
+      <div class="field"><strong>Writes</strong><div id="writes" class="small"></div></div>
+      <div class="field"><strong>Success</strong><div id="successCondition" class="small"></div></div>
+      <div class="field"><strong>Also listens</strong><div id="subscribes" class="small"></div></div>
+      <div class="field"><strong>Also sends</strong><div id="emits" class="small"></div></div>
+      <div class="field"><strong>Explicit</strong><div id="explicitInteractions" class="small"></div></div>
+      <div class="field"><strong>Implicit</strong><div id="implicitInteractions" class="small"></div></div>
+      <div class="field"><strong>Best combos</strong><div id="combos" class="small"></div></div>
+      <div class="field"><strong>Bridge notes</strong><div id="bridgeNotes" class="small"></div></div>
+      <div class="field"><strong>Setup</strong><div id="acceptanceSetup" class="small"></div></div>
+      <div class="field"><strong>Trigger</strong><div id="acceptanceTrigger" class="small"></div></div>
+      <div class="field"><strong>Expect events</strong><div id="acceptanceEvents" class="small"></div></div>
+      <div class="field"><strong>Visible result</strong><div id="acceptanceVisible" class="small"></div></div>
+      <div class="field"><strong>Real input</strong><div id="acceptanceInput" class="small"></div></div>
+      <div class="field"><strong>Real output</strong><div id="acceptanceOutput" class="small"></div></div>
+      <div class="field"><strong>State</strong><pre id="currentState" class="event-json"></pre></div>
+      <div class="field"><strong>Live controls</strong><div id="controls" class="stack"></div></div>
+      <div class="field"><strong>Checklist</strong><div id="checklist" class="checklist"></div></div>
+    </details>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/project.js"></script>
+</body>
+</html>

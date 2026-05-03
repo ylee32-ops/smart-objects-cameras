@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Phone Lens</title>
+  <link rel="stylesheet" href="/shared.css">
+</head>
+<body data-page="phone" class="phone-lens-page">
+  <header class="topbar phone-lens-nav">
+    <div class="brand">Phone Lens</div>
+    <nav class="nav"></nav>
+    <div class="spacer"></div>
+    <div class="identity">
+      <span class="status-dot" data-connection-dot></span>
+      <input data-user-input placeholder="Your name">
+      <button data-join-button>Join</button>
+    </div>
+  </header>
+
+  <main class="phone-lens-shell">
+    <section class="phone-lens-device" aria-label="Phone tag controller">
+      <div class="phone-lens-screen" id="phoneLensScreen" data-state="idle">
+        <video id="cameraVideo" class="phone-lens-video" playsinline muted></video>
+        <div class="phone-lens-feed"></div>
+        <div class="phone-lens-grain"></div>
+
+        <div class="phone-top-strip">
+          <span id="phoneClock">9:41</span>
+          <span class="phone-state">ROOM LENS</span>
+          <span id="cameraState">OFF</span>
+        </div>
+
+        <div class="phone-lens-title">
+          <div class="eyebrow">Room remote</div>
+          <strong id="currentTarget"><span>Aim</span></strong>
+          <span id="phoneTargetDelta">No target locked</span>
+        </div>
+
+        <div class="phone-target-ring" aria-hidden="true">
+          <span class="phone-target-orbit"></span>
+          <span class="phone-target-dot"></span>
+          <span class="phone-target-spark one"></span>
+          <span class="phone-target-spark two"></span>
+        </div>
+
+        <div class="phone-tag-annot">
+          <span class="leader"></span>
+          <div class="label" id="phoneAnnotLabel">No target</div>
+          <div class="conf" id="phoneAnnotConf">camera off</div>
+        </div>
+
+        <div class="phone-reading" aria-live="polite">
+          <div class="label">Target</div>
+          <div class="value" id="phoneLensMode">Tag scan</div>
+        </div>
+
+        <div id="collabMode" class="phone-action-zone">
+          <div class="phone-camera-actions phone-main-actions">
+            <button id="startCamera" class="lens-btn primary" type="button">Camera</button>
+            <button id="stopCamera" class="lens-btn" type="button">Stop</button>
+            <button id="toggleLiveConversation" class="lens-btn" type="button">Talk</button>
+          </div>
+
+          <button id="captureVision" class="phone-ask-btn" type="button" aria-label="Send what the phone sees">
+            <span class="ring"></span>
+            <span>Look</span>
+          </button>
+
+          <div id="phoneVisionStatus" class="phone-status-line">Main camera tracks tags. Use this phone for Look, Talk, and quick confirmation.</div>
+          <div id="scannerStatus" class="phone-scanner-status">Open camera when you want to send the phone view to the room.</div>
+        </div>
+
+        <textarea id="phoneAsk" hidden>What is this target?</textarea>
+        <div id="arMode" hidden></div>
+        <div id="manualTargets" hidden></div>
+        <div id="phoneCharacter" hidden></div>
+        <div id="phoneTargetControls" hidden></div>
+
+        <div class="phone-home-bar"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/phone.js"></script>
+</body>
+</html>

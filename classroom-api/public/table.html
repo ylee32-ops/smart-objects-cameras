@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mock Interactive Table</title>
+  <link rel="stylesheet" href="/shared.css">
+</head>
+<body data-page="table">
+  <header class="topbar">
+    <div class="brand">Mock Interactive Table</div>
+    <nav class="nav">
+      <a href="/">Control</a>
+      <a href="/projector.html">Projector</a>
+      <a href="/camera.html">Camera</a>
+      <a href="/rgb-demo.html">RGB</a>
+      <a class="active" href="/table.html">Table</a>
+      <a href="/board.html">Board</a>
+      <a href="/phone.html">Phone</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="identity">
+      <span class="status-dot" data-connection-dot></span>
+      <input data-user-input placeholder="Your name">
+      <button data-join-button>Join</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="grid">
+      <article class="panel span-9">
+        <h2>Place: Executable Objects</h2>
+        <div class="panel-body">
+          <div id="tableSurface" class="surface dark">
+            <div class="surface-label">Table Surface: drag tokens, click inputs to toggle</div>
+            <svg id="wireLayer" class="wire-layer"></svg>
+            <div id="tokenLayer"></div>
+            <div id="tableDebug"></div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel span-3">
+        <h2>Table Controls</h2>
+        <div class="panel-body stack">
+          <div id="puzzleStatus" class="target-card"></div>
+          <button id="copyOutput" class="primary">Copy Target</button>
+          <button id="sendToBoard">Send Clipboard To Board</button>
+          <button id="askHint">Ask Room For Hint</button>
+          <button id="debugToggle">Toggle Reveal</button>
+          <div class="small">Drag markers to bend the beam. Click emitter, mirror, or splitter to rotate it.</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/table.js"></script>
+</body>
+</html>

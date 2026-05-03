@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editorial spread · Smart Classroom (mock B)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,200;1,9..144,300;1,9..144,400&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:       #f5efe2;
+      --ink-soft:  rgba(245, 239, 226, 0.78);
+      --ink-faint: rgba(245, 239, 226, 0.42);
+      --ink-dim:   rgba(245, 239, 226, 0.20);
+      --line:      rgba(245, 239, 226, 0.10);
+      --line-hi:   rgba(245, 239, 226, 0.22);
+      --bg:        #060709;
+      --paper:     #f0e9d8;
+      --paper-2:   #e6dcc4;
+      --note-ink:  #1a1612;
+      --note-ink-soft: rgba(26, 22, 18, 0.62);
+      --note-ink-faint: rgba(26, 22, 18, 0.35);
+      --amber:     #ffb360;
+      --cyan:      #7fbcd2;
+      --emerald:   #74c896;
+      --coral:     #ff7a6b;
+      --serif:     'Fraunces', Georgia, serif;
+      --mono:      'IBM Plex Mono', ui-monospace, monospace;
+      --sans:      'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      background:
+        radial-gradient(1300px 800px at 80% 10%, rgba(255, 200, 130, 0.04), transparent 60%),
+        var(--bg);
+    }
+    body::after {
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' seed='14'/><feColorMatrix values='0 0 0 0 0.96  0 0 0 0 0.94  0 0 0 0 0.86  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      opacity: 0.45;
+      mix-blend-mode: screen;
+      z-index: 90;
+    }
+
+    /* registration marks */
+    .reg {
+      position: fixed;
+      width: 16px; height: 16px;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .reg::before, .reg::after { content: ""; position: absolute; background: var(--ink-faint); }
+    .reg::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .reg::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .reg.tl { top: 22px; left: 22px; }
+    .reg.tr { top: 22px; right: 22px; }
+    .reg.bl { bottom: 22px; left: 22px; }
+    .reg.br { bottom: 22px; right: 22px; }
+
+    .mock-badge {
+      position: fixed;
+      top: 24px;
+      right: 60px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--amber);
+      z-index: 50;
+      mix-blend-mode: difference;
+    }
+
+    .container {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 0 80px;
+    }
+
+    /* ============= Cover ============= */
+    .cover {
+      min-height: 100vh;
+      padding: 88px 0 72px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+    .cover-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: baseline;
+      padding-bottom: 26px;
+      border-bottom: 1px solid var(--line);
+    }
+    .cover-head .colophon {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      display: flex;
+      gap: 28px;
+      align-items: baseline;
+    }
+    .cover-head .colophon .key { color: var(--ink-faint); margin-right: 8px; }
+    .cover-head .colophon strong { color: var(--ink); font-weight: 500; }
+    .cover-head .issue {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 5fr 4fr;
+      gap: 64px;
+      align-items: end;
+      padding: 80px 0 48px;
+    }
+    .cover-title {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 200;
+      font-size: clamp(72px, 13vw, 188px);
+      line-height: 0.86;
+      letter-spacing: -0.038em;
+      margin: 0;
+      color: var(--ink);
+    }
+    .cover-title em {
+      font-style: italic;
+      font-weight: 200;
+      color: var(--amber);
+    }
+    .cover-title .small {
+      display: block;
+      font-size: 0.42em;
+      font-weight: 300;
+      color: var(--ink-soft);
+      letter-spacing: -0.012em;
+      margin-top: 14px;
+    }
+    .cover-side {
+      display: grid;
+      gap: 36px;
+      padding-bottom: 28px;
+    }
+    .cover-side h2 {
+      margin: 0 0 8px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      font-weight: 400;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .cover-side p {
+      margin: 0;
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 22px;
+      line-height: 1.4;
+      letter-spacing: -0.005em;
+      color: var(--ink-soft);
+      max-width: 32ch;
+    }
+    .cover-side .pull em { color: var(--amber); font-style: italic; }
+    .cover-side .pull cite {
+      display: block;
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      font-style: normal;
+    }
+
+    .cover-foot {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+      padding-top: 22px;
+      gap: 0;
+    }
+    .cover-foot .cell {
+      padding: 0 24px 0 0;
+      border-right: 1px solid var(--line);
+    }
+    .cover-foot .cell:last-child { border-right: 0; padding-right: 0; }
+    .cover-foot .cell:not(:first-child) { padding-left: 24px; }
+    .cover-foot .key {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .cover-foot .val {
+      display: block;
+      margin-top: 10px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 38px;
+      line-height: 1;
+      letter-spacing: -0.018em;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+    .cover-foot .val.am { color: var(--amber); font-style: italic; }
+    .cover-foot .val.gn { color: var(--emerald); }
+    .cover-foot .val.cy { color: var(--cyan); }
+    .cover-foot .note {
+      display: block;
+      margin-top: 8px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    /* ============= Contents ============= */
+    .toc {
+      padding: 96px 0 64px;
+      border-top: 1px solid var(--line);
+    }
+    .toc h2 {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin: 0 0 36px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .toc h2::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 96px;
+    }
+    .toc-row {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) 64px;
+      gap: 14px;
+      align-items: baseline;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+      text-decoration: none;
+      color: inherit;
+      transition: padding-left .25s ease;
+    }
+    .toc-row:hover { padding-left: 8px; }
+    .toc-row .num {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      color: var(--ink-faint);
+    }
+    .toc-row .title {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 24px;
+      line-height: 1.15;
+      letter-spacing: -0.012em;
+      color: var(--ink);
+    }
+    .toc-row .title em { font-style: italic; color: var(--ink-soft); }
+    .toc-row .pg {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      color: var(--ink-faint);
+      text-align: right;
+      font-feature-settings: "tnum";
+    }
+    .toc-row:hover .title { color: var(--amber); }
+
+    /* ============= Issue body — alternating asymmetric spreads ============= */
+    .spread {
+      padding: 96px 0;
+      border-top: 1px solid var(--line);
+      position: relative;
+    }
+    .folio {
+      position: absolute;
+      top: 28px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .folio.l { left: 80px; }
+    .folio.r { right: 80px; }
+
+    .lede {
+      display: grid;
+      grid-template-columns: 1fr 6fr 3fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .lede .marker {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 100px;
+      line-height: 1;
+      color: var(--amber);
+      letter-spacing: -0.025em;
+    }
+    .lede .body h3 {
+      margin: 0 0 4px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .lede .body h2 {
+      margin: 0 0 24px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(40px, 5vw, 64px);
+      line-height: 1.0;
+      letter-spacing: -0.014em;
+      color: var(--ink);
+    }
+    .lede .body h2 em { font-style: italic; color: var(--ink-soft); font-weight: 300; }
+    .lede .body .body-text {
+      max-width: 56ch;
+      color: var(--ink-soft);
+      font-size: 16.5px;
+      line-height: 1.7;
+    }
+    .lede .body .body-text + .body-text { margin-top: 22px; }
+    .lede .marginalia {
+      max-width: 28ch;
+      padding-top: 12px;
+    }
+    .lede .marginalia h4 {
+      margin: 0 0 8px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+    .lede .marginalia p {
+      margin: 0 0 18px;
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 17px;
+      line-height: 1.45;
+      color: var(--ink-soft);
+    }
+    .lede .marginalia .rule {
+      display: block;
+      width: 36px;
+      height: 1px;
+      background: var(--ink-faint);
+      margin: 12px 0;
+    }
+
+    /* === project portraits — paper cards on dark === */
+    .portraits {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 36px;
+      margin-top: 72px;
+    }
+    .portrait {
+      background: var(--paper);
+      color: var(--note-ink);
+      padding: 26px 26px 22px;
+      box-shadow:
+        0 22px 50px rgba(0, 0, 0, 0.45),
+        0 0 0 0.5px rgba(0, 0, 0, 0.1);
+      position: relative;
+      display: grid;
+      gap: 16px;
+      transition: transform .4s cubic-bezier(.2,.8,.2,1);
+    }
+    .portrait:hover { transform: translateY(-4px); }
+    .portrait[data-rot="-1"] { transform: rotate(-1.2deg); }
+    .portrait[data-rot="1"]  { transform: rotate(0.8deg); }
+    .portrait[data-rot="-2"] { transform: rotate(-1.6deg); }
+    .portrait .corner {
+      position: absolute;
+      width: 12px; height: 12px;
+      border: 1px solid rgba(26, 22, 18, 0.18);
+    }
+    .portrait .corner.tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+    .portrait .corner.tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+    .portrait .corner.bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+    .portrait .corner.br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+    .portrait .label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--note-ink-soft);
+    }
+    .portrait .label .id { color: var(--note-ink-faint); margin-left: 8px; }
+    .portrait h4 {
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 32px;
+      line-height: 1.0;
+      letter-spacing: -0.014em;
+      color: var(--note-ink);
+    }
+    .portrait .by {
+      font-family: var(--sans);
+      font-size: 12.5px;
+      color: var(--note-ink-soft);
+    }
+    .portrait .glyph {
+      height: 96px;
+      display: grid;
+      place-items: center;
+      border-top: 1px solid rgba(26, 22, 18, 0.15);
+      border-bottom: 1px solid rgba(26, 22, 18, 0.15);
+      padding: 12px 0;
+    }
+    .portrait .glyph svg { width: 80%; height: 100%; }
+    .portrait .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--note-ink-soft);
+    }
+    .portrait .meta .k { color: var(--note-ink-faint); display: block; }
+    .portrait .meta strong {
+      display: block;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 400;
+      font-size: 16px;
+      letter-spacing: -0.005em;
+      color: var(--note-ink);
+      text-transform: none;
+      margin-top: 2px;
+    }
+    .portrait .meta strong.live { color: #2c6440; }
+    .portrait .meta strong.silent { color: #984040; }
+
+    /* === Pull quote spread === */
+    .quote-spread {
+      padding: 120px 0;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 11fr 1fr;
+      gap: 48px;
+    }
+    .quote-spread blockquote {
+      grid-column: 2;
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 200;
+      font-style: italic;
+      font-size: clamp(40px, 5.5vw, 80px);
+      line-height: 1.06;
+      letter-spacing: -0.022em;
+      color: var(--ink);
+      max-width: 28ch;
+    }
+    .quote-spread blockquote::before {
+      content: "“";
+      color: var(--amber);
+      margin-right: 8px;
+    }
+    .quote-spread blockquote::after { content: "”"; color: var(--amber); }
+    .quote-spread cite {
+      grid-column: 2;
+      margin-top: 36px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      font-style: normal;
+    }
+
+    /* === Quests / assignments page === */
+    .quests {
+      padding: 96px 0;
+      border-top: 1px solid var(--line);
+    }
+    .quests-head {
+      display: grid;
+      grid-template-columns: 6fr 4fr;
+      align-items: end;
+      gap: 64px;
+      padding-bottom: 36px;
+      border-bottom: 1px solid var(--line);
+    }
+    .quests-head h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(40px, 5vw, 64px);
+      line-height: 0.96;
+      letter-spacing: -0.014em;
+      color: var(--ink);
+    }
+    .quests-head h2 em { font-style: italic; color: var(--ink-soft); font-weight: 300; }
+    .quests-head .due {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .quests-head .due strong {
+      display: block;
+      margin-top: 6px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 26px;
+      letter-spacing: -0.005em;
+      text-transform: none;
+      color: var(--amber);
+    }
+    .quest {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1.6fr) minmax(0, 1.4fr);
+      gap: 48px;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .quest .num {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 32px;
+      color: var(--amber);
+      letter-spacing: -0.012em;
+    }
+    .quest .body h4 {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 26px;
+      line-height: 1.1;
+      letter-spacing: -0.012em;
+      color: var(--ink);
+    }
+    .quest .body h4 em { font-style: italic; color: var(--ink-soft); font-weight: 300; }
+    .quest .body p {
+      margin: 0;
+      max-width: 56ch;
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .quest .rubric {
+      list-style: none;
+      margin: 0; padding: 0;
+      display: grid;
+      gap: 6px;
+    }
+    .quest .rubric li {
+      position: relative;
+      padding-left: 22px;
+      color: var(--ink-soft);
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .quest .rubric li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 11px;
+      width: 12px; height: 1px;
+      background: var(--amber);
+    }
+
+    /* === colophon === */
+    .colophon {
+      padding: 64px 0 88px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 28px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      align-items: end;
+    }
+    .colophon strong { color: var(--ink); font-weight: 500; }
+    .colophon .imprint {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 22px;
+      letter-spacing: -0.005em;
+      text-transform: none;
+      color: var(--ink-soft);
+    }
+
+    @media (max-width: 1100px) {
+      .container { padding: 0 36px; }
+      .cover-body, .lede, .quote-spread, .quests-head, .quest { grid-template-columns: 1fr; gap: 28px; }
+      .toc-grid { grid-template-columns: 1fr; gap: 0; }
+      .portraits { grid-template-columns: 1fr 1fr; }
+      .cover-foot { grid-template-columns: 1fr 1fr; }
+      .cover-foot .cell:nth-child(2) { border-right: 0; }
+    }
+  </style>
+</head>
+<body>
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+  <div class="mock-badge">Editorial spread · Mock B</div>
+
+  <!-- ============== COVER ============== -->
+  <section class="cover">
+    <div class="container">
+      <header class="cover-head">
+        <div class="colophon">
+          <span><span class="key">Vol.</span><strong>02</strong></span>
+          <span><span class="key">No.</span><strong>12</strong></span>
+          <span><span class="key">Term</span><strong>Spring 2026</strong></span>
+        </div>
+        <div class="issue">Tuesday · April 28, 2026</div>
+      </header>
+
+      <div class="cover-body">
+        <h1 class="cover-title">
+          The room,<br>
+          <em>by the day.</em>
+          <span class="small">Implicit interactions · Wendy Ju, affordances, smart classroom design.</span>
+        </h1>
+        <aside class="cover-side">
+          <section>
+            <h2>Today, the lecture says</h2>
+            <p class="pull">“We're not talking about building apps. We're talking about <em>building connections</em> and experiences between people.”<cite>— Brett, week two</cite></p>
+          </section>
+          <section>
+            <h2>And the room replies</h2>
+            <p class="pull">Smart stage demoed at <em>16:42</em>; Forest held canopy through the lecture; Gus entered at break and the class read it as a reset.</p>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="cover-foot">
+        <div class="cell">
+          <span class="key">Phase</span>
+          <span class="val am">Lecture</span>
+          <span class="note">→ activity in 12 min</span>
+        </div>
+        <div class="cell">
+          <span class="key">Live</span>
+          <span class="val gn">6 / 8</span>
+          <span class="note">2 silent · 1 stale</span>
+        </div>
+        <div class="cell">
+          <span class="key">Cues</span>
+          <span class="val">14</span>
+          <span class="note">5 fired so far</span>
+        </div>
+        <div class="cell">
+          <span class="key">Quests</span>
+          <span class="val cy">3</span>
+          <span class="note">due next week</span>
+        </div>
+      </footer>
+    </div>
+  </section>
+
+  <!-- ============== CONTENTS ============== -->
+  <section class="toc">
+    <div class="container">
+      <h2>Inside this issue</h2>
+      <div class="toc-grid">
+        <a class="toc-row" href="#now"><span class="num">i.</span><span class="title">The lecture, <em>now in motion</em></span><span class="pg">p. 03</span></a>
+        <a class="toc-row" href="#projects"><span class="num">ii.</span><span class="title">Eight projects, one room</span><span class="pg">p. 09</span></a>
+        <a class="toc-row" href="#room-replies"><span class="num">iii.</span><span class="title">What the <em>room</em> said back</span><span class="pg">p. 14</span></a>
+        <a class="toc-row" href="#quests"><span class="num">iv.</span><span class="title">Quests for next class</span><span class="pg">p. 18</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== I. lede ============== -->
+  <section class="spread" id="now">
+    <span class="folio l">Smart Classroom · No. 12</span>
+    <span class="folio r">i. — p. 03</span>
+    <div class="container">
+      <div class="lede">
+        <span class="marker">i.</span>
+        <div class="body">
+          <h3>The lecture, now in motion</h3>
+          <h2>The class is a <em>verb,</em> not a room.</h2>
+          <p class="body-text">At 16:48 the room is in lecture mode, ten minutes into the second hour. The smart stage holds the slide; Forest's canopy is pulsing gentle green; Gus is at home, ready, scheduled to enter at break. Seren keeps the entry music low. The gesture timer is armed but quiet.</p>
+          <p class="body-text">In twelve minutes the class moves into activity, three groups quadrant-mapping their interaction sketches. The room has cleared its throat for that — focus beam dim, gesture timer about to count down ten — but it has not begun.</p>
+          <p class="body-text">All of this is happening at the same time, which is why the page reads more like a magazine of the moment than a list of switches. The room is doing many things at once; the page lets you see them all at once.</p>
+        </div>
+        <aside class="marginalia">
+          <h4>Margin note</h4>
+          <p>Watch the axis labels on the quadrant slide — they were swapped in week two. <em>Fix before the activity starts.</em></p>
+          <span class="rule"></span>
+          <h4>Pacing</h4>
+          <p>Last week the second hour rushed. Pull affordances forward by ten minutes if Gus arrives on time.</p>
+          <span class="rule"></span>
+          <h4>Live</h4>
+          <p><em>6 of 8 projects</em> reporting. Imprint stale. Grammar coach silent — <em>check Slack</em>.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== II. project portraits ============== -->
+  <section class="spread" id="projects">
+    <span class="folio l">Smart Classroom · No. 12</span>
+    <span class="folio r">ii. — p. 09</span>
+    <div class="container">
+      <div class="lede">
+        <span class="marker">ii.</span>
+        <div class="body">
+          <h3>Eight projects, one room</h3>
+          <h2>Roster, <em>by the room.</em></h2>
+          <p class="body-text">Each project is a card the room can pick up. They are running at different intensities — some ambient and quiet, some staged for moments. Tap one to read its contract and its evidence.</p>
+        </div>
+        <aside class="marginalia">
+          <h4>Sort</h4>
+          <p>Live first, then by readiness, then by title. Reference projects are hidden by default.</p>
+        </aside>
+      </div>
+
+      <div class="portraits">
+        <article class="portrait" data-rot="-1">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="label">Stage <span class="id">· tag 10</span></div>
+          <h4>Smart stage</h4>
+          <div class="by">Laila</div>
+          <div class="glyph">
+            <svg viewBox="0 0 200 96" fill="none">
+              <rect x="20" y="20" width="160" height="56" stroke="#1a1612" stroke-width="1.4"/>
+              <line x1="20" y1="76" x2="180" y2="76" stroke="#1a1612" stroke-width="2"/>
+              <circle cx="100" cy="48" r="14" stroke="#1a1612" stroke-width="1.4"/>
+              <line x1="40" y1="48" x2="86" y2="48" stroke="#1a1612" stroke-width="0.6" stroke-dasharray="2 3"/>
+              <line x1="114" y1="48" x2="160" y2="48" stroke="#1a1612" stroke-width="0.6" stroke-dasharray="2 3"/>
+            </svg>
+          </div>
+          <div class="meta">
+            <span><span class="k">Live</span><strong class="live">live</strong></span>
+            <span><span class="k">Score</span><strong>5 / 5</strong></span>
+          </div>
+        </article>
+
+        <article class="portrait" data-rot="1">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="label">Ambience <span class="id">· tag 11</span></div>
+          <h4>Forest</h4>
+          <div class="by">Tomas</div>
+          <div class="glyph">
+            <svg viewBox="0 0 200 96" fill="none">
+              <path d="M 20 80 Q 50 30 80 80" stroke="#1a1612" stroke-width="1.4"/>
+              <path d="M 60 80 Q 100 20 140 80" stroke="#1a1612" stroke-width="1.4"/>
+              <path d="M 120 80 Q 150 36 180 80" stroke="#1a1612" stroke-width="1.4"/>
+              <line x1="10" y1="84" x2="190" y2="84" stroke="#1a1612" stroke-width="0.8"/>
+            </svg>
+          </div>
+          <div class="meta">
+            <span><span class="k">Live</span><strong class="live">live</strong></span>
+            <span><span class="k">Score</span><strong>4 / 5</strong></span>
+          </div>
+        </article>
+
+        <article class="portrait" data-rot="-2">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="label">Character <span class="id">· tag 12</span></div>
+          <h4>Gus</h4>
+          <div class="by">Sara</div>
+          <div class="glyph">
+            <svg viewBox="0 0 200 96" fill="none">
+              <circle cx="100" cy="48" r="22" stroke="#1a1612" stroke-width="1.6"/>
+              <circle cx="92" cy="44" r="2" fill="#1a1612"/>
+              <circle cx="108" cy="44" r="2" fill="#1a1612"/>
+              <path d="M 88 58 Q 100 64 112 58" stroke="#1a1612" stroke-width="1.4" fill="none"/>
+            </svg>
+          </div>
+          <div class="meta">
+            <span><span class="k">Live</span><strong class="live">live</strong></span>
+            <span><span class="k">Score</span><strong>4 / 5</strong></span>
+          </div>
+        </article>
+
+        <article class="portrait" data-rot="1">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="label">Implicit <span class="id">· tag 13</span></div>
+          <h4>Focus beam</h4>
+          <div class="by">Lena</div>
+          <div class="glyph">
+            <svg viewBox="0 0 200 96" fill="none">
+              <circle cx="40" cy="48" r="14" stroke="#1a1612" stroke-width="1.4"/>
+              <line x1="54" y1="48" x2="180" y2="48" stroke="#1a1612" stroke-width="1.6"/>
+              <line x1="54" y1="40" x2="180" y2="20" stroke="#1a1612" stroke-width="0.5" stroke-dasharray="2 3"/>
+              <line x1="54" y1="56" x2="180" y2="76" stroke="#1a1612" stroke-width="0.5" stroke-dasharray="2 3"/>
+              <circle cx="180" cy="48" r="6" stroke="#1a1612" stroke-width="1.4" fill="none"/>
+            </svg>
+          </div>
+          <div class="meta">
+            <span><span class="k">Live</span><strong class="live">live</strong></span>
+            <span><span class="k">Score</span><strong>3 / 5</strong></span>
+          </div>
+        </article>
+
+        <article class="portrait" data-rot="-1">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="label">Cadence <span class="id">· tag 14</span></div>
+          <h4>Gesture timer</h4>
+          <div class="by">Ana</div>
+          <div class="glyph">
+            <svg viewBox="0 0 200 96" fill="none">
+              <circle cx="100" cy="48" r="32" stroke="#1a1612" stroke-width="1.4"/>
+              <line x1="100" y1="48" x2="100" y2="22" stroke="#1a1612" stroke-width="1.8"/>
+              <line x1="100" y1="48" x2="120" y2="60" stroke="#1a1612" stroke-width="1.4"/>
+              <circle cx="100" cy="48" r="2" fill="#1a1612"/>
+            </svg>
+          </div>
+          <div class="meta">
+            <span><span class="k">Live</span><strong class="live">live</strong></span>
+            <span><span class="k">Score</span><strong>3 / 5</strong></span>
+          </div>
+        </article>
+
+        <article class="portrait" data-rot="-2">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="label">Reflection <span class="id">· tag 15</span></div>
+          <h4>Imprint</h4>
+          <div class="by">Marc</div>
+          <div class="glyph">
+            <svg viewBox="0 0 200 96" fill="none">
+              <rect x="50" y="20" width="100" height="56" stroke="#1a1612" stroke-width="1.4" stroke-dasharray="3 3"/>
+              <circle cx="100" cy="48" r="3" fill="#1a1612"/>
+            </svg>
+          </div>
+          <div class="meta">
+            <span><span class="k">Live</span><strong style="color:#7a6232">stale</strong></span>
+            <span><span class="k">Score</span><strong>2 / 5</strong></span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== III. quote spread ============== -->
+  <section class="quote-spread" id="room-replies">
+    <blockquote>The most profound technologies are those that disappear.</blockquote>
+    <cite>— Mark Weiser, after class</cite>
+  </section>
+
+  <!-- ============== IV. quests ============== -->
+  <section class="quests" id="quests">
+    <span class="folio l">Smart Classroom · No. 12</span>
+    <span class="folio r">iv. — p. 18</span>
+    <div class="container">
+      <header class="quests-head">
+        <h2>Quests <em>for next class.</em></h2>
+        <div class="due"><span>Due</span><strong>Tuesday · May 5</strong></div>
+      </header>
+
+      <article class="quest">
+        <div class="num">i.</div>
+        <div class="body">
+          <h4>Three sketches, <em>one developed.</em></h4>
+          <p>Pick one corner of the Wendy Ju quadrant and fill it with three plausible smart-classroom interactions. One sketch should go to fidelity — name the signifier, the feedback, the failure mode.</p>
+        </div>
+        <ul class="rubric">
+          <li>Maps onto the quadrant cleanly.</li>
+          <li>Names a beneficiary and a possible harm.</li>
+          <li>Identifies signifier, feedback, and failure.</li>
+        </ul>
+      </article>
+
+      <article class="quest">
+        <div class="num">ii.</div>
+        <div class="body">
+          <h4>Read, then <em>respond in writing.</em></h4>
+          <p>The conversation-design PDF, plus one paragraph each on: who benefits from the design you sketched, and who might be harmed by it.</p>
+        </div>
+        <ul class="rubric">
+          <li>Quote at least one passage from the PDF.</li>
+          <li>Name a specific population at risk.</li>
+        </ul>
+      </article>
+
+      <article class="quest">
+        <div class="num">iii.</div>
+        <div class="body">
+          <h4>Send a <em>heartbeat.</em></h4>
+          <p>Even if your code isn't ready, register your project. The room will route to it; we'll have something to critique.</p>
+        </div>
+        <ul class="rubric">
+          <li>Project ID claimed, contract listed.</li>
+          <li>One mock event sent through the bus.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============== Colophon ============== -->
+  <footer class="colophon">
+    <div class="container" style="display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: end;">
+      <div>
+        <div class="imprint">An issue of the room, <em>by the room.</em></div>
+        <div style="margin-top: 14px;"><span style="color: var(--ink-soft); margin-right: 8px;">Imprint</span><strong>Smart Classroom · 2025–26</strong></div>
+      </div>
+      <div style="text-align: right;">
+        <div><span style="color: var(--ink-soft); margin-right: 8px;">Set in</span><strong>Fraunces / IBM Plex</strong></div>
+        <div style="margin-top: 6px;"><span style="color: var(--ink-soft); margin-right: 8px;">Build</span><strong>0.4 · mock</strong></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

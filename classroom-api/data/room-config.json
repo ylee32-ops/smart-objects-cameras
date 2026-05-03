@@ -1,0 +1,135 @@
+{
+  "schema": "smart-classroom-room-config/v0.1",
+  "surfaces": [
+    {
+      "id": "table",
+      "label": "Interactive Table",
+      "type": "projected-surface",
+      "coordinateSpace": "table.normalized",
+      "widthMm": 1800,
+      "heightMm": 900,
+      "calibrationTags": [0, 1, 2, 3]
+    },
+    {
+      "id": "board",
+      "label": "Semantic Board",
+      "type": "projected-surface",
+      "coordinateSpace": "board.normalized",
+      "widthMm": 4600,
+      "heightMm": 2400,
+      "calibrationTags": [4, 5, 6, 7]
+    },
+    {
+      "id": "phone",
+      "label": "Phone Companion",
+      "type": "client",
+      "coordinateSpace": "phone.screen"
+    }
+  ],
+  "markerModes": {
+    "light-lab": {
+      "label": "Light Lab",
+      "description": "Markers become optical objects that bend, split, color, and block projected light.",
+      "roles": ["emitter", "mirror", "filter", "splitter", "blocker", "target", "function"]
+    },
+    "force-field": {
+      "label": "Force Field",
+      "description": "Markers become attractors, repellers, emitters, and flow fields.",
+      "roles": ["emitter", "attractor", "repeller", "gravity-well", "obstacle", "target", "function"]
+    },
+    "programming-lab": {
+      "label": "Programming Lab",
+      "description": "Markers become beginner programming blocks.",
+      "roles": ["input", "if", "loop", "variable", "function", "output"]
+    }
+  },
+  "markers": [
+    {
+      "id": "emitter",
+      "tagId": 10,
+      "shortCode": "EMIT",
+      "kind": "emitter",
+      "label": "Emitter",
+      "color": "#fef3c7",
+      "x": 0.14,
+      "y": 0.5,
+      "angle": 0
+    },
+    {
+      "id": "mirror-a",
+      "tagId": 11,
+      "shortCode": "MIR",
+      "kind": "mirror",
+      "label": "Mirror",
+      "color": "#93c5fd",
+      "x": 0.42,
+      "y": 0.5,
+      "angle": 0.6911503837897545
+    },
+    {
+      "id": "filter-blue",
+      "tagId": 12,
+      "shortCode": "FILT",
+      "kind": "filter",
+      "label": "Blue Filter",
+      "color": "#38bdf8",
+      "beamColor": "#38bdf8",
+      "x": 0.62,
+      "y": 0.35
+    },
+    {
+      "id": "splitter",
+      "tagId": 13,
+      "shortCode": "SPLIT",
+      "kind": "splitter",
+      "label": "Splitter",
+      "color": "#c084fc",
+      "x": 0.58,
+      "y": 0.68,
+      "angle": 2.261946710584651
+    },
+    {
+      "id": "blocker",
+      "tagId": 14,
+      "shortCode": "STOP",
+      "kind": "blocker",
+      "label": "Blocker",
+      "color": "#f87171",
+      "x": 0.72,
+      "y": 0.52
+    },
+    {
+      "id": "target",
+      "tagId": 15,
+      "shortCode": "TGT",
+      "kind": "target",
+      "label": "Target",
+      "color": "#4ade80",
+      "x": 0.86,
+      "y": 0.35
+    },
+    {
+      "id": "explain-card",
+      "tagId": 16,
+      "shortCode": "EXPLAIN",
+      "kind": "function",
+      "functionName": "explain",
+      "label": "Explain",
+      "color": "#8b5cf6",
+      "x": 0.72,
+      "y": 0.78
+    }
+  ],
+  "calibration": {
+    "table": {
+      "status": "uncalibrated",
+      "cameraToSurfaceHomography": null,
+      "projectorToSurfaceHomography": null
+    },
+    "board": {
+      "status": "uncalibrated",
+      "cameraToSurfaceHomography": null,
+      "projectorToSurfaceHomography": null
+    }
+  }
+}

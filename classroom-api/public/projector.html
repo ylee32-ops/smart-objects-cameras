@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projector Output</title>
+  <link rel="stylesheet" href="/shared.css">
+</head>
+<body data-page="projector" class="stage-page">
+  <main class="projector-root">
+    <div class="projector-controls" aria-label="Projector controls">
+      <button id="projectorFullscreen">Fullscreen</button>
+      <button id="projectorMapToggle">Map Overlay</button>
+      <button id="projectorStatusToggle">Status</button>
+    </div>
+    <section class="projector-stage board-only">
+      <div id="projectorBoard" class="projector-surface board-output">
+        <div id="projectorWarpLayer" class="projector-warp-layer">
+          <svg id="projectorStrokeLayer" class="projector-stroke-layer"></svg>
+          <div id="projectorBoardLayer"></div>
+          <div id="projectorFocusLayer"></div>
+          <div id="projectorBoardDebug"></div>
+        </div>
+        <div id="projectorMapOverlay" class="projector-map-overlay" aria-hidden="true">
+          <svg id="projectorMapSvg" class="projector-map-svg"></svg>
+          <span class="projector-map-corner tl">TL</span>
+          <span class="projector-map-corner tr">TR</span>
+          <span class="projector-map-corner br">BR</span>
+          <span class="projector-map-corner bl">BL</span>
+          <span class="projector-map-center">BOARD PROJECTION FRAME</span>
+        </div>
+      </div>
+    </section>
+    <section class="projector-status">
+      <div id="projectorState" class="projector-status-card"></div>
+      <div id="projectorCharacter" class="projector-status-card projector-character"></div>
+    </section>
+  </main>
+  <script src="/shared.js"></script>
+  <script src="/class-event-effects.js"></script>
+  <script src="/projector.js"></script>
+</body>
+</html>

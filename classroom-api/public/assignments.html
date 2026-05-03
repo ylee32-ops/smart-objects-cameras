@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignments · Class evidence</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    body { padding: 0; }
+
+    .assign-shell {
+      max-width: var(--shell-width);
+      margin: 0 auto;
+      padding: 36px var(--shell-pad-x) var(--shell-pad-y-bottom);
+      display: grid;
+      gap: 0;
+    }
+
+    /* Week pills inside the subnav (mirrors the calendar pattern) */
+    .week-strip {
+      display: flex;
+      gap: 0;
+      flex: 1;
+      min-width: 0;
+      overflow-x: auto;
+    }
+    .week-strip .week {
+      position: relative;
+      display: grid;
+      gap: 4px;
+      padding: 18px 26px;
+      border-right: 1px solid var(--line);
+      background: transparent;
+      text-align: left;
+      color: inherit;
+      font: inherit;
+      text-transform: none;
+      letter-spacing: normal;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: background .25s ease;
+    }
+    .week-strip .week:hover { background: rgba(245, 239, 226, 0.025); }
+    .week-strip .week .num {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .week-strip .week .name {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: -0.012em;
+      color: var(--ink-soft);
+    }
+    .week-strip .week.is-empty .name { color: var(--ink-faint); font-style: italic; }
+    .week-strip .week.selected { background: rgba(255, 179, 96, 0.06); }
+    .week-strip .week.selected .name { color: var(--amber); font-style: italic; }
+    .week-strip .week.selected::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -1px;
+      height: 2px;
+      background: var(--amber);
+      box-shadow: 0 0 12px var(--amber-glow);
+    }
+
+    /* Masthead variant — leaner, with verdict italic in subhead */
+    .assign-mast {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 28px;
+      padding: 22px 0 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .assign-mast .eyebrow {
+      display: flex; align-items: center; gap: 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .assign-mast .eyebrow::after { content: ""; flex: 0 0 64px; height: 1px; background: var(--line-hi); }
+    .assign-mast h1 {
+      margin: 8px 0 12px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(32px, 4.4vw, 52px);
+      line-height: 1;
+      letter-spacing: -0.014em;
+      color: var(--ink);
+      max-width: 24ch;
+    }
+    .assign-mast h1 em { font-style: italic; color: var(--ink-soft); }
+    .assign-mast .verdict {
+      max-width: 56ch;
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 16px;
+      line-height: 1.5;
+      letter-spacing: -0.005em;
+      color: var(--ink-soft);
+    }
+    .assign-mast .meta {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      line-height: 1.85;
+    }
+    .assign-mast .meta .key { color: var(--ink-faint); margin-right: 8px; }
+    .assign-mast .meta strong { color: var(--ink); font-weight: 500; }
+
+    /* Two-column composition for the Class evidence zone:
+       left = run-of-show + engagement, right = grammar marginalia. */
+    .evidence-spread {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.85fr);
+      gap: 56px;
+      align-items: start;
+    }
+    .evidence-side .grammar-list { display: grid; gap: 0; }
+    /* Stack grammar rows vertically when inside the marginalia rail */
+    .evidence-side .grammar-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding: 14px 0;
+      align-items: start;
+    }
+    .evidence-side .grammar-row .moment {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .evidence-side .grammar-row .moment::after {
+      content: attr(data-cat);
+    }
+    .evidence-side .grammar-row .cat,
+    .evidence-side .grammar-row .sev {
+      grid-column: 1;
+      font-size: 9.5px;
+    }
+    .evidence-side .grammar-row .sev {
+      justify-self: start;
+      text-align: left;
+    }
+    @media (max-width: 920px) {
+      .evidence-spread { grid-template-columns: 1fr; gap: 36px; }
+    }
+
+    /* Section: ASSIGNMENTS rows */
+    .assign-list { display: grid; gap: 0; }
+    .assign-row {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1.6fr) minmax(140px, 0.55fr) minmax(140px, 0.55fr) auto;
+      gap: 24px;
+      align-items: baseline;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .assign-row:first-child { border-top: 1px solid var(--line); }
+    .assign-row .num {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      color: var(--ink-faint);
+      padding-top: 6px;
+      font-feature-settings: "tnum";
+    }
+    .assign-row .body {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+    .assign-row h3 {
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 26px;
+      line-height: 1.05;
+      letter-spacing: -0.012em;
+      color: var(--ink);
+    }
+    .assign-row h3 em { font-style: italic; color: var(--ink-soft); }
+    .assign-row .spec {
+      max-width: 64ch;
+      color: var(--ink-soft);
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .assign-row .rubric {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 4px;
+    }
+    .assign-row .rubric li {
+      position: relative;
+      padding-left: 18px;
+      color: var(--ink-soft);
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+    .assign-row .rubric li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 9px;
+      width: 8px; height: 1px;
+      background: var(--ink-faint);
+    }
+    .assign-row .ambiguity {
+      margin-top: 4px;
+      padding: 8px 12px;
+      border-left: 2px solid var(--amber);
+      background: rgba(255, 179, 96, 0.04);
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.05em;
+      line-height: 1.5;
+    }
+    .assign-row .meta-cell {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      display: grid;
+      gap: 4px;
+    }
+    .assign-row .meta-cell .k { color: var(--ink-faint); }
+    .assign-row .meta-cell .v {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 18px;
+      line-height: 1.05;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+      text-transform: none;
+    }
+    .assign-row .actions { display: flex; gap: 6px; padding-top: 4px; }
+
+    /* Section: GRAMMAR moments — terse, mono, severity-coloured */
+    .grammar-list { display: grid; gap: 0; }
+    .grammar-row {
+      display: grid;
+      grid-template-columns: 90px 110px minmax(0, 1.4fr) minmax(0, 1fr) 80px;
+      gap: 18px;
+      align-items: baseline;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .grammar-row:first-child { border-top: 1px solid var(--line); }
+    .grammar-row .moment {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+    .grammar-row .cat {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .grammar-row .issue {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 16px;
+      line-height: 1.35;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+    }
+    .grammar-row .fix {
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+    .grammar-row .sev {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      text-align: right;
+    }
+    .grammar-row.sev-warn .sev { color: var(--amber); }
+    .grammar-row.sev-bad  .sev { color: var(--coral); }
+    .grammar-row.sev-info .sev { color: var(--cyan); }
+
+    /* Section: SECTIONS / EVIDENCE */
+    .sections-grid {
+      display: grid;
+      gap: 0;
+    }
+    .sec-row {
+      display: grid;
+      grid-template-columns: 80px minmax(0, 1.6fr) 110px 110px;
+      gap: 22px;
+      align-items: baseline;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .sec-row:first-child { border-top: 1px solid var(--line); }
+    .sec-row .when {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .sec-row .name {
+      display: grid;
+      gap: 6px;
+    }
+    .sec-row .name strong {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 18px;
+      line-height: 1.1;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+    }
+    .sec-row .name strong em { font-style: italic; color: var(--ink-soft); }
+    .sec-row .name .summary {
+      color: var(--ink-soft);
+      font-size: 12.5px;
+      line-height: 1.55;
+      max-width: 56ch;
+    }
+    .sec-row .duration,
+    .sec-row .engagement {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .sec-row .engagement {
+      color: var(--ink-faint);
+      text-align: right;
+    }
+    .sec-row .engagement.high { color: var(--green); }
+    .sec-row .engagement.med  { color: var(--amber); }
+    .sec-row .engagement.low  { color: var(--coral); }
+    .sec-row.has-issue .name strong::after {
+      content: " · " attr(data-issue);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--coral);
+      font-style: normal;
+    }
+
+    /* Section: IDEAS — captured ideas, two-column on wide */
+    .ideas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .idea {
+      display: grid;
+      gap: 6px;
+      padding: 22px 22px 22px 0;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+    }
+    .idea:nth-child(2n) { padding-right: 0; padding-left: 22px; border-right: 0; }
+    .idea:first-child, .idea:nth-child(2) { border-top: 1px solid var(--line); }
+    .idea .title-line {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .idea h4 {
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 22px;
+      line-height: 1.1;
+      letter-spacing: -0.012em;
+      color: var(--ink);
+    }
+    .idea .quadrant {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
+    .idea .followup {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+    .idea .by {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .idea .summary {
+      color: var(--ink-soft);
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 56ch;
+    }
+
+    /* Engagement deck */
+    .eng-deck {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .eng-deck .cell {
+      padding: 22px 22px 24px;
+      border-right: 1px solid var(--line);
+      display: grid;
+      gap: 6px;
+    }
+    .eng-deck .cell:last-child { border-right: 0; }
+    .eng-deck .cell .key {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .eng-deck .cell .val {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(28px, 3.4vw, 40px);
+      line-height: 1;
+      letter-spacing: -0.018em;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+    .eng-deck .cell.good .val { color: var(--green); }
+    .eng-deck .cell .note {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+
+    /* Quotes — pull-quotes block */
+    .quotes-list { display: grid; gap: 0; }
+    .quote-row {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .quote-row:first-child { border-top: 1px solid var(--line); }
+    .quote-row blockquote {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(20px, 2vw, 26px);
+      line-height: 1.25;
+      letter-spacing: -0.008em;
+      color: var(--ink);
+      max-width: 64ch;
+    }
+    .quote-row blockquote::before { content: "“"; color: var(--amber); }
+    .quote-row blockquote::after  { content: "”"; color: var(--amber); }
+    .quote-row .by {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    /* Action items — checklist */
+    .action-list { display: grid; gap: 0; }
+    .action-row {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1.6fr) 110px 110px 80px;
+      gap: 18px;
+      align-items: baseline;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .action-row:first-child { border-top: 1px solid var(--line); }
+    .action-row .check {
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--ink-faint);
+      cursor: pointer;
+      align-self: center;
+    }
+    .action-row.is-done .check {
+      background: var(--green);
+      border-color: var(--green);
+    }
+    .action-row.is-done .title { color: var(--ink-faint); text-decoration: line-through; }
+    .action-row .title {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 16px;
+      line-height: 1.3;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+    }
+    .action-row .owner,
+    .action-row .due,
+    .action-row .status {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .action-row .status { text-align: right; color: var(--amber); }
+
+    @media (max-width: 920px) {
+      .assign-shell { padding: 22px 22px 64px; }
+      .assign-row { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 12px; }
+      .assign-row .meta-cell { display: none; }
+      .grammar-row { grid-template-columns: 70px minmax(0, 1fr); gap: 10px; }
+      .grammar-row .cat, .grammar-row .fix, .grammar-row .sev { grid-column: 2; }
+      .sec-row { grid-template-columns: 60px minmax(0, 1fr); gap: 12px; }
+      .sec-row .duration, .sec-row .engagement { grid-column: 2; text-align: left; }
+      .ideas-grid { grid-template-columns: 1fr; }
+      .idea { padding: 22px 0; border-right: 0; }
+      .idea:nth-child(2n) { padding-left: 0; }
+      .eng-deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .eng-deck .cell:nth-child(2n) { border-right: 0; }
+      .action-row { grid-template-columns: 18px 1fr; }
+      .action-row .owner, .action-row .due, .action-row .status { grid-column: 2; }
+    }
+  </style>
+</head>
+<body data-page="assignments">
+  <header class="topbar">
+    <a class="brand" href="/">Smart Classroom</a>
+    <nav class="nav nav-primary"></nav>
+    <nav class="nav-secondary"></nav>
+    <button class="log-toggle" type="button" data-log-toggle>
+      <span class="live-dot"></span><span>Log</span><span class="count" data-log-count>0</span>
+    </button>
+  </header>
+
+  <nav class="subnav" aria-label="Class days">
+    <div class="subnav-inner">
+      <div class="cal-strip" id="calStrip"></div>
+      <div class="daypicker" id="daypicker"></div>
+      <div class="cal-strip-controls">
+        <button id="prevWeekBtn" aria-label="Previous week">‹</button>
+        <button id="todayWeekBtn">Today</button>
+        <button id="nextWeekBtn" aria-label="Next week">›</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="assign-shell">
+    <section class="assign-mast">
+      <div>
+        <div class="eyebrow"><span id="weekEyebrow">Week 2 · Implicit interactions</span></div>
+        <h1 id="weekTitle">The class, <em>read back.</em></h1>
+        <div class="verdict" id="weekVerdict">—</div>
+      </div>
+      <div class="meta">
+        <div><span class="key">Date</span><strong id="weekDate">—</strong></div>
+        <div><span class="key">Run</span><strong id="weekDuration">—</strong></div>
+        <div><span class="key">Format</span><strong id="weekFormat">—</strong></div>
+        <div><span class="key">Lead</span><strong id="weekLead">—</strong></div>
+      </div>
+    </section>
+
+    <header class="zone-head">
+      <span class="zone-label">Quests</span>
+      <span class="zone-rule"></span>
+      <span class="zone-meta"><span class="key">Count</span><strong id="assignCount">—</strong></span>
+    </header>
+    <section class="assign-list" id="assignList"></section>
+
+    <header class="zone-head">
+      <span class="zone-label">Class evidence</span>
+      <span class="zone-rule"></span>
+      <span class="zone-meta"><span class="key">Sections</span><strong id="sectionCount">—</strong> · <span class="key">Moments</span><strong id="grammarCount">—</strong></span>
+    </header>
+    <section class="evidence-spread">
+      <div class="evidence-main">
+        <h3 class="zone-sub">Run of show</h3>
+        <div class="sections-grid" id="sectionsGrid"></div>
+        <h3 class="zone-sub" style="margin-top: 36px;">Engagement</h3>
+        <div class="eng-deck" id="engDeck"></div>
+      </div>
+      <aside class="evidence-side">
+        <h3 class="zone-sub">Grammar &amp; clarity</h3>
+        <div class="grammar-list" id="grammarList"></div>
+      </aside>
+    </section>
+
+    <header class="zone-head">
+      <span class="zone-label">Captured</span>
+      <span class="zone-rule"></span>
+      <span class="zone-meta"><span class="key">Ideas</span><strong id="ideaCount">—</strong></span>
+    </header>
+    <section class="ideas-grid" id="ideasGrid"></section>
+    <section class="quotes-list" id="quotesList" style="margin-top: 28px;"></section>
+
+    <header class="zone-head">
+      <span class="zone-label">Actions</span>
+      <span class="zone-rule"></span>
+      <span class="zone-meta"><span class="key">To do</span><strong id="actionCount">—</strong></span>
+    </header>
+    <section class="action-list" id="actionList"></section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/calendar.js"></script>
+  <script src="/assignments.js"></script>
+</body>
+</html>
