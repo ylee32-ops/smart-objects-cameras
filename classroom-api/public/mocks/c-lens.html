@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lens + canvas · Smart Classroom (mock C)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:       #e6efef;
+      --ink-soft:  rgba(230, 239, 239, 0.74);
+      --ink-faint: rgba(230, 239, 239, 0.34);
+      --ink-dim:   rgba(230, 239, 239, 0.16);
+      --bg:        #050709;
+      --bg-2:      #0a0d11;
+      --grid:      rgba(127, 188, 210, 0.14);
+      --grid-soft: rgba(127, 188, 210, 0.06);
+      --cyan:      #7fbcd2;
+      --cyan-bright:#b6e2ee;
+      --amber:     #ffb360;
+      --amber-glow:rgba(255, 179, 96, 0.5);
+      --emerald:   #74c896;
+      --coral:     #ff7a6b;
+      --serif:     'Fraunces', Georgia, serif;
+      --mono:      'IBM Plex Mono', ui-monospace, monospace;
+      --sans:      'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* registration corners */
+    .reg {
+      position: fixed;
+      width: 16px; height: 16px;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .reg::before, .reg::after { content: ""; position: absolute; background: var(--cyan); opacity: 0.55; }
+    .reg::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .reg::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .reg.tl { top: 22px; left: 22px; }
+    .reg.tr { top: 22px; right: 22px; }
+    .reg.bl { bottom: 22px; left: 22px; }
+    .reg.br { bottom: 22px; right: 22px; }
+
+    .mock-badge {
+      position: fixed;
+      top: 24px; right: 56px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--amber);
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    /* === main two-pane layout === */
+    .room {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* === Left: the LENS — fixed instrument view of the current focus === */
+    .lens {
+      position: relative;
+      border-right: 1px solid var(--ink-dim);
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255, 179, 96, 0.07), transparent 60%),
+        linear-gradient(180deg, rgba(127, 188, 210, 0.04), transparent 60%),
+        var(--bg-2);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 28px 32px 32px;
+      overflow: hidden;
+    }
+
+    .lens-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--ink-dim);
+    }
+    .lens-head .eyebrow {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lens-head .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber-glow);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.55; }
+      50%      { opacity: 1; }
+    }
+    .lens-head .clock {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      font-feature-settings: "tnum";
+    }
+    .lens-head .clock strong { color: var(--ink); font-weight: 500; }
+
+    /* the central object inside the lens */
+    .subject {
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 28px 0;
+    }
+    .subject-frame {
+      position: relative;
+      width: 240px; height: 240px;
+    }
+    .subject-frame svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .subj-rings circle {
+      fill: none;
+      stroke: var(--ink-dim);
+      stroke-width: 0.6;
+    }
+    .subj-arc {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 1.2;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 10px var(--amber-glow));
+    }
+    .subj-tick {
+      stroke: var(--ink-soft);
+      stroke-width: 0.8;
+      stroke-linecap: round;
+    }
+    .subj-handle {
+      fill: var(--amber);
+      stroke: #fff7e0;
+      stroke-width: 0.8;
+      filter: drop-shadow(0 0 8px var(--amber-glow));
+    }
+
+    .subj-label {
+      position: absolute;
+      top: -6px; left: -6px;
+      padding: 4px 8px;
+      border: 1px solid var(--cyan);
+      background: rgba(5, 7, 9, 0.86);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--cyan-bright);
+    }
+
+    .reading {
+      text-align: center;
+      margin-top: 14px;
+    }
+    .reading .label {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .reading .value {
+      margin-top: 4px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 64px;
+      line-height: 1;
+      letter-spacing: -0.022em;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+    .reading .value em { font-style: italic; color: var(--amber); }
+    .reading .delta {
+      margin-top: 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+
+    .lens-info {
+      display: grid;
+      gap: 14px;
+      padding-top: 22px;
+      border-top: 1px solid var(--ink-dim);
+    }
+    .lens-row {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr);
+      gap: 14px;
+      align-items: baseline;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .lens-row .k { color: var(--ink-faint); }
+    .lens-row .v { color: var(--ink); }
+    .lens-row .v.am { color: var(--amber); }
+    .lens-row .v.gn { color: var(--emerald); }
+
+    .lens-foot {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .lens-foot button {
+      padding: 12px 8px;
+      border: 1px solid var(--ink-dim);
+      background: rgba(5, 7, 9, 0.5);
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color .15s ease, color .15s ease;
+    }
+    .lens-foot button:hover { border-color: var(--ink-soft); color: var(--ink); }
+    .lens-foot button.primary {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: rgba(255, 179, 96, 0.08);
+    }
+
+    /* === Right: the CANVAS — blueprint grid with positioned objects === */
+    .canvas {
+      position: relative;
+      overflow: auto;
+    }
+
+    .canvas-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, var(--grid-soft) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-soft) 1px, transparent 1px),
+        linear-gradient(to right, var(--grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+      background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+      mask-image: radial-gradient(120% 90% at 50% 50%, #000 65%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* slow scan line */
+    .scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 220px;
+      background: linear-gradient(180deg, transparent 0%, rgba(127, 188, 210, 0.05) 50%, transparent 100%);
+      animation: scan 12s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes scan {
+      0% { transform: translateY(-260px); }
+      100% { transform: translateY(105vh); }
+    }
+
+    /* canvas header (top floating bar) */
+    .canvas-bar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: baseline;
+      gap: 32px;
+      padding: 24px 56px;
+      background: linear-gradient(180deg, rgba(5, 7, 9, 0.94) 0%, rgba(5, 7, 9, 0.7) 70%, transparent 100%);
+      backdrop-filter: blur(6px);
+    }
+    .canvas-bar .crumb {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .canvas-bar .crumb::after {
+      content: "";
+      width: 56px; height: 1px;
+      background: var(--cyan);
+      opacity: 0.55;
+    }
+    .canvas-bar h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(20px, 2.4vw, 28px);
+      line-height: 1.1;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+    }
+    .canvas-bar h1 em { font-style: italic; color: var(--cyan-bright); font-weight: 300; }
+    .canvas-bar .meta {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      line-height: 1.7;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .canvas-bar .meta .key { color: var(--ink-faint); margin-right: 6px; }
+    .canvas-bar .meta strong { color: var(--cyan-bright); font-weight: 500; }
+
+    /* canvas surface — the diagram of the day */
+    .canvas-surface {
+      position: relative;
+      width: 100%;
+      min-height: calc(100vh - 96px);
+      padding-bottom: 80px;
+    }
+
+    .canvas-surface svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* objects positioned on canvas */
+    .obj {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 2;
+    }
+    .obj-tag {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 14px;
+      align-items: start;
+      padding: 14px 18px;
+      border: 1px solid var(--cyan);
+      background: rgba(5, 7, 9, 0.84);
+      backdrop-filter: blur(4px);
+      transition: border-color .2s ease, background .2s ease;
+    }
+    .obj-tag::before, .obj-tag::after,
+    .obj-tag .ne, .obj-tag .nw {
+      content: "";
+      position: absolute;
+      width: 7px; height: 7px;
+      border: 1px solid var(--cyan);
+    }
+    .obj-tag::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+    .obj-tag::after  { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+    .obj-tag .ne     { top: -1px; right: -1px; border-left: 0; border-bottom: 0; display: block; }
+    .obj-tag .nw     { bottom: -1px; left: -1px; border-right: 0; border-top: 0; display: block; }
+
+    .obj-tag .id {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--cyan-bright);
+    }
+    .obj-tag h4 {
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 18px;
+      line-height: 1.0;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+    }
+    .obj-tag .by {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-top: 4px;
+    }
+    .obj-tag .read {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: -0.008em;
+      color: var(--amber);
+      font-feature-settings: "tnum";
+    }
+    .obj-tag .read .unit {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-left: 4px;
+    }
+
+    .obj.live .obj-tag { border-color: var(--emerald); }
+    .obj.live .id { color: var(--emerald); }
+    .obj.silent .obj-tag { border-color: var(--coral); border-style: dashed; }
+    .obj.silent .id { color: var(--coral); }
+    .obj:hover .obj-tag {
+      background: rgba(5, 7, 9, 0.96);
+    }
+
+    .obj.focused .obj-tag {
+      border-color: var(--amber);
+      box-shadow: 0 0 24px var(--amber-glow);
+    }
+    .obj.focused .obj-tag::before,
+    .obj.focused .obj-tag::after,
+    .obj.focused .obj-tag .ne,
+    .obj.focused .obj-tag .nw { border-color: var(--amber); }
+
+    /* small dot marker that anchors leader lines on the diagram */
+    .obj-anchor {
+      position: absolute;
+      left: 50%; top: 100%;
+      transform: translate(-50%, 4px);
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px rgba(127, 188, 210, 0.7);
+    }
+    .obj.live .obj-anchor { background: var(--emerald); box-shadow: 0 0 8px rgba(116, 200, 150, 0.7); }
+    .obj.silent .obj-anchor { background: var(--coral); }
+
+    /* phase ribbons — subtle horizontal bands across the canvas */
+    .phase-ribbon {
+      position: absolute;
+      left: 56px; right: 56px;
+      height: 1px;
+      background: var(--ink-dim);
+    }
+    .phase-ribbon span {
+      position: absolute;
+      left: 0;
+      top: -18px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .phase-ribbon span.r { left: auto; right: 0; }
+    .phase-ribbon.now { background: var(--amber); box-shadow: 0 0 8px var(--amber-glow); }
+    .phase-ribbon.now span { color: var(--amber); }
+
+    /* event tail (bottom-right floating) */
+    .tail {
+      position: fixed;
+      bottom: 24px;
+      right: 56px;
+      max-width: 520px;
+      z-index: 30;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-soft);
+    }
+    .tail .head {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tail .head::before {
+      content: "";
+      width: 24px; height: 1px;
+      background: var(--cyan);
+      opacity: 0.55;
+    }
+    .tail .ev {
+      display: grid;
+      grid-template-columns: 60px minmax(0, 1fr);
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--ink-dim);
+    }
+    .tail .ev:last-child { border-bottom: 0; }
+    .tail .ev .t { color: var(--ink-faint); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; }
+    .tail .ev .m em { color: var(--cyan-bright); font-style: normal; }
+    .tail .ev .m .ok { color: var(--emerald); }
+    .tail .ev .m .err { color: var(--coral); }
+
+    /* leader lines layer */
+    .leaders { stroke: rgba(127, 188, 210, 0.4); stroke-width: 0.5; fill: none; }
+    .leaders-active { stroke: var(--amber); stroke-width: 1; filter: drop-shadow(0 0 6px var(--amber-glow)); }
+
+    @media (max-width: 1100px) {
+      .room { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .lens { border-right: 0; border-bottom: 1px solid var(--ink-dim); padding: 22px; max-height: 440px; }
+      .canvas-bar { padding: 20px 28px; }
+      .tail { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+  <div class="mock-badge">Lens + canvas · Mock C</div>
+
+  <div class="room">
+
+    <!-- ================== LENS ================== -->
+    <aside class="lens">
+      <div class="lens-head">
+        <div class="eyebrow"><span class="live-dot"></span><span>Lens · Smart stage</span></div>
+        <div class="clock"><span style="color: var(--ink-faint); margin-right: 6px;">T</span><strong id="clock">— —</strong></div>
+      </div>
+
+      <div class="subject">
+        <div class="subject-frame">
+          <span class="subj-label">Tag · 10 · stage</span>
+          <svg viewBox="0 0 240 240">
+            <g class="subj-rings">
+              <circle cx="120" cy="120" r="110"/>
+              <circle cx="120" cy="120" r="84"/>
+              <circle cx="120" cy="120" r="58"/>
+            </g>
+            <!-- arc indicating brightness/focus = 72% -->
+            <path class="subj-arc"
+                  d="M 50 174 A 84 84 0 1 1 190 174"
+                  pathLength="100" stroke-dasharray="100"
+                  stroke-dashoffset="28"/>
+            <!-- tick marks every 30deg -->
+            <g class="subj-tick">
+              <line x1="120" y1="22" x2="120" y2="34"/>
+              <line x1="218" y1="120" x2="206" y2="120"/>
+              <line x1="120" y1="218" x2="120" y2="206"/>
+              <line x1="22" y1="120" x2="34" y2="120"/>
+            </g>
+            <!-- handle at current value -->
+            <circle class="subj-handle" cx="190" cy="174" r="6"/>
+            <!-- inner glyph: stage with beam -->
+            <g transform="translate(120 120)">
+              <rect x="-30" y="-12" width="60" height="24" stroke="rgba(230, 239, 239, 0.55)" stroke-width="0.8" fill="none"/>
+              <line x1="0" y1="-26" x2="0" y2="-12" stroke="var(--amber)" stroke-width="1.2"/>
+              <circle cx="0" cy="-30" r="2" fill="var(--amber)"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="reading">
+        <div class="label">Brightness</div>
+        <div class="value">72<em>°</em></div>
+        <div class="delta">Δ +6° in last 90s · holds slide</div>
+      </div>
+
+      <div class="lens-info">
+        <div class="lens-row"><span class="k">Phase</span><span class="v am">Lecture</span></div>
+        <div class="lens-row"><span class="k">Cue</span><span class="v">16:48 group activity</span></div>
+        <div class="lens-row"><span class="k">Owner</span><span class="v">Laila</span></div>
+        <div class="lens-row"><span class="k">Heartbeat</span><span class="v gn">live · 3s ago</span></div>
+        <div class="lens-row"><span class="k">Last evt</span><span class="v">stage.cue.lit</span></div>
+      </div>
+
+      <div class="lens-foot">
+        <button>Bind</button>
+        <button class="primary">Send to board</button>
+        <button>Open packet</button>
+      </div>
+    </aside>
+
+    <!-- ================== CANVAS ================== -->
+    <main class="canvas">
+      <div class="canvas-bg"></div>
+      <div class="scanline"></div>
+
+      <header class="canvas-bar">
+        <div class="crumb">Today · Tuesday · April 28</div>
+        <h1>The room <em>shows its work.</em></h1>
+        <div class="meta">
+          <div><span class="key">Phase</span><strong>Lecture</strong></div>
+          <div><span class="key">Live</span><strong>6 / 8</strong></div>
+        </div>
+      </header>
+
+      <section class="canvas-surface" id="surface">
+
+        <!-- phase ribbons (horizontal) -->
+        <div class="phase-ribbon" style="top: 16%;"><span>Pre-arrival</span><span class="r">15:30</span></div>
+        <div class="phase-ribbon" style="top: 32%;"><span>Arrival</span><span class="r">15:45</span></div>
+        <div class="phase-ribbon now" style="top: 50%;"><span>Lecture · now</span><span class="r">16:48</span></div>
+        <div class="phase-ribbon" style="top: 70%;"><span>Activity</span><span class="r">17:00</span></div>
+        <div class="phase-ribbon" style="top: 88%;"><span>Wrap</span><span class="r">18:35</span></div>
+
+        <!-- objects positioned on the canvas. Coords are (left%, top%). -->
+        <a class="obj live focused" style="left: 50%; top: 50%;" data-id="smart-stage">
+          <div class="obj-tag">
+            <span class="ne"></span><span class="nw"></span>
+            <div>
+              <div class="id">Stage · 10</div>
+              <h4>Smart stage</h4>
+              <div class="by">Laila</div>
+            </div>
+            <div class="read">72<span class="unit">°</span></div>
+          </div>
+          <span class="obj-anchor"></span>
+        </a>
+
+        <a class="obj live" style="left: 22%; top: 22%;" data-id="forest">
+          <div class="obj-tag">
+            <span class="ne"></span><span class="nw"></span>
+            <div>
+              <div class="id">Ambience · 11</div>
+              <h4>Forest</h4>
+              <div class="by">Tomas</div>
+            </div>
+            <div class="read">canopy</div>
+          </div>
+          <span class="obj-anchor"></span>
+        </a>
+
+        <a class="obj live" style="left: 78%; top: 28%;" data-id="seren">
+          <div class="obj-tag">
+            <span class="ne"></span><span class="nw"></span>
+            <div>
+              <div class="id">Ambience · 12</div>
+              <h4>Seren</h4>
+              <div class="by">Marc</div>
+            </div>
+            <div class="read">low</div>
+          </div>
+          <span class="obj-anchor"></span>
+        </a>
+
+        <a class="obj live" style="left: 30%; top: 72%;" data-id="gus">
+          <div class="obj-tag">
+            <span class="ne"></span><span class="nw"></span>
+            <div>
+              <div class="id">Character · 13</div>
+              <h4>Gus</h4>
+              <div class="by">Sara</div>
+            </div>
+            <div class="read">home</div>
+          </div>
+          <span class="obj-anchor"></span>
+        </a>
+
+        <a class="obj live" style="left: 70%; top: 70%;" data-id="focus-beam">
+          <div class="obj-tag">
+            <span class="ne"></span><span class="nw"></span>
+            <div>
+              <div class="id">Implicit · 14</div>
+              <h4>Focus beam</h4>
+              <div class="by">Lena</div>
+            </div>
+            <div class="read">−45<span class="unit">°</span></div>
+          </div>
+          <span class="obj-anchor"></span>
+        </a>
+
+        <a class="obj live" style="left: 86%; top: 56%;" data-id="gesture-timer">
+          <div class="obj-tag">
+            <span class="ne"></span><span class="nw"></span>
+            <div>
+              <div class="id">Cadence · 15</div>
+              <h4>Gesture timer</h4>
+              <div class="by">Ana</div>
+            </div>
+            <div class="read">10:00</div>
+          </div>
+          <span class="obj-anchor"></span>
+        </a>
+
+        <a class="obj silent" style="left: 14%; top: 56%;" data-id="grammar-coach">
+          <div class="obj-tag">
+            <span class="ne"></span><span class="nw"></span>
+            <div>
+              <div class="id">Critique · 16</div>
+              <h4>Grammar coach</h4>
+              <div class="by">— silent</div>
+            </div>
+            <div class="read">—</div>
+          </div>
+          <span class="obj-anchor"></span>
+        </a>
+
+        <!-- leader lines from the focused object to others (drawn as svg) -->
+        <svg style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;" preserveAspectRatio="none">
+          <g class="leaders">
+            <path d="M 50% 50% C 30% 40%, 24% 30%, 22% 22%"/>
+            <path d="M 50% 50% C 60% 38%, 70% 30%, 78% 28%"/>
+            <path d="M 50% 50% C 38% 64%, 32% 70%, 30% 72%"/>
+            <path d="M 50% 50% C 60% 60%, 66% 66%, 70% 70%"/>
+          </g>
+          <g class="leaders-active">
+            <path d="M 50% 50% C 70% 54%, 80% 56%, 86% 56%"/>
+          </g>
+        </svg>
+
+      </section>
+
+      <!-- event tail -->
+      <aside class="tail">
+        <div class="head">Stream · last 5</div>
+        <div class="ev"><span class="t">16:48:02</span><span class="m">stage.cue.lit · <em>group activity</em></span></div>
+        <div class="ev"><span class="t">16:48:01</span><span class="m">forest.canopy.lifted · <span class="ok">+12</span></span></div>
+        <div class="ev"><span class="t">16:47:54</span><span class="m">timer.armed · <em>10:00</em></span></div>
+        <div class="ev"><span class="t">16:47:38</span><span class="m">gus.scheduled · <em>break</em></span></div>
+        <div class="ev"><span class="t">16:47:14</span><span class="m">grammar.silent · <span class="err">no heartbeat 4m</span></span></div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    // tiny clock
+    function tick() {
+      const d = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    setInterval(tick, 1000); tick();
+
+    // click an object → focus shifts (mock — only visual)
+    const surface = document.getElementById('surface');
+    surface.addEventListener('click', e => {
+      const obj = e.target.closest('.obj');
+      if (!obj) return;
+      e.preventDefault();
+      surface.querySelectorAll('.obj').forEach(o => o.classList.remove('focused'));
+      obj.classList.add('focused');
+      // (in real app: lens pane re-renders to this object)
+    });
+  </script>
+</body>
+</html>

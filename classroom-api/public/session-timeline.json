@@ -1,0 +1,324 @@
+{
+  "schema": "smart-classroom-session-timeline/v0.1",
+  "title": "Smart Classroom Class Timeline",
+  "startClock": "16:45",
+  "minuteScale": "virtual minutes from pre-arrival",
+  "notes": [
+    "Phase clock follows the smart-classroom-story lead: 16:45 → 17:00 → 17:10 → 18:15 → 18:30 → 19:30 → 19:50 → 20:00.",
+    "Scrubbing should not mutate room state. Playing with Emit enabled sends only the cues as they are crossed.",
+    "Opt-in sensing stays gated as explicit scheduled cues, not always-on monitoring."
+  ],
+  "phases": [
+    {
+      "id": "pre-arrival",
+      "label": "Pre-Arrival",
+      "startMinute": 0,
+      "durationMinutes": 15,
+      "phase": "arrival",
+      "boardMode": "explore",
+      "summary": "The room warms up before anyone is in it.",
+      "cues": [
+        {
+          "id": "forest-seed",
+          "atMinute": 0,
+          "label": "Forest starts seeding",
+          "projectId": "forest-classroom",
+          "kind": "ambient",
+          "description": "Forest scene starts reacting softly as students enter.",
+          "events": [
+            { "event_type": "projection.scene.changed", "payload": { "scene": "forest", "mood": "seed", "energy": 20 } },
+            { "projectId": "forest-classroom", "event_type": "projection.ambient.pulsed", "payload": { "layer": "canopy", "intensity": 0.2 } }
+          ]
+        },
+        {
+          "id": "entry-music",
+          "atMinute": 1,
+          "label": "Entry music on",
+          "projectId": "seren-room",
+          "kind": "ambient",
+          "description": "Entry music and room ambience are active until arrival transitions into lecture.",
+          "events": [
+            { "event_type": "audio.entry.started", "payload": { "playlist": "arrival", "volume": 0.45 } },
+            { "projectId": "seren-room", "event_type": "ambience.changed", "payload": { "mode": "arrival", "intensity": 0.45 } }
+          ]
+        },
+        {
+          "id": "gus-ready-home",
+          "atMinute": 4,
+          "label": "Gus ready at home",
+          "projectId": "gus-mode",
+          "kind": "setup",
+          "description": "Gus is online but not yet in the room; break entrance is scheduled.",
+          "events": [
+            { "projectId": "gus-mode", "event_type": "gus.ready", "payload": { "location": "home", "scheduledFor": "break" } }
+          ]
+        },
+        {
+          "id": "break-timer-armed",
+          "atMinute": 8,
+          "label": "Break timer armed",
+          "projectId": "gesture-timer",
+          "kind": "setup",
+          "description": "Timer system is ready but does not start until break.",
+          "events": [
+            { "projectId": "gesture-timer", "event_type": "timer.armed", "payload": { "label": "break", "minutes": 15 } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrival",
+      "label": "Arrival",
+      "startMinute": 15,
+      "durationMinutes": 10,
+      "phase": "arrival",
+      "boardMode": "stage",
+      "summary": "Bodies in the frame.",
+      "cues": [
+        {
+          "id": "music-fades",
+          "atMinute": 15,
+          "label": "Music fades",
+          "projectId": "seren-room",
+          "kind": "transition",
+          "description": "Music fades as students take seats.",
+          "events": [
+            { "event_type": "audio.entry.faded", "payload": { "reason": "students seated" } },
+            { "event_type": "class.presence.changed", "payload": { "detected": true, "newCount": 12, "trigger": "arrival" } }
+          ]
+        },
+        {
+          "id": "lecture-mode-confirm",
+          "atMinute": 25,
+          "label": "Lecture mode confirmed",
+          "kind": "mode",
+          "description": "Class starts when music stops and professor begins. Keep this confirmable.",
+          "actions": [
+            { "type": "phase.set", "payload": { "phase": "lecture" } },
+            { "type": "board-mode.set", "payload": { "mode": "stage" } }
+          ],
+          "events": [
+            { "event_type": "session.mode.changed", "payload": { "newMode": "lecture", "trigger": "timeline.confirmed" } },
+            { "event_type": "class.type.set", "payload": { "classType": "smart-objects", "confidence": 1 } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lecture-1",
+      "label": "Lecture",
+      "startMinute": 25,
+      "durationMinutes": 65,
+      "phase": "lecture",
+      "boardMode": "stage",
+      "summary": "Capture, attention, support — opt-in only.",
+      "cues": [
+        {
+          "id": "captions-summary-on",
+          "atMinute": 25,
+          "label": "Captions and summary on",
+          "projectId": "smart-stage",
+          "kind": "support",
+          "description": "Live captions and summary run as lecture support.",
+          "events": [
+            { "projectId": "smart-stage", "event_type": "stage.ready", "payload": { "captions": true, "summary": true } },
+            { "event_type": "projection.classroom.updated", "payload": { "title": "Lecture", "status": "captions and summary active" } }
+          ]
+        },
+        {
+          "id": "emotion-layer-sample",
+          "atMinute": 31,
+          "label": "Tony emotion layer sample",
+          "projectId": "tony-shuyang",
+          "kind": "agent",
+          "description": "Shuyang's Tony layer can publish a room emotion summary from mock or real sensing.",
+          "events": [
+            { "projectId": "tony-shuyang", "event_type": "class.emotion.changed", "payload": { "emotion": "engaged", "confidence": 0.82 } }
+          ]
+        },
+        {
+          "id": "focus-light",
+          "atMinute": 35,
+          "label": "Focus light available",
+          "projectId": "focus-beam",
+          "kind": "attention",
+          "description": "Focus Beam can point at active lecture regions.",
+          "events": [
+            { "projectId": "focus-beam", "event_type": "board.focus.changed", "payload": { "target": "board-center", "intensity": 60 } }
+          ]
+        },
+        {
+          "id": "opt-in-attention",
+          "atMinute": 38,
+          "label": "Opt-in attention sensing",
+          "projectId": "nodcheck",
+          "kind": "opt-in",
+          "description": "Sleep/fatigue or nod checks must stay opt-in and visible.",
+          "events": [
+            { "projectId": "nodcheck", "event_type": "attention.opt-in.requested", "payload": { "source": "laptop-or-room-camera", "scope": "lecture support" } }
+          ]
+        },
+        {
+          "id": "questions-helper",
+          "atMinute": 44,
+          "label": "Q/A helpers available",
+          "projectId": "grammar-coach",
+          "kind": "agent",
+          "description": "Lumi and Tony can answer from captured notes when asked.",
+          "events": [
+            { "projectId": "grammar-coach", "event_type": "character.message", "payload": { "mode": "qa", "grounding": "captured-notes" } },
+            { "projectId": "tony-ramon", "event_type": "character.message", "payload": { "mode": "recorder-helper", "grounding": "lecture" } }
+          ]
+        },
+        {
+          "id": "lecture-mid-checkpoint",
+          "atMinute": 70,
+          "label": "Mid-lecture checkpoint",
+          "projectId": "nodcheck",
+          "kind": "opt-in",
+          "description": "Optional comprehension sample if the instructor opens it. Stays gated.",
+          "events": [
+            { "projectId": "nodcheck", "event_type": "class.prompt.started", "payload": { "prompt": "got_it", "scope": "mid-lecture" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "break",
+      "label": "Break",
+      "startMinute": 90,
+      "durationMinutes": 15,
+      "phase": "break",
+      "boardMode": "character",
+      "summary": "Gus appears.",
+      "cues": [
+        {
+          "id": "break-start",
+          "atMinute": 90,
+          "label": "Break timer starts",
+          "projectId": "gesture-timer",
+          "kind": "timer",
+          "description": "Start the break timer.",
+          "actions": [
+            { "type": "phase.set", "payload": { "phase": "break" } },
+            { "type": "board-mode.set", "payload": { "mode": "character" } }
+          ],
+          "events": [
+            { "projectId": "gesture-timer", "event_type": "timer.started", "payload": { "label": "break", "minutes": 15 } }
+          ]
+        },
+        {
+          "id": "gus-enters",
+          "atMinute": 91,
+          "label": "Gus appears",
+          "projectId": "gus-mode",
+          "kind": "character",
+          "description": "Gus enters during break as a scheduled social beat.",
+          "events": [
+            { "projectId": "gus-mode", "event_type": "gus.present", "payload": { "location": "classroom", "reason": "break" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "group-work",
+      "label": "Group Work",
+      "startMinute": 105,
+      "durationMinutes": 60,
+      "phase": "activity",
+      "boardMode": "write",
+      "summary": "Lab posture — small groups, surfaces, helpers.",
+      "cues": [
+        {
+          "id": "activity-mode",
+          "atMinute": 105,
+          "label": "Group/lab mode",
+          "kind": "mode",
+          "description": "Switch into group work. The board and surfaces become primary inputs.",
+          "actions": [
+            { "type": "phase.set", "payload": { "phase": "activity" } },
+            { "type": "board-mode.set", "payload": { "mode": "write" } }
+          ],
+          "events": [
+            { "event_type": "session.mode.changed", "payload": { "newMode": "group-work", "trigger": "timeline" } }
+          ]
+        },
+        {
+          "id": "brainstorming",
+          "atMinute": 110,
+          "label": "Brainstorm on any surface",
+          "projectId": "tony-shuyang",
+          "kind": "collaboration",
+          "description": "Writing, brainstorming, and Tony embodied helper mode become useful here.",
+          "events": [
+            { "projectId": "tony-shuyang", "event_type": "character.message", "payload": { "mode": "embodied-helper", "surface": "any" } },
+            { "event_type": "whiteboard.changed", "payload": { "textDetected": true, "trigger": "brainstorming" } }
+          ]
+        },
+        {
+          "id": "whiteboard-capture",
+          "atMinute": 117,
+          "label": "Whiteboard reader captures",
+          "projectId": "imprint",
+          "kind": "capture",
+          "description": "Capture and save board content after writing stabilizes.",
+          "events": [
+            { "projectId": "imprint", "event_type": "board.note.saved", "payload": { "captureMode": "handwriting", "saveTo": "lesson-summary" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tech-demo",
+      "label": "Tech Demo",
+      "startMinute": 165,
+      "durationMinutes": 20,
+      "phase": "demo",
+      "boardMode": "focus",
+      "summary": "Focused work, demos, and opt-in checks.",
+      "cues": [
+        {
+          "id": "demo-setup",
+          "atMinute": 165,
+          "label": "Setup and opt-in",
+          "kind": "setup",
+          "description": "Make opt-in visible before showing sensing and agent flows.",
+          "actions": [
+            { "type": "phase.set", "payload": { "phase": "demo" } },
+            { "type": "board-mode.set", "payload": { "mode": "focus" } }
+          ],
+          "events": [
+            { "event_type": "demo.setup.started", "payload": { "optInRequired": true } },
+            { "event_type": "projection.classroom.updated", "payload": { "title": "Tech Demo", "status": "setup and opt-in" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wrap",
+      "label": "Wrap",
+      "startMinute": 185,
+      "durationMinutes": 10,
+      "phase": "wrap",
+      "boardMode": "explore",
+      "summary": "Dismissal. The room logs the class.",
+      "cues": [
+        {
+          "id": "session-log",
+          "atMinute": 185,
+          "label": "Class log saved",
+          "kind": "wrap",
+          "description": "Room ends and writes the session log: phases, cues, captured notes.",
+          "actions": [
+            { "type": "phase.set", "payload": { "phase": "wrap" } },
+            { "type": "board-mode.set", "payload": { "mode": "explore" } }
+          ],
+          "events": [
+            { "event_type": "session.mode.changed", "payload": { "newMode": "wrap", "trigger": "timeline" } },
+            { "event_type": "session.log.saved", "payload": { "scope": "class", "trigger": "timeline" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

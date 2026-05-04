@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tag Reference</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .tag-shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 24px 56px;
+      display: grid;
+      gap: 18px;
+    }
+    .tag-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .tag-card {
+      border: 1px solid var(--line);
+      border-left: 8px solid var(--tag-color, var(--cyan));
+      background: var(--bg-panel);
+      border-radius: 3px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      gap: 12px;
+      min-height: 170px;
+    }
+    .tag-card img {
+      width: 86px;
+      height: 86px;
+      background: #fff;
+      padding: 8px;
+      image-rendering: pixelated;
+    }
+    .tag-card h3 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      color: var(--ink);
+    }
+    .tag-id {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .tag-meta {
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      line-height: 1.45;
+    }
+    .tag-grammar {
+      display: grid;
+      gap: 4px;
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--ink-soft);
+    }
+    .tag-grammar strong {
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .grammar-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+    .grammar-table th,
+    .grammar-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .grammar-table th {
+      color: var(--ink-faint);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .contract-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-soft);
+    }
+    .contract-table th,
+    .contract-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+    }
+    @media (max-width: 980px) {
+      .tag-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .tag-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-page="tag-reference">
+  <header class="topbar">
+    <div class="brand">Tag Reference</div>
+    <nav class="nav">
+      <a href="/start.html">Start</a>
+      <a href="/">Console</a>
+      <a href="/board.html">Board</a>
+      <a href="/projects.html">Projects</a>
+      <a href="/report.html">Report</a>
+      <a href="/cameras.html">Cameras</a>
+      <a href="/events.html">Events</a>
+      <a href="/projector.html">Projector</a>
+    </nav>
+    <div class="spacer"></div>
+    <button onclick="window.print()">Print Reference</button>
+  </header>
+
+  <main class="tag-shell">
+    <section class="hero-line">
+      <div class="eyebrow">Tomorrow Setup</div>
+      <h1>Print and place these board tags.</h1>
+      <p>Use this page as the meaning reference. Print the real AprilTag sheet from the generated tag page so the camera gets clean marker squares.</p>
+      <div class="tag-actions">
+        <a href="/generated-tags/board-tags.html" target="_blank"><button class="primary">Print Board Tags</button></a>
+        <a href="/generated-tags/cards.html" target="_blank"><button>Print All Tags</button></a>
+        <a href="/ideas/virtualroom/"><button>Open Virtual Room</button></a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Board Coordinate Contract</h2>
+      <div class="panel-body">
+        <table class="contract-table">
+          <thead>
+            <tr><th>Coordinate</th><th>Meaning</th><th>Use</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>x = 0</code></td><td>left edge</td><td>board events, tag positions, projection targets</td></tr>
+            <tr><td><code>x = 1</code></td><td>right edge</td><td>board events, tag positions, projection targets</td></tr>
+            <tr><td><code>y = 0</code></td><td>top edge</td><td>board events, tag positions, projection targets</td></tr>
+            <tr><td><code>y = 1</code></td><td>bottom edge</td><td>board events, tag positions, projection targets</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Calibration Tags</h2>
+      <div id="calibrationTags" class="panel-body tag-grid"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Tag Grammar Matrix</h2>
+      <div class="panel-body">
+        <table class="grammar-table">
+          <thead>
+            <tr><th>Role</th><th>Primary Action</th><th>Projected Signifier</th><th>Feedback / Failure</th><th>Why It Exists</th></tr>
+          </thead>
+          <tbody id="tagGrammarMatrix"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Board Action Tags</h2>
+      <div id="boardTags" class="panel-body tag-grid"></div>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/tag-reference.js"></script>
+</body>
+</html>

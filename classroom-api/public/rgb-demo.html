@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RGB Tracker Demo</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .rgb-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 14px;
+    }
+    .rgb-view {
+      position: relative;
+      min-height: calc(100vh - 132px);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+      background: #05070a;
+    }
+    .rgb-view video,
+    .rgb-view canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .rgb-view canvas {
+      pointer-events: none;
+    }
+    .sample-swatch {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      background: #38bdf8;
+    }
+    .rgb-crosshair {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #f8fafc;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: .8;
+    }
+  </style>
+</head>
+<body data-page="rgb-demo">
+  <header class="topbar">
+    <div class="brand">RGB Tracker</div>
+    <nav class="nav">
+      <a href="/">Control</a>
+      <a href="/projector.html">Projector</a>
+      <a href="/camera.html">Camera</a>
+      <a class="active" href="/rgb-demo.html">RGB</a>
+      <a href="/phone.html">Phone</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="identity">
+      <span class="status-dot" data-connection-dot></span>
+      <input data-user-input placeholder="Your name">
+      <button data-join-button>Join</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="rgb-layout">
+      <div id="rgbView" class="rgb-view">
+        <video id="rgbVideo" playsinline muted></video>
+        <canvas id="rgbCanvas"></canvas>
+        <div id="rgbCrosshair" class="rgb-crosshair" hidden></div>
+        <div class="surface-label">Click the video to sample the colored object</div>
+      </div>
+
+      <aside class="panel">
+        <h2>RGB Perception</h2>
+        <div class="panel-body stack">
+          <div class="row">
+            <button id="startRgb" class="primary">Start Camera</button>
+            <button id="stopRgb">Stop</button>
+          </div>
+
+          <label class="stack small">
+            Marker to move
+            <select id="markerSelect">
+              <option value="mirror-a">Mirror</option>
+              <option value="emitter">Emitter</option>
+              <option value="filter-blue">Filter</option>
+              <option value="splitter">Splitter</option>
+              <option value="blocker">Blocker</option>
+              <option value="target">Target</option>
+            </select>
+          </label>
+
+          <label class="stack small">
+            Color tolerance
+            <input id="tolerance" type="range" min="20" max="150" value="74">
+          </label>
+
+          <label class="stack small">
+            Minimum blob pixels
+            <input id="minPixels" type="range" min="20" max="2000" value="160">
+          </label>
+
+          <div class="row">
+            <div id="sampleSwatch" class="sample-swatch"></div>
+            <button id="useBlue">Track Blue</button>
+            <button id="useGreen">Track Green</button>
+          </div>
+
+          <div id="rgbStatus" class="target-card small">
+            Start the camera, hold up a colored object, then click it in the video.
+          </div>
+
+          <div class="small">
+            This is a fallback perception worker. It emits the same room events as the future OAK/AprilTag path by moving a marker through `token.move`.
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/rgb-demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interaction Grammar</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .grammar-shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 24px 60px;
+      display: grid;
+      gap: 18px;
+    }
+    .grammar-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .grammar-card {
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: 3px;
+      padding: 14px;
+      display: grid;
+      gap: 9px;
+      align-content: start;
+    }
+    .grammar-card h2,
+    .grammar-card h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .rule-stack {
+      display: grid;
+      gap: 7px;
+    }
+    .rule {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 10px;
+      align-items: start;
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
+      border-radius: 3px;
+      padding: 10px;
+    }
+    .rule strong {
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .tag-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .tag-tile {
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(127, 188, 210, 0.06), rgba(224, 168, 94, 0.04));
+      border-radius: 3px;
+      padding: 11px;
+      min-height: 112px;
+    }
+    .tag-tile strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+    .signal-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .signal-table th,
+    .signal-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .signal-table th {
+      color: var(--ink-faint);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+    .role-chip {
+      display: inline-flex;
+      padding: 3px 6px;
+      border: 1px solid var(--line-hi);
+      border-radius: 999px;
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .do-dont {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .do-dont .grammar-card:first-child {
+      border-color: rgba(116, 198, 157, 0.35);
+    }
+    .do-dont .grammar-card:last-child {
+      border-color: rgba(211, 106, 106, 0.35);
+    }
+    .grammar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    @media (max-width: 900px) {
+      .grammar-grid,
+      .tag-grid,
+      .do-dont {
+        grid-template-columns: 1fr;
+      }
+      .rule {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-page="interaction">
+  <header class="topbar">
+    <div class="brand">Smart Classroom</div>
+    <nav class="nav">
+      <a href="/start.html">Start</a>
+      <a class="active" href="/interaction.html">Grammar</a>
+      <a href="/projects.html">Projects</a>
+      <a href="/board.html">Board</a>
+      <a href="/projector.html">Projector</a>
+      <a href="/phone.html">Phone</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="status-dot" data-connection-dot></span>
+  </header>
+
+  <main class="grammar-shell">
+    <section class="hero-line">
+      <div class="eyebrow">Interaction Grammar</div>
+      <h1>One board-first language for tags, projection, phone, and cameras.</h1>
+      <p>Use this as the student contract: every object should declare what it affords, every implicit inference should show feedback before it commits, and the projector is the user-facing truth.</p>
+    </section>
+
+    <section class="panel">
+      <h2>The Five Rules</h2>
+      <div class="panel-body rule-stack">
+        <div class="rule"><strong>Handles</strong><span>Tags are movable handles for identity, control, and calibration. If students can touch it, it should respond visibly.</span></div>
+        <div class="rule"><strong>Places</strong><span>Zones, sticky notes, writing clusters, and polygons are places on the board. Projection should land in the same place the student sees.</span></div>
+        <div class="rule"><strong>Commit</strong><span>Action is the general commit/control tag. Dragging it over a valid target shows green drop affordances before anything irreversible happens.</span></div>
+        <div class="rule"><strong>Answer</strong><span>Projection answers back with glow, fill, pulse, slide change, video state, or classroom-screen summary within one beat.</span></div>
+        <div class="rule"><strong>Explain</strong><span>The phone and Figurate explain what the system sees, start live conversation, and convert simple text into room commands.</span></div>
+      </div>
+    </section>
+
+    <section class="grammar-grid">
+      <article class="grammar-card">
+        <span class="eyebrow cy">Explicit</span>
+        <h2>Student Says</h2>
+        <p class="small">Move a tag, rotate a tag, drag Action, draw a zone, tap the phone lens, ask Figurate, or press a quick phone control.</p>
+      </article>
+      <article class="grammar-card">
+        <span class="eyebrow cy">Implicit</span>
+        <h2>Room Infers</h2>
+        <p class="small">Detect tag pose, sticky-note color, writing clusters, QR targets, pose/hand gestures, or object hints. Inference must be conservative.</p>
+      </article>
+      <article class="grammar-card">
+        <span class="eyebrow cy">Feedback</span>
+        <h2>Room Responds</h2>
+        <p class="small">Pulse the tag, draw the mapped projection, show green acceptable drop zones, update classroom slides, or put Figurate response on the classroom projector.</p>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Tag Set</h2>
+      <div class="panel-body tag-grid">
+        <div class="tag-tile"><strong>Calibration</strong><span class="small">Fixed board corners. These stay when tags are cleared.</span></div>
+        <div class="tag-tile"><strong>Zone</strong><span class="small">Defines an area. A second diagonal Zone resizes it.</span></div>
+        <div class="tag-tile"><strong>Action</strong><span class="small">Contextual commit: capture zone, play video, change slide, erase/write.</span></div>
+        <div class="tag-tile"><strong>Focus</strong><span class="small">Projects a white highlighter; rotation changes radius.</span></div>
+        <div class="tag-tile"><strong>Write / Erase</strong><span class="small">Writing mode and eraser behavior, backed by board strokes and OCR later.</span></div>
+        <div class="tag-tile"><strong>Slide / Video</strong><span class="small">Projects media beside the tag; Action controls state.</span></div>
+        <div class="tag-tile"><strong>Vertex / 3D</strong><span class="small">Vertices close into filled polygons; 3D rotation changes shape.</span></div>
+        <div class="tag-tile"><strong>Figurate</strong><span class="small">Character presence for room-aware questions and phone Live.</span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Tag Grammar Matrix</h2>
+      <div class="panel-body">
+        <table class="signal-table">
+          <thead>
+            <tr><th>Role</th><th>Student Action</th><th>Signifier</th><th>Feedback</th><th>Failure Constraint</th></tr>
+          </thead>
+          <tbody id="interactionGrammarMatrix"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>CV Stack</h2>
+      <div class="panel-body">
+        <table class="signal-table">
+          <thead>
+            <tr><th>Signal</th><th>Role</th><th>Use It For</th><th>Rule</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>AprilTags</td><td>Primary</td><td>Identity, XY, rotation, calibration</td><td>Must be stable enough to drive projection.</td></tr>
+            <tr><td>QR / phone target</td><td>Primary fallback</td><td>Debugging, manual target selection, phone point-and-ask</td><td>Same target object as tags.</td></tr>
+            <tr><td>Color/sticky detection</td><td>Secondary</td><td>Find real sticky notes without tags</td><td>Show confirmation before capture.</td></tr>
+            <tr><td>Writing/OCR</td><td>Secondary</td><td>Highlight marker writing and summarize zones</td><td>Project on strokes, not on the whole zone.</td></tr>
+            <tr><td>Pose/hands</td><td>Secondary implicit</td><td>Point-to-focus, two-hand resize, pause/play, raised-hand timer</td><td>Confidence gate and require projected affordance before commit.</td></tr>
+            <tr><td>YOLO/ONNX objects</td><td>Optional</td><td>Phone/OAK object hints and demos</td><td>Do not make object class labels the critical path for Monday.</td></tr>
+            <tr><td>V-JEPA/classification</td><td>Optional room mode</td><td>Room energy/activity/mode summaries</td><td>Use as ambient context, not exact control.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="do-dont">
+      <article class="grammar-card">
+        <span class="eyebrow cy">Do</span>
+        <h2>Make Affordances Visible</h2>
+        <p class="small">Green means a valid drop target. White glow means focus/highlight. Yellow means pending/thinking. Blue/cyan means informational overlay. Pulses mean the room saw movement or action.</p>
+      </article>
+      <article class="grammar-card">
+        <span class="eyebrow cy">Do Not</span>
+        <h2>Hide the System State</h2>
+        <p class="small">Do not make projection mapping private to one page. Do not trigger major implicit actions silently. Do not use pose, YOLO, or classification as the only way to complete a project.</p>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Useful Entrypoints</h2>
+      <div class="panel-body grammar-actions">
+        <a href="/start.html"><button>Student Start</button></a>
+        <a href="/tag-reference.html"><button>Tag Reference</button></a>
+        <a href="/board.html"><button>Board Control</button></a>
+        <a href="/projector.html"><button>Projector Output</button></a>
+        <a href="/phone.html"><button>Phone Lens</button></a>
+      </div>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/interaction.js"></script>
+  <script>
+    Room.connect();
+  </script>
+</body>
+</html>

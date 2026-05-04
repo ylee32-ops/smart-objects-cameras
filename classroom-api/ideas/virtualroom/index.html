@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="virtual-room.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/vendor/three/build/three.module.js",
+      "three/addons/": "/vendor/three/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <h1>Virtual <em>Room</em></h1>
+      <span class="version">Board rehearsal</span>
+    </div>
+    <div class="top-meta">
+      <span>Local only</span>
+      <span id="fps">FPS --</span>
+      <span id="markerCount">Tags 00</span>
+    </div>
+    <div class="top-actions">
+      <button id="streamBtn" class="ctrl active">Stream</button>
+      <button id="resetBtn" class="ctrl">Reset</button>
+      <button id="resetWarpBtn" class="ctrl">Reset Warp</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section id="scene">
+      <div class="scene-label">Board viewer</div>
+      <div class="toolbar" id="toolbar">
+        <button class="tool active" data-mode="select">Select</button>
+        <button class="tool" data-mode="draw">Draw</button>
+        <button class="tool" data-mode="warp">Map</button>
+        <button class="tool" id="view2dBtn">2D</button>
+        <button class="tool active" id="view3dBtn">3D</button>
+        <button class="tool" id="coverageBtn">COV</button>
+      </div>
+      <canvas id="view2dCanvas" class="view2d-canvas" hidden></canvas>
+      <div id="orientationWidget" class="orientation-widget"></div>
+      <div id="inspector" class="inspector" hidden></div>
+      <div class="hotkeys"><span>Right drag orbit</span><span>D draw / P map</span><span>Map: drag corners, click edge to add point</span></div>
+    </section>
+
+    <aside class="rail">
+      <section class="panel camera-setup-panel">
+        <h3>Camera + Calibration <span id="rateBadge" class="rate-badge">0/s</span></h3>
+        <select id="camSelect"></select>
+        <div class="preview-frame">
+          <canvas id="povCanvas"></canvas>
+          <video id="physicalCameraVideo" playsinline muted></video>
+          <canvas id="detectionOverlay"></canvas>
+          <canvas id="calibrationOverlay"></canvas>
+          <button id="sampleStickyBtn" class="sample-sticky" title="Sample sticky-note color from camera view">sample</button>
+        </div>
+        <button id="autoCalibrateBtn" class="ctrl primary">Calibrate Visible Corners</button>
+        <div id="cornerStatus" class="corner-status">Need corner tags 4, 5, 6, 7.</div>
+        <div class="stream-meta">
+          <span id="detCount">00 detections</span>
+          <span id="streamRate">surface</span>
+        </div>
+        <div class="stream-meta">
+          <span id="serverStatus">server idle</span>
+          <span id="calibrationStatus">board cal pending</span>
+        </div>
+        <div id="detList" class="det-list"></div>
+        <div class="hidden-utility">
+          <div class="source-toggle">
+            <button id="sourceSurfaceBtn" class="ctrl active">surface truth</button>
+            <button id="sourceCameraBtn" class="ctrl">camera pixels</button>
+          </div>
+          <button id="validatePixelsBtn" class="ctrl">Validate camera pixels</button>
+          <div id="calibrationPanel" class="calibration-panel"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Projector Map</h3>
+        <select id="projectorSelect"></select>
+        <div id="projectorSpec" class="device-spec"></div>
+        <div id="projectorMapStatus" class="map-status">Projector map pending</div>
+      </section>
+
+      <section class="panel hidden-utility">
+        <h3>Replay <span class="rate-badge">experimental</span></h3>
+        <select id="replaySource">
+          <option value="live">live server log</option>
+          <option value="file">file upload</option>
+          <option value="paste">paste JSONL</option>
+        </select>
+        <input id="replayFile" type="file" accept=".jsonl,.json,.txt" hidden>
+        <textarea id="replayPaste" rows="4" placeholder="Paste JSONL events here" hidden></textarea>
+        <div class="replay-controls">
+          <button id="loadReplayBtn" class="ctrl">Load</button>
+          <button id="playReplayBtn" class="ctrl">Play</button>
+          <button id="pauseReplayBtn" class="ctrl">Pause</button>
+        </div>
+        <input id="replayScrub" type="range" min="0" max="1000" value="0">
+        <div class="stream-meta">
+          <span id="replayTime">00:00 / 00:00</span>
+          <span id="replayStatus">idle</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Tags</h3>
+        <div class="panel-actions">
+          <a href="/tag-board.html" target="_blank"><button class="ctrl">Tag Board</button></a>
+          <a href="/calibration-board.html" target="_blank"><button class="ctrl">Checker</button></a>
+        </div>
+        <div class="panel-actions">
+          <a href="/tag-reference.html" target="_blank"><button class="ctrl">Reference</button></a>
+          <a href="/tag-debugger.html" target="_blank"><button class="ctrl">Debugger</button></a>
+        </div>
+        <div id="markerPad" class="marker-pad"></div>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="bottom">
+    <span>Board coords: x left to right, y top to bottom</span>
+    <span><a href="/tag-reference.html" target="_blank">tag reference</a> / docs/board-coordinate-contract.md</span>
+  </footer>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

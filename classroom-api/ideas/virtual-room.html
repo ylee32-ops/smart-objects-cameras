@@ -1,0 +1,2507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual Room — Sim · 0.2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <style>
+    :root {
+      --ink: #f5efe2;
+      --ink-soft: rgba(245, 239, 226, 0.62);
+      --ink-faint: rgba(245, 239, 226, 0.22);
+      --ink-rule: rgba(245, 239, 226, 0.10);
+      --bg: #060709;
+      --bg-2: #0a0c10;
+      --amber: #ffb360;
+      --amber-glow: rgba(255, 179, 96, 0.5);
+      --cyan: #7fbcd2;
+      --emerald: #74c896;
+      --coral: #ff7a6b;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: var(--bg); color: var(--ink);
+      font-family: 'IBM Plex Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    body::after {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' seed='9'/><feColorMatrix values='0 0 0 0 0.96  0 0 0 0 0.94  0 0 0 0 0.86  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      opacity: 0.45; mix-blend-mode: screen; z-index: 90;
+    }
+    .reg { position: fixed; width: 14px; height: 14px; pointer-events: none; z-index: 80; }
+    .reg::before, .reg::after { content: ""; position: absolute; background: var(--ink-faint); }
+    .reg::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .reg::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .reg.tl { top: 16px; left: 16px; } .reg.tr { top: 16px; right: 16px; }
+    .reg.bl { bottom: 16px; left: 16px; } .reg.br { bottom: 16px; right: 16px; }
+
+    body { display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh; }
+
+    header.top {
+      display: grid; grid-template-columns: auto 1fr auto;
+      align-items: center; gap: 32px; padding: 16px 40px;
+      border-bottom: 1px solid var(--ink-rule); z-index: 10;
+    }
+    .brand { display: flex; align-items: baseline; gap: 14px; }
+    .brand .mark {
+      width: 16px; height: 16px;
+      border: 1px solid var(--ink); position: relative;
+    }
+    .brand .mark::after {
+      content: ""; position: absolute; inset: 3px;
+      background: var(--amber); box-shadow: 0 0 10px var(--amber-glow);
+    }
+    .brand h1 {
+      margin: 0; font-family: 'Fraunces', serif;
+      font-variation-settings: "opsz" 144;
+      font-weight: 300; font-size: 22px; letter-spacing: -0.005em;
+    }
+    .brand h1 em { font-style: italic; color: var(--ink-soft); }
+    .brand .sub {
+      font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
+      letter-spacing: 0.4em; text-transform: uppercase; color: var(--ink-faint);
+      padding-bottom: 2px;
+    }
+    .header-meta {
+      display: flex; justify-content: center; gap: 28px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft);
+    }
+    .header-meta .key { color: var(--ink-faint); margin-right: 8px; }
+    .header-meta strong { color: var(--ink); font-weight: 500; }
+    .header-controls { display: flex; gap: 6px; }
+    .ctrl {
+      background: transparent; border: 1px solid var(--ink-rule);
+      color: var(--ink); font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+      padding: 8px 12px; cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .ctrl:hover { border-color: var(--ink-soft); }
+    .ctrl.active {
+      border-color: var(--amber); color: var(--amber);
+      background: rgba(255, 179, 96, 0.06);
+    }
+
+    main.grid {
+      display: grid; grid-template-columns: 1fr 380px;
+      min-height: 0; position: relative;
+    }
+
+    /* === 3D SCENE === */
+    #scene {
+      position: relative; background: #050608; overflow: hidden;
+      border-right: 1px solid var(--ink-rule);
+    }
+    #scene canvas { display: block; width: 100% !important; height: 100% !important; }
+    .scene-reg {
+      position: absolute; width: 12px; height: 12px;
+      border: 1px solid var(--ink-faint); pointer-events: none; z-index: 5;
+    }
+    .scene-reg.tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+    .scene-reg.tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+    .scene-reg.bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+    .scene-reg.br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+    .scene-label {
+      position: absolute; top: 14px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px; letter-spacing: 0.5em;
+      text-transform: uppercase; color: var(--ink-faint);
+      z-index: 5; pointer-events: none;
+    }
+    .scene-meta-l, .scene-meta-r {
+      position: absolute; bottom: 14px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--ink-faint); z-index: 5; pointer-events: none;
+    }
+    .scene-meta-l { left: 22px; }
+    .scene-meta-r { right: 22px; }
+
+    /* mode toolbar — Unity-style left palette */
+    .toolbar {
+      position: absolute; top: 50px; left: 22px;
+      display: flex; flex-direction: column; gap: 4px;
+      z-index: 8; pointer-events: auto;
+    }
+    .tool {
+      width: 38px; height: 38px;
+      display: grid; place-items: center;
+      background: rgba(8, 10, 14, 0.7); backdrop-filter: blur(8px);
+      border: 1px solid var(--ink-rule); cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      color: var(--ink-soft); position: relative;
+    }
+    .tool:hover { border-color: var(--ink-soft); color: var(--ink); }
+    .tool.active {
+      border-color: var(--amber); color: var(--amber);
+      background: rgba(255, 179, 96, 0.08);
+    }
+    .tool svg { display: block; width: 18px; height: 18px; }
+    .tool .key {
+      position: absolute; bottom: 2px; right: 4px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 7.5px;
+      letter-spacing: 0.1em; color: var(--ink-faint);
+    }
+    .tool.active .key { color: var(--amber); }
+    .tool.divider {
+      height: 1px; width: 100%; padding: 0;
+      background: var(--ink-rule); border: none; cursor: default;
+      margin: 4px 0;
+    }
+    .tool.divider:hover { background: var(--ink-rule); }
+
+    .fps {
+      position: absolute; top: 14px; right: 22px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--ink-faint); z-index: 5; pointer-events: none;
+    }
+    .fps strong { color: var(--ink); font-weight: 500; }
+
+    /* hover hint near cursor */
+    .hover-tag {
+      position: absolute; padding: 4px 8px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--amber); background: rgba(8, 10, 14, 0.85);
+      border: 1px solid var(--amber); pointer-events: none;
+      z-index: 9; transform: translate(14px, 14px);
+      opacity: 0; transition: opacity 0.12s;
+      white-space: nowrap;
+    }
+    .hover-tag.show { opacity: 1; }
+
+    /* Inspector floats on bottom-left of scene */
+    .inspector {
+      position: absolute; bottom: 50px; left: 22px;
+      width: 280px; padding: 14px 16px;
+      background: rgba(8, 10, 14, 0.85); backdrop-filter: blur(10px);
+      border: 1px solid var(--amber); z-index: 8;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      color: var(--ink);
+    }
+    .inspector.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .inspector::before, .inspector::after {
+      content: ""; position: absolute; width: 7px; height: 7px;
+      border: 1px solid var(--amber);
+    }
+    .inspector::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+    .inspector::after  { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+    .inspector .head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 12px; margin-bottom: 12px;
+    }
+    .inspector .name {
+      font-family: 'Fraunces', serif; font-variation-settings: "opsz" 144;
+      font-weight: 300; font-size: 22px; letter-spacing: -0.005em;
+      color: var(--ink); line-height: 1;
+    }
+    .inspector .name em { font-style: italic; color: var(--amber); }
+    .inspector .id {
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      letter-spacing: 0.32em; text-transform: uppercase; color: var(--ink-faint);
+    }
+    .inspector .row {
+      display: grid; grid-template-columns: 60px 1fr;
+      gap: 10px; padding: 5px 0;
+      border-bottom: 1px solid var(--ink-rule);
+      align-items: baseline;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: 0.16em; text-transform: uppercase;
+    }
+    .inspector .row:last-of-type { border-bottom: none; }
+    .inspector .row .lbl { color: var(--ink-faint); }
+    .inspector .row .val { color: var(--ink); font-feature-settings: "tnum"; letter-spacing: 0.06em; text-transform: none; }
+    .inspector .row .val .num { color: var(--amber); }
+    .inspector .actions {
+      display: flex; gap: 6px; margin-top: 12px;
+      padding-top: 10px; border-top: 1px solid var(--ink-rule);
+    }
+    .inspector .actions .ctrl { padding: 6px 10px; font-size: 9px; flex: 1; }
+    .inspector input[type="range"] {
+      width: 100%; appearance: none; background: transparent; height: 12px;
+    }
+    .inspector input[type="range"]::-webkit-slider-runnable-track {
+      height: 1px; background: var(--ink-faint);
+    }
+    .inspector input[type="range"]::-webkit-slider-thumb {
+      appearance: none; width: 11px; height: 11px;
+      background: var(--amber); margin-top: -5px;
+      box-shadow: 0 0 8px var(--amber-glow);
+      cursor: pointer; border: none; border-radius: 0;
+    }
+
+    /* === RIGHT RAIL === */
+    aside.rail {
+      display: flex; flex-direction: column;
+      min-height: 0; overflow-y: auto;
+    }
+    aside.rail::-webkit-scrollbar { width: 6px; }
+    aside.rail::-webkit-scrollbar-track { background: transparent; }
+    aside.rail::-webkit-scrollbar-thumb { background: var(--ink-rule); border-radius: 3px; }
+
+    .panel {
+      padding: 16px 20px; border-bottom: 1px solid var(--ink-rule);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .panel:last-child { border-bottom: none; }
+    .panel h3 {
+      margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      letter-spacing: 0.4em; text-transform: uppercase;
+      color: var(--cyan);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .panel h3::after { content: ""; flex: 1; height: 1px; background: var(--ink-rule); }
+    .panel h3 .badge {
+      font-size: 8px; letter-spacing: 0.32em;
+      color: var(--ink-faint); padding: 2px 6px;
+      border: 1px solid var(--ink-rule);
+    }
+
+    .preview-frame {
+      position: relative; background: #050608;
+      width: 100%; overflow: hidden;
+    }
+    .preview-frame canvas {
+      position: absolute; inset: 0;
+      width: 100% !important; height: 100% !important;
+    }
+    .preview-frame .overlay { position: absolute; inset: 0; pointer-events: none; }
+    .preview-frame::before, .preview-frame::after {
+      position: absolute; width: 10px; height: 10px;
+      border: 1px solid var(--ink-faint); content: ""; z-index: 3;
+    }
+    .preview-frame::before { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+    .preview-frame::after  { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+
+    .preview-meta {
+      display: flex; justify-content: space-between; gap: 12px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint);
+    }
+    .preview-meta .key { color: var(--ink-faint); margin-right: 6px; }
+    .preview-meta strong { color: var(--ink); font-weight: 500; }
+
+    /* phone lens — narrower aspect, with framed device feel */
+    .phone-frame {
+      width: 156px; aspect-ratio: 9 / 19.5;
+      margin: 0 auto; position: relative;
+      border-radius: 16px; background: #0d0f12;
+      padding: 6px; box-shadow: 0 14px 36px rgba(0,0,0,0.5);
+    }
+    .phone-frame::before {
+      content: ""; position: absolute;
+      top: 6px; left: 50%; transform: translateX(-50%);
+      width: 50px; height: 12px;
+      background: #0d0f12; border-radius: 0 0 8px 8px; z-index: 5;
+    }
+    .phone-frame .screen {
+      width: 100%; height: 100%; border-radius: 12px;
+      overflow: hidden; position: relative; background: #050608;
+    }
+
+    /* detection stream */
+    .stream {
+      max-height: 180px; overflow-y: auto;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: 0.06em; color: var(--ink-soft); padding-right: 4px;
+    }
+    .stream::-webkit-scrollbar { width: 6px; }
+    .stream::-webkit-scrollbar-track { background: transparent; }
+    .stream::-webkit-scrollbar-thumb { background: var(--ink-rule); border-radius: 3px; }
+    .det {
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 10px; padding: 5px 0;
+      border-bottom: 1px solid var(--ink-rule); align-items: baseline;
+    }
+    .det .id { color: var(--amber); letter-spacing: 0.3em; font-weight: 500; }
+    .det .role { color: var(--ink); }
+    .det .pose {
+      color: var(--ink-faint); font-size: 9px;
+      letter-spacing: 0.12em; white-space: nowrap;
+    }
+
+    /* footer */
+    footer.bottom {
+      padding: 12px 40px; border-top: 1px solid var(--ink-rule);
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 32px;
+      align-items: center;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft);
+      z-index: 10;
+    }
+    footer .key { color: var(--ink-faint); margin-right: 8px; }
+    footer strong { color: var(--ink); font-weight: 500; }
+    footer .center {
+      text-align: center; font-family: 'Fraunces', serif;
+      font-style: italic; font-weight: 300; font-size: 14px;
+      letter-spacing: 0; color: var(--ink-soft); text-transform: none;
+    }
+    footer .right {
+      text-align: right; display: flex; gap: 18px; justify-content: flex-end;
+    }
+
+    /* add marker pad */
+    .marker-pad {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    }
+    .marker-pad button {
+      background: transparent; border: 1px solid var(--ink-rule);
+      color: var(--ink); font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 8px 4px; cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .marker-pad button:hover { border-color: var(--ink-soft); }
+    .marker-pad button .swatch { width: 6px; height: 6px; }
+
+    .add-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+      margin-top: 6px;
+    }
+    .add-row button {
+      background: transparent; border: 1px solid var(--ink-rule);
+      color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 8px 4px; cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .add-row button:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* keyboard hint below scene */
+    .hotkeys {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 16px; align-items: center;
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--ink-faint); pointer-events: none; z-index: 5;
+    }
+    .hotkeys .k { color: var(--ink); border: 1px solid var(--ink-rule); padding: 2px 5px; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+
+  <header class="top">
+    <div class="brand">
+      <div class="mark"></div>
+      <h1>Virtual <em>Room</em></h1>
+      <div class="sub">Sim · 0.2</div>
+    </div>
+    <div class="header-meta">
+      <div><span class="key">Stream</span><strong id="streamUrl">localhost:4177 · /api/action</strong></div>
+      <div><span class="key">Surface</span><strong>Table · 1.8 × 0.9 m</strong></div>
+      <div><span class="key">Tags</span><strong id="tagCount">0</strong></div>
+    </div>
+    <div class="header-controls">
+      <button class="ctrl" id="btnLights" title="Dim ambient when projector is on">Dim</button>
+      <button class="ctrl active" id="btnStream">Stream</button>
+      <button class="ctrl" id="btnReset">Reset</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section id="scene">
+      <span class="scene-reg tl"></span>
+      <span class="scene-reg tr"></span>
+      <span class="scene-reg bl"></span>
+      <span class="scene-reg br"></span>
+      <div class="scene-label">Room · perspective</div>
+      <div class="scene-meta-l">click · select · drag widget</div>
+      <div class="scene-meta-r">orbit · right-drag</div>
+      <div class="fps"><span class="key">FPS</span><strong id="fps">— —</strong></div>
+
+      <!-- Unity-style left toolbar -->
+      <div class="toolbar" id="toolbar">
+        <button class="tool active" data-tool="select" title="Select (Q)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 3 L19 12 L13 13 L18 20 L15 22 L10 15 L5 19 Z"/></svg>
+          <span class="key">Q</span>
+        </button>
+        <button class="tool" data-tool="move" title="Move (W)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M12 3 L12 21 M3 12 L21 12 M12 3 L9 6 M12 3 L15 6 M12 21 L9 18 M12 21 L15 18 M3 12 L6 9 M3 12 L6 15 M21 12 L18 9 M21 12 L18 15"/>
+          </svg>
+          <span class="key">W</span>
+        </button>
+        <button class="tool" data-tool="rotate" title="Rotate (E)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M4 12 a8 8 0 1 1 4 7 M4 12 V18 M4 18 H10"/>
+          </svg>
+          <span class="key">E</span>
+        </button>
+        <span class="tool divider"></span>
+        <button class="tool" data-tool="draw" title="Draw on whiteboard (D)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M3 21 L7 17 L17 7 L20 4 L20 4 L17 7 M14 4 L20 10 M5 19 L9 23"/>
+          </svg>
+          <span class="key">D</span>
+        </button>
+        <span class="tool divider"></span>
+        <button class="tool" data-tool="add-person" title="Add person">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="12" cy="6" r="3"/>
+            <path d="M5 22 V18 a4 4 0 0 1 4 -4 H15 a4 4 0 0 1 4 4 V22"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- inspector -->
+      <div class="inspector" id="inspector">
+        <div class="head">
+          <div class="name" id="insName">—</div>
+          <div class="id" id="insId">—</div>
+        </div>
+        <div id="insRows"></div>
+        <div class="actions" id="insActions"></div>
+      </div>
+
+      <div class="hover-tag" id="hoverTag"></div>
+
+      <div class="hotkeys">
+        <span><span class="k">Q</span>select</span>
+        <span><span class="k">W</span>move</span>
+        <span><span class="k">E</span>rotate</span>
+        <span><span class="k">D</span>draw</span>
+        <span><span class="k">F</span>focus</span>
+        <span><span class="k">Esc</span>deselect</span>
+      </div>
+    </section>
+
+    <aside class="rail">
+
+      <section class="panel">
+        <h3>Camera POV <span class="badge" id="camRes">— × —</span></h3>
+        <select id="camSelect" style="background: transparent; border: 1px solid var(--ink-rule); color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.18em; padding: 6px 8px;"></select>
+        <div class="preview-frame" id="povFrame" style="aspect-ratio: 4/3;">
+          <canvas id="povCanvas"></canvas>
+          <canvas class="overlay" id="povOverlay"></canvas>
+        </div>
+        <div class="preview-meta">
+          <span><span class="key">FOV</span><strong id="metaFov">50°</strong></span>
+          <span><span class="key">Detected</span><strong id="detCount">0</strong></span>
+          <span><span class="key">Conf · avg</span><strong id="confAvg">—</strong></span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Phone · lens <span class="badge">person · 02</span></h3>
+        <div class="phone-frame">
+          <div class="screen">
+            <canvas id="phoneCanvas"></canvas>
+            <canvas class="overlay" id="phoneOverlay" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
+          </div>
+        </div>
+        <div class="preview-meta">
+          <span><span class="key">Mode</span><strong>Lens</strong></span>
+          <span><span class="key">Aim</span><strong id="phoneAim">—</strong></span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Detection stream <span class="badge" id="rateBadge">0/s</span></h3>
+        <div class="stream" id="stream"></div>
+      </section>
+
+      <section class="panel">
+        <h3>Add</h3>
+        <div class="marker-pad">
+          <button data-add="emitter"><span class="swatch" style="background: #c8842b"></span>Emit</button>
+          <button data-add="mirror"><span class="swatch" style="background: #404a55"></span>Mirror</button>
+          <button data-add="filter"><span class="swatch" style="background: #4a7d8a"></span>Filter</button>
+          <button data-add="splitter"><span class="swatch" style="background: #7a4a6e"></span>Split</button>
+          <button data-add="blocker"><span class="swatch" style="background: #b04848"></span>Block</button>
+          <button data-add="target"><span class="swatch" style="background: #4a7a55"></span>Target</button>
+        </div>
+        <div class="add-row">
+          <button data-add-prop="person">+ Person</button>
+          <button data-add-prop="phone">+ Phone</button>
+          <button data-add-prop="clear-board">Clear board</button>
+        </div>
+      </section>
+
+    </aside>
+  </main>
+
+  <footer class="bottom">
+    <div><span class="key">Build</span><strong>virtual-room · 0.2 · ideas</strong></div>
+    <div class="center">A virtual room you can replace with a real one.</div>
+    <div class="right">
+      <span><span class="key">T</span><strong id="clock">— —</strong></span>
+      <span><span class="key">Sess</span><strong>0xv2·a0</strong></span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { TransformControls } from 'three/addons/controls/TransformControls.js';
+
+    // ---------- HOOK POINT for posting detections ----------
+    const STREAM_URL = '/api/action';
+    // (currently a no-op; uncomment fetch in maybePost to wire up)
+
+    // ---------- ROLE / TAG MAP ----------
+    const ROLES = {
+      emitter:  { color: '#c8842b', label: 'Emitter',  startTag: 10 },
+      mirror:   { color: '#404a55', label: 'Mirror',   startTag: 11 },
+      filter:   { color: '#4a7d8a', label: 'Filter',   startTag: 12 },
+      splitter: { color: '#7a4a6e', label: 'Splitter', startTag: 13 },
+      blocker:  { color: '#b04848', label: 'Blocker',  startTag: 14 },
+      target:   { color: '#4a7a55', label: 'Target',   startTag: 15 },
+    };
+    // Collaborative surface = two 1.8 × 0.9 tables placed side-by-side on Z, total 1.8 × 1.8 square.
+    // Server can still treat this as one logical "table" surface 1.8 m × 1.8 m.
+    const TABLE_W = 1.8, TABLE_D = 1.8, TABLE_Y = 0.72;
+    const SUBTABLE_W = 1.8, SUBTABLE_D = 0.9;  // each physical table
+    const PROJECTOR_HEIGHT = 2.5;
+
+    // ---------- THREE setup ----------
+    const sceneEl = document.getElementById('scene');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050608);
+    scene.fog = new THREE.Fog(0x050608, 6, 22);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    sceneEl.appendChild(renderer.domElement);
+
+    const mainCam = new THREE.PerspectiveCamera(38, 1, 0.05, 50);
+    mainCam.position.set(2.6, 1.7, 2.6);
+    mainCam.lookAt(0, TABLE_Y + 0.05, 0);
+
+    const orbit = new OrbitControls(mainCam, renderer.domElement);
+    orbit.target.set(0, TABLE_Y + 0.05, 0);
+    orbit.enableDamping = true;
+    orbit.dampingFactor = 0.08;
+    orbit.maxPolarAngle = Math.PI * 0.48;
+    orbit.minDistance = 1.0;
+    orbit.maxDistance = 8;
+    // default mouse: LEFT = orbit, RIGHT = pan, MIDDLE = dolly. We detect click-vs-drag in pointerup below.
+
+    // pov renderer
+    const povCanvas = document.getElementById('povCanvas');
+    const povRenderer = new THREE.WebGLRenderer({ antialias: true, canvas: povCanvas });
+    povRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    povRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+    povRenderer.shadowMap.enabled = true;
+    povRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    povRenderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const phoneRenderer = new THREE.WebGLRenderer({ antialias: true, canvas: document.getElementById('phoneCanvas') });
+    phoneRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    phoneRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+    phoneRenderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    // helpers group (transformer gizmos, frustum helpers)
+    const helpers = new THREE.Group();
+    scene.add(helpers);
+
+    // ---------- LIGHTING ----------
+    // Bright readable room lighting (Edit mode default).
+    // The Dim button reduces these so the projector's light dominates (Demo mode).
+    const ambient = new THREE.AmbientLight(0x404048, 0.6);
+    scene.add(ambient);
+    const hemi = new THREE.HemisphereLight(0x9c958a, 0x10131a, 0.85);
+    scene.add(hemi);
+    // Warm key from above-right, casts shadows
+    const key = new THREE.DirectionalLight(0xffe6c0, 0.95);
+    key.position.set(3, 4.5, 3);
+    key.castShadow = true;
+    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.camera.left = -4; key.shadow.camera.right = 4;
+    key.shadow.camera.top = 4; key.shadow.camera.bottom = -4;
+    key.shadow.camera.near = 0.5; key.shadow.camera.far = 12;
+    key.shadow.bias = -0.0005;
+    scene.add(key);
+    // Cool fill from front-left
+    const fill = new THREE.DirectionalLight(0xc8d4e0, 0.40);
+    fill.position.set(-3, 2, 4);
+    scene.add(fill);
+    // Window-style rim from behind to separate things from background
+    const rim = new THREE.DirectionalLight(0xc8d8e8, 0.25);
+    rim.position.set(-2, 3, -4);
+    scene.add(rim);
+
+    // ---------- ROOM ----------
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(20, 20),
+      new THREE.MeshStandardMaterial({ color: 0x0a0c0f, roughness: 0.95 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // walls — taller so floor-to-ceiling whiteboards fit
+    const ROOM_HALF = 3.0;     // half-width of room (x)
+    const ROOM_DEPTH = 3.0;    // half-depth (z)
+    const ROOM_HEIGHT = 3.0;   // ceiling height
+
+    const backWall = new THREE.Mesh(
+      new THREE.PlaneGeometry(ROOM_HALF * 2, ROOM_HEIGHT),
+      new THREE.MeshStandardMaterial({ color: 0x14181d, roughness: 0.95 })
+    );
+    backWall.position.set(0, ROOM_HEIGHT/2, -ROOM_DEPTH);
+    backWall.receiveShadow = true;
+    scene.add(backWall);
+
+    const leftWall = new THREE.Mesh(
+      new THREE.PlaneGeometry(ROOM_DEPTH * 2, ROOM_HEIGHT),
+      new THREE.MeshStandardMaterial({ color: 0x14181d, roughness: 0.95 })
+    );
+    leftWall.position.set(-ROOM_HALF, ROOM_HEIGHT/2, 0);
+    leftWall.rotation.y = Math.PI / 2;
+    leftWall.receiveShadow = true;
+    scene.add(leftWall);
+
+    const rightWall = new THREE.Mesh(
+      new THREE.PlaneGeometry(ROOM_DEPTH * 2, ROOM_HEIGHT),
+      new THREE.MeshStandardMaterial({ color: 0x14181d, roughness: 0.95 })
+    );
+    rightWall.position.set(ROOM_HALF, ROOM_HEIGHT/2, 0);
+    rightWall.rotation.y = -Math.PI / 2;
+    rightWall.receiveShadow = true;
+    scene.add(rightWall);
+
+    // ceiling (dim)
+    const ceiling = new THREE.Mesh(
+      new THREE.PlaneGeometry(ROOM_HALF * 2, ROOM_DEPTH * 2),
+      new THREE.MeshStandardMaterial({ color: 0x0e1014, roughness: 1 })
+    );
+    ceiling.position.set(0, ROOM_HEIGHT, 0);
+    ceiling.rotation.x = Math.PI / 2;
+    scene.add(ceiling);
+
+    // ---------- TABLES (two parallel, forming a 1.8m square collab surface) ----------
+    const tables = [];
+    function createTable(label, posX, posZ) {
+      const t = new THREE.Group();
+      t.position.set(posX, 0, posZ);
+      t.userData = {
+        selectable: true, kind: 'table', label,
+        sub: `${SUBTABLE_W.toFixed(1)} × ${SUBTABLE_D.toFixed(1)} m`,
+        allowMove: true, allowRotate: true, moveAxis: 'xz'
+      };
+      scene.add(t);
+
+      const top = new THREE.Mesh(
+        new THREE.BoxGeometry(SUBTABLE_W, 0.04, SUBTABLE_D),
+        new THREE.MeshStandardMaterial({ color: 0x1d160e, roughness: 0.7, metalness: 0.0 })
+      );
+      top.position.y = TABLE_Y;
+      top.castShadow = true; top.receiveShadow = true;
+      top.userData.parent = t;
+      t.add(top);
+
+      const lxr = SUBTABLE_W/2 - 0.06, lzr = SUBTABLE_D/2 - 0.06;
+      for (const [x, z] of [[lxr,lzr],[-lxr,lzr],[lxr,-lzr],[-lxr,-lzr]]) {
+        const g = new THREE.Mesh(
+          new THREE.BoxGeometry(0.04, TABLE_Y, 0.04),
+          new THREE.MeshStandardMaterial({ color: 0x14110d, roughness: 0.6 })
+        );
+        g.position.set(x, TABLE_Y / 2, z);
+        g.castShadow = true;
+        g.userData.parent = t;
+        t.add(g);
+      }
+      tables.push(t);
+      return t;
+    }
+    const tableA = createTable('Table A', 0, -0.46);
+    const tableB = createTable('Table B', 0,  0.46);
+
+    // calibration corner squares — placed at the OUTER corners of the combined collab surface
+    // (one virtual surface 1.8 × 1.8 centered at origin)
+    function calCorner(x, z, parent) {
+      const m = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.05, 0.05),
+        new THREE.MeshBasicMaterial({ color: 0xf5efe2 })
+      );
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(x, TABLE_Y + 0.022, z);
+      scene.add(m);
+      const inner = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.04, 0.04),
+        new THREE.MeshBasicMaterial({ color: 0x0a0a0a })
+      );
+      inner.rotation.x = -Math.PI / 2;
+      inner.position.set(x, TABLE_Y + 0.023, z);
+      scene.add(inner);
+    }
+    const tx = TABLE_W/2 - 0.07, tz = TABLE_D/2 - 0.07;
+    calCorner(tx, tz); calCorner(-tx, tz); calCorner(-tx, -tz); calCorner(tx, -tz);
+
+    // ---------- PROJECTOR (with real projection!) ----------
+    const projector = new THREE.Group();
+    projector.position.set(0, PROJECTOR_HEIGHT, 0);
+    projector.userData = {
+      selectable: true, kind: 'projector', label: 'Projector',
+      sub: 'overhead · 1080', allowMove: true, allowRotate: false
+    };
+    scene.add(projector);
+
+    const projBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.14, 0.22),
+      new THREE.MeshStandardMaterial({ color: 0x14171c, roughness: 0.45, metalness: 0.2 })
+    );
+    projBox.castShadow = true;
+    projBox.userData.parent = projector;
+    projector.add(projBox);
+    const projLens = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 0.04, 32),
+      new THREE.MeshStandardMaterial({ color: 0x0a0c0f, roughness: 0.2, metalness: 0.7 })
+    );
+    projLens.position.y = -0.08;
+    projLens.userData.parent = projector;
+    projector.add(projLens);
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.012, 0.012, 0.5, 8),
+      new THREE.MeshStandardMaterial({ color: 0x202428, roughness: 0.5 })
+    );
+    stem.position.y = 0.32;
+    stem.userData.parent = projector;
+    projector.add(stem);
+
+    // The projection canvas — what gets projected onto the table
+    const projCanvas = document.createElement('canvas');
+    projCanvas.width = 1024; projCanvas.height = 512;
+    const projCtx = projCanvas.getContext('2d');
+    const projTexture = new THREE.CanvasTexture(projCanvas);
+    projTexture.colorSpace = THREE.SRGBColorSpace;
+    projTexture.minFilter = THREE.LinearFilter;
+    projTexture.magFilter = THREE.LinearFilter;
+    projTexture.anisotropy = 8;
+
+    // SpotLight that projects the canvas onto the table
+    // angle calculated to cover the table from projector height
+    const distToTable = PROJECTOR_HEIGHT - TABLE_Y;
+    const projAngle = Math.atan2(Math.sqrt((TABLE_W/2)*(TABLE_W/2) + (TABLE_D/2)*(TABLE_D/2)), distToTable);
+    const projLight = new THREE.SpotLight(0xfff5dc, 18, 8, projAngle * 1.05, 0.05, 1.0);
+    projLight.position.copy(projector.position);
+    projLight.target.position.set(0, TABLE_Y, 0);
+    projLight.castShadow = true;
+    projLight.shadow.mapSize.set(2048, 2048);
+    projLight.shadow.bias = -0.0006;
+    projLight.shadow.camera.near = 0.5;
+    projLight.shadow.camera.far = 5;
+    projLight.shadow.focus = 1;
+    projLight.map = projTexture;
+    scene.add(projLight);
+    scene.add(projLight.target);
+
+    // ambient projector wash — wide spotlight that gives the table its warm "lamp glow" look
+    const projFill = new THREE.SpotLight(0xffd9a8, 5.5, 7, projAngle * 1.35, 0.5, 0.8);
+    projFill.position.copy(projector.position);
+    projFill.target.position.set(0, TABLE_Y, 0);
+    scene.add(projFill);
+    scene.add(projFill.target);
+
+    // ---------- WALL PROJECTOR (aimed at the whiteboard) ----------
+    const wallProj = new THREE.Group();
+    wallProj.position.set(2.0, 2.5, 0);
+    wallProj.userData = {
+      selectable: true, kind: 'projector', label: 'Wall projector',
+      sub: 'aims at board', allowMove: true, allowRotate: false
+    };
+    scene.add(wallProj);
+
+    const wpBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.14, 0.22),
+      new THREE.MeshStandardMaterial({ color: 0x14171c, roughness: 0.45, metalness: 0.2 })
+    );
+    wpBox.castShadow = true;
+    wpBox.userData.parent = wallProj;
+    wallProj.add(wpBox);
+    const wpLens = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 0.04, 32),
+      new THREE.MeshStandardMaterial({ color: 0x0a0c0f, roughness: 0.2, metalness: 0.7 })
+    );
+    wpLens.rotation.z = Math.PI / 2;
+    wpLens.position.x = -0.1;
+    wpLens.userData.parent = wallProj;
+    wallProj.add(wpLens);
+    const wpStem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.012, 0.012, ROOM_HEIGHT - 2.5, 8),
+      new THREE.MeshStandardMaterial({ color: 0x202428, roughness: 0.5 })
+    );
+    wpStem.position.y = (ROOM_HEIGHT - 2.5) / 2;
+    wpStem.userData.parent = wallProj;
+    wallProj.add(wpStem);
+
+    // SpotLight aimed at the whiteboard center
+    const wallProjLight = new THREE.SpotLight(0xfff0d4, 4, 8, Math.PI * 0.18, 0.3, 1.0);
+    wallProjLight.position.copy(wallProj.position);
+    wallProjLight.target.position.set(-ROOM_HALF + 0.05, 1.4, 0);
+    wallProjLight.castShadow = true;
+    wallProjLight.shadow.mapSize.set(1024, 1024);
+    wallProjLight.shadow.bias = -0.0006;
+    scene.add(wallProjLight);
+    scene.add(wallProjLight.target);
+
+    // ---------- CAMERAS ----------
+    // Convention: a camera rig has 3 parts.
+    //   - rig   : the selectable Group, sits on the floor (or anchors on the ceiling).
+    //             Drag in XZ moves the whole stand. allowRotate yaws the head with it.
+    //   - tripod/stem : vertical support, modeled inside the rig so it stays vertical.
+    //   - head  : a child Group at camera height, rotates to aim. Camera + body meshes
+    //             are children of head. Forward is its local -Z (matches PerspectiveCamera).
+    // We DO NOT call mount.lookAt() because Object3D.lookAt() flips +Z toward target for
+    // non-cameras — that aimed our cameras backwards. We compute yaw/pitch directly.
+    const cameras = [];
+
+    function aimHeadAt(head, target) {
+      // Set head's local rotation so its -Z points at the world `target`.
+      // Assumes head's parent has identity rotation (true for our rigs at init).
+      const wp = new THREE.Vector3();
+      head.getWorldPosition(wp);
+      const dx = target.x - wp.x;
+      const dy = target.y - wp.y;
+      const dz = target.z - wp.z;
+      const horiz = Math.sqrt(dx * dx + dz * dz);
+      const yaw   = Math.atan2(dx, -dz);  // -Z toward (dx, _, dz)
+      const pitch = -Math.atan2(dy, horiz); // positive when looking down, negative when up
+      head.rotation.set(pitch, yaw, 0);
+    }
+
+    function createCameraRig({ name, kind, position, lookAt, fov, aspect, mountOnCeiling = false }) {
+      const rig = new THREE.Group();
+      // rig position: floor (xz) for tripods, mount point for ceiling
+      rig.position.set(position.x, mountOnCeiling ? position.y : 0, position.z);
+      rig.userData = {
+        selectable: true, kind: 'camera', label: name, sub: kind,
+        allowMove: true, allowRotate: true, moveAxis: 'xz',
+      };
+      scene.add(rig);
+
+      // vertical support
+      const supportMat = new THREE.MeshStandardMaterial({ color: 0x202428, roughness: 0.5 });
+      if (mountOnCeiling) {
+        const stemH = ROOM_HEIGHT - position.y;
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, stemH, 8), supportMat);
+        stem.position.y = stemH / 2;
+        stem.userData.parent = rig;
+        rig.add(stem);
+      } else {
+        const stemH = position.y - 0.04;
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, stemH, 8), supportMat);
+        stem.position.y = stemH / 2;
+        stem.userData.parent = rig;
+        rig.add(stem);
+        const base = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.18, 0.18, 0.012, 12),
+          new THREE.MeshStandardMaterial({ color: 0x202428, roughness: 0.6 })
+        );
+        base.position.y = 0.006;
+        base.userData.parent = rig;
+        rig.add(base);
+      }
+
+      // The "head" — rotates to aim. Sits at local y = camera height (or 0 for ceiling rigs).
+      const head = new THREE.Group();
+      head.position.y = mountOnCeiling ? 0 : position.y;
+      rig.add(head);
+
+      // Camera body (clearly directional: lens hood pointing -Z = "forward")
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.10, 0.07, 0.08),
+        new THREE.MeshStandardMaterial({ color: 0x14171c, roughness: 0.4, metalness: 0.3 })
+      );
+      body.position.z = 0.025;  // body sits behind the lens
+      body.castShadow = true;
+      body.userData.parent = rig;
+      head.add(body);
+      // viewfinder hump on top — gives an obvious top
+      const hump = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05, 0.025, 0.04),
+        new THREE.MeshStandardMaterial({ color: 0x14171c, roughness: 0.4 })
+      );
+      hump.position.set(0, 0.045, 0.025);
+      hump.castShadow = true;
+      hump.userData.parent = rig;
+      head.add(hump);
+      // BIG lens hood — sticks out -Z (toward whatever the camera sees)
+      const lensRing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.045, 0.07, 24, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0x0a0c0f, roughness: 0.3, metalness: 0.7, side: THREE.DoubleSide })
+      );
+      lensRing.rotation.x = Math.PI / 2;
+      lensRing.position.z = -0.05;
+      lensRing.castShadow = true;
+      lensRing.userData.parent = rig;
+      head.add(lensRing);
+      // glass disk at the front of the lens
+      const lensGlass = new THREE.Mesh(
+        new THREE.CircleGeometry(0.038, 24),
+        new THREE.MeshStandardMaterial({ color: 0x1a2630, roughness: 0.1, metalness: 0.9 })
+      );
+      lensGlass.position.z = -0.083;
+      lensGlass.userData.parent = rig;
+      head.add(lensGlass);
+      // tiny red "REC" indicator on the back
+      const rec = new THREE.Mesh(
+        new THREE.SphereGeometry(0.005, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0xff4040, emissive: 0xff4040, emissiveIntensity: 0.8 })
+      );
+      rec.position.set(0.04, 0.02, 0.063);
+      rec.userData.parent = rig;
+      head.add(rec);
+
+      // The actual PerspectiveCamera — default forward is -Z (matches the lens hood)
+      const cam = new THREE.PerspectiveCamera(fov, aspect, 0.05, 30);
+      head.add(cam);
+
+      rig.userData.camera = cam;
+      rig.userData.head = head;
+      rig.userData.aimTarget = lookAt.clone();
+
+      // Aim the head at the lookAt target (yaw + pitch, manually computed).
+      aimHeadAt(head, lookAt);
+
+      const helper = new THREE.CameraHelper(cam);
+      helper.material.transparent = true;
+      helper.material.opacity = 0.35;
+      helper.visible = false;
+      helpers.add(helper);
+      rig.userData.helper = helper;
+
+      cameras.push({ name, mount: rig, cam, helper, head });
+      return { mount: rig, cam, head };
+    }
+
+    // Camera 1 — overhead, ceiling-mounted near the front-right corner of the table area,
+    // angled down so it doesn't sit in the projector's cone.
+    const overheadRig = createCameraRig({
+      name: 'Camera · Overhead',
+      kind: 'ceiling · top-down',
+      position: new THREE.Vector3(1.1, 2.7, 1.1),
+      lookAt:   new THREE.Vector3(0, TABLE_Y, 0),
+      fov: 60, aspect: 4/3, mountOnCeiling: true, withTripod: false
+    });
+
+    // Camera 2 — opposite corner, tripod height, facing the whiteboard at an angle that
+    // also catches part of the table.
+    const wallCamRig = createCameraRig({
+      name: 'Camera · Wall',
+      kind: 'tripod · facing board',
+      position: new THREE.Vector3(2.2, 1.6, -1.4),
+      lookAt:   new THREE.Vector3(-ROOM_HALF + 0.1, 1.2, 0),
+      fov: 48, aspect: 16/9, mountOnCeiling: false
+    });
+
+    // The "primary" camera (used by detection stream by default) is the overhead
+    let activeCamera = overheadRig.cam;
+    let activeRig = cameras.find(c => c.cam === activeCamera);
+
+    // backwards-compat aliases used elsewhere in the script
+    const camMount = overheadRig.mount;
+    const roomCam = overheadRig.cam;
+    const camHelper = activeRig.helper;
+
+    // ---------- WHITEBOARD (floor-to-ceiling, with glass window above) ----------
+    // Real life: whiteboard from ~10cm above floor up to ~2.4m, glass strip from 2.4m to ceiling (~3.0m).
+    const wbW = 3.6;          // 12 ft wide
+    const wbH = 2.3;          // 7.5 ft tall (floor to clerestory)
+    const wbBottom = 0.10;    // floor clearance
+    const wbCenterY = wbBottom + wbH / 2;
+
+    const whiteboard = new THREE.Group();
+    // sits flush to left wall (x = -ROOM_HALF + tiny offset), facing +x
+    whiteboard.position.set(-ROOM_HALF + 0.03, wbCenterY, 0);
+    whiteboard.rotation.y = Math.PI / 2;
+    whiteboard.userData = {
+      selectable: true, kind: 'whiteboard', label: 'Whiteboard',
+      sub: `${wbW.toFixed(1)} × ${wbH.toFixed(1)} m`,
+      allowMove: true, allowRotate: false,
+      drawable: true, snapsToWalls: true
+    };
+    scene.add(whiteboard);
+
+    // frame around the board
+    const wbFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(wbW + 0.08, wbH + 0.08, 0.03),
+      new THREE.MeshStandardMaterial({ color: 0x1a1d22, roughness: 0.6 })
+    );
+    wbFrame.userData.parent = whiteboard;
+    wbFrame.receiveShadow = true;
+    whiteboard.add(wbFrame);
+
+    // ----- glass clerestory window above the whiteboard -----
+    const winH = ROOM_HEIGHT - (wbBottom + wbH) - 0.05; // ~0.55m strip
+    const winY = wbBottom + wbH + winH/2 + 0.02 - wbCenterY; // local y above whiteboard center
+    const windowMat = new THREE.MeshPhysicalMaterial({
+      color: 0xc8e0ee,
+      transparent: true, opacity: 0.18, roughness: 0.05,
+      metalness: 0, transmission: 0.85,
+      emissive: 0xffe9b8, emissiveIntensity: 0.6,
+      side: THREE.DoubleSide
+    });
+    const windowGlass = new THREE.Mesh(
+      new THREE.PlaneGeometry(wbW + 0.4, winH),
+      windowMat
+    );
+    windowGlass.position.set(0, winY, 0);
+    windowGlass.userData.parent = whiteboard;
+    whiteboard.add(windowGlass);
+
+    // a thin mullion frame around the window
+    const mullion = new THREE.Mesh(
+      new THREE.BoxGeometry(wbW + 0.5, winH + 0.06, 0.04),
+      new THREE.MeshStandardMaterial({ color: 0x1a1d22, roughness: 0.6 })
+    );
+    mullion.position.set(0, winY, -0.005);
+    mullion.userData.parent = whiteboard;
+    whiteboard.add(mullion);
+    // re-overlay glass on top
+    const windowGlass2 = new THREE.Mesh(
+      new THREE.PlaneGeometry(wbW + 0.34, winH - 0.04),
+      windowMat.clone()
+    );
+    windowGlass2.position.set(0, winY, 0.022);
+    windowGlass2.userData.parent = whiteboard;
+    whiteboard.add(windowGlass2);
+    // 3 vertical mullion bars
+    for (const f of [-0.33, 0, 0.33]) {
+      const bar = new THREE.Mesh(
+        new THREE.BoxGeometry(0.025, winH - 0.04, 0.012),
+        new THREE.MeshStandardMaterial({ color: 0x1a1d22, roughness: 0.5 })
+      );
+      bar.position.set(f * (wbW + 0.34), winY, 0.026);
+      bar.userData.parent = whiteboard;
+      whiteboard.add(bar);
+    }
+
+    // ----- sunlight through the clerestory -----
+    // a directional light from outside the wall, angled slightly down into the room
+    const sunlight = new THREE.DirectionalLight(0xfff1cc, 0.9);
+    sunlight.position.set(-6, 3.8, 0.5);
+    sunlight.target.position.set(0, 1.0, 0);
+    sunlight.castShadow = true;
+    sunlight.shadow.mapSize.set(1024, 1024);
+    sunlight.shadow.camera.left = -4; sunlight.shadow.camera.right = 4;
+    sunlight.shadow.camera.top = 4; sunlight.shadow.camera.bottom = -4;
+    sunlight.shadow.camera.near = 0.5; sunlight.shadow.camera.far = 14;
+    sunlight.shadow.bias = -0.0005;
+    scene.add(sunlight);
+    scene.add(sunlight.target);
+    // a soft warm "window glow" hemisphere accent
+    const windowGlow = new THREE.PointLight(0xffd9a0, 0.6, 4, 1.2);
+    windowGlow.position.set(-2.8, wbBottom + wbH + winH/2, 0);
+    scene.add(windowGlow);
+
+    // drawable canvas — sized to whiteboard aspect (wbW × wbH)
+    const wbCanvas = document.createElement('canvas');
+    wbCanvas.width = 2400; wbCanvas.height = Math.round(2400 * wbH / wbW);
+    const wbCtx = wbCanvas.getContext('2d');
+    function clearWhiteboard() {
+      wbCtx.fillStyle = '#f5efe2';
+      wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+      // calibration corners (matches tag IDs 4..7)
+      const corners = [
+        { x: 60,  y: 60,  id: 4 },
+        { x: wbCanvas.width - 60, y: 60,  id: 5 },
+        { x: wbCanvas.width - 60, y: wbCanvas.height - 60, id: 6 },
+        { x: 60,  y: wbCanvas.height - 60, id: 7 },
+      ];
+      corners.forEach(c => {
+        wbCtx.fillStyle = '#0a0a0a';
+        wbCtx.fillRect(c.x - 24, c.y - 24, 48, 48);
+        wbCtx.fillStyle = '#f5efe2';
+        wbCtx.fillRect(c.x - 18, c.y - 18, 36, 36);
+        wbCtx.fillStyle = '#0a0a0a';
+        wbCtx.font = 'bold 12px IBM Plex Mono, monospace';
+        wbCtx.textAlign = 'center';
+        wbCtx.fillText(`${String(c.id).padStart(2,'0')}`, c.x, c.y + 4);
+      });
+      // hairline label
+      wbCtx.fillStyle = 'rgba(26,20,16,0.35)';
+      wbCtx.font = 'italic 22px Fraunces, serif';
+      wbCtx.textAlign = 'left';
+      wbCtx.fillText('— board · 02 —', 130, wbCanvas.height - 30);
+      wbTexture.needsUpdate = true;
+    }
+    const wbTexture = new THREE.CanvasTexture(wbCanvas);
+    wbTexture.colorSpace = THREE.SRGBColorSpace;
+    wbTexture.minFilter = THREE.LinearFilter;
+    wbTexture.anisotropy = 8;
+
+    const wbSurface = new THREE.Mesh(
+      new THREE.PlaneGeometry(wbW, wbH),
+      new THREE.MeshStandardMaterial({
+        map: wbTexture, color: 0xffffff,
+        roughness: 0.92
+      })
+    );
+    wbSurface.position.z = 0.022;
+    wbSurface.castShadow = false;
+    wbSurface.receiveShadow = true;
+    wbSurface.userData.parent = whiteboard;
+    wbSurface.userData.isDrawable = true;
+    whiteboard.add(wbSurface);
+    clearWhiteboard();
+
+    // marker tray (visual only)
+    const tray = new THREE.Mesh(
+      new THREE.BoxGeometry(wbW * 0.6, 0.04, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0x1d2024, roughness: 0.7 })
+    );
+    tray.position.set(0, -wbH/2 - 0.06, 0.04);
+    tray.userData.parent = whiteboard;
+    whiteboard.add(tray);
+    // a "marker" pen on the tray
+    function pen(color, x) {
+      const p = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.008, 0.008, 0.10, 12),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.5 })
+      );
+      p.rotation.z = Math.PI/2;
+      p.position.set(x, -wbH/2 - 0.04, 0.06);
+      p.userData.parent = whiteboard;
+      whiteboard.add(p);
+    }
+    pen(0x1a1410, -0.18);
+    pen(0xc23a2a, -0.05);
+    pen(0x2a5fc2,  0.08);
+    pen(0x2a8a4a,  0.21);
+
+    // ---------- MARKERS (cards on table) ----------
+    const markers = [];
+    const tagIdsUsed = new Set();
+    function nextTagId(role) {
+      let id = ROLES[role].startTag;
+      while (tagIdsUsed.has(id)) id += 10;
+      tagIdsUsed.add(id);
+      return id;
+    }
+
+    function makeTagTexture(tagId, role) {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 320;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#f5efe2';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.fillStyle = ROLES[role].color;
+      ctx.fillRect(0, 0, 16, c.height);
+      const tagSize = 110, tagX = 36, tagY = 36;
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(tagX - 8, tagY - 8, tagSize + 16, tagSize + 16);
+      ctx.fillStyle = '#f5efe2';
+      ctx.fillRect(tagX, tagY, tagSize, tagSize);
+      const cells = 6;
+      const cellSize = tagSize / cells;
+      let seed = tagId * 1000 + 17;
+      const rng = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+      for (let i = 0; i < cells; i++) for (let j = 0; j < cells; j++) {
+        if (i === 0 || j === 0 || i === cells-1 || j === cells-1) {
+          ctx.fillStyle = '#0a0a0a';
+          ctx.fillRect(tagX + i*cellSize, tagY + j*cellSize, cellSize, cellSize);
+        } else if (rng() > 0.5) {
+          ctx.fillStyle = '#0a0a0a';
+          ctx.fillRect(tagX + i*cellSize, tagY + j*cellSize, cellSize, cellSize);
+        }
+      }
+      ctx.fillStyle = '#1a1410';
+      ctx.font = "italic 300 30px 'Fraunces', serif";
+      ctx.textAlign = 'left';
+      ctx.fillText(ROLES[role].label, 36, 220);
+      ctx.font = "500 12px 'IBM Plex Mono', monospace";
+      ctx.fillStyle = 'rgba(26,20,16,0.7)';
+      ctx.fillText(`TAG · ${String(tagId).padStart(2,'0')}`, 36, 248);
+      ctx.font = "400 11px 'IBM Plex Mono', monospace";
+      ctx.fillStyle = 'rgba(26,20,16,0.5)';
+      ctx.fillText('LIGHT LAB', 36, 296);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.anisotropy = 8;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      return tex;
+    }
+
+    function createMarker(role, x = 0, z = 0, rotY = 0) {
+      const tagId = nextTagId(role);
+      const group = new THREE.Group();
+      group.userData = {
+        tagId, role, isMarker: true,
+        selectable: true, kind: 'marker', label: ROLES[role].label,
+        sub: `Tag · ${String(tagId).padStart(2,'0')}`,
+        allowMove: true, allowRotate: true,
+        moveAxis: 'xz', removable: true
+      };
+
+      const cardWidth = 0.10, cardHeight = 0.135;
+      const card = new THREE.Mesh(
+        new THREE.PlaneGeometry(cardWidth, cardHeight),
+        new THREE.MeshStandardMaterial({
+          map: makeTagTexture(tagId, role),
+          color: 0xffffff, roughness: 0.85, side: THREE.DoubleSide
+        })
+      );
+      card.rotation.x = -Math.PI / 2;
+      card.position.y = 0.0008;
+      card.castShadow = true;
+      card.receiveShadow = true;
+      card.userData.isMarker = true;
+      card.userData.parent = group;
+      group.add(card);
+      group.userData.card = card;
+      group.userData.bounds = { w: cardWidth, h: cardHeight };
+
+      group.position.set(x, TABLE_Y + 0.022, z);
+      group.rotation.y = rotY;
+      scene.add(group);
+      markers.push(group);
+      updateTagCount();
+      return group;
+    }
+
+    function removeMarker(m) {
+      const i = markers.indexOf(m);
+      if (i >= 0) markers.splice(i, 1);
+      tagIdsUsed.delete(m.userData.tagId);
+      scene.remove(m);
+      m.traverse(o => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material?.map) o.material.map.dispose();
+        if (o.material) o.material.dispose();
+      });
+      updateTagCount();
+    }
+
+    function updateTagCount() {
+      document.getElementById('tagCount').textContent = String(markers.length).padStart(2, '0');
+    }
+
+    createMarker('emitter', -0.55,  0.10, 0);
+    createMarker('mirror',   0.05, -0.18, -Math.PI/4);
+    createMarker('target',   0.65,  0.10, 0);
+
+    // ---------- LO-FI PEOPLE ----------
+    const people = [];
+    const personMaterial = new THREE.MeshStandardMaterial({ color: 0x342f29, roughness: 0.85 });
+    const personHeadMat  = new THREE.MeshStandardMaterial({ color: 0x4a423a, roughness: 0.7 });
+    const phoneInHandMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5, emissive: 0x664020, emissiveIntensity: 0.3 });
+
+    function createPerson(x, z, rotY = 0, pose = 'stand') {
+      const g = new THREE.Group();
+      g.userData = {
+        selectable: true, kind: 'person', label: 'Person',
+        sub: pose === 'phone' ? 'with phone' : 'observing',
+        allowMove: true, allowRotate: true, moveAxis: 'xz',
+        removable: true
+      };
+
+      // legs
+      const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.85, 8), personMaterial);
+      legL.position.set(-0.08, 0.42, 0);
+      legL.castShadow = true; legL.userData.parent = g;
+      g.add(legL);
+      const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.85, 8), personMaterial);
+      legR.position.set(0.08, 0.42, 0);
+      legR.castShadow = true; legR.userData.parent = g;
+      g.add(legR);
+
+      // torso
+      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.32, 4, 12), personMaterial);
+      torso.position.set(0, 1.04, 0);
+      torso.castShadow = true; torso.userData.parent = g;
+      g.add(torso);
+
+      // head
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), personHeadMat);
+      head.position.set(0, 1.45, 0);
+      head.castShadow = true; head.userData.parent = g;
+      g.add(head);
+
+      // arms
+      const armL = new THREE.Group();
+      armL.position.set(-0.16, 1.18, 0);
+      g.add(armL);
+      const armLMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.36, 4, 8), personMaterial);
+      armLMesh.position.y = -0.18;
+      armLMesh.castShadow = true; armLMesh.userData.parent = g;
+      armL.add(armLMesh);
+
+      const armR = new THREE.Group();
+      armR.position.set(0.16, 1.18, 0);
+      g.add(armR);
+      const armRMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.36, 4, 8), personMaterial);
+      armRMesh.position.y = -0.18;
+      armRMesh.castShadow = true; armRMesh.userData.parent = g;
+      armR.add(armRMesh);
+
+      if (pose === 'phone') {
+        // raise the right arm and put a phone in hand
+        armR.rotation.x = -1.0;
+        armR.position.z = 0.05;
+        const phone = new THREE.Mesh(
+          new THREE.BoxGeometry(0.05, 0.09, 0.008),
+          phoneInHandMat
+        );
+        phone.position.set(0, -0.35, 0.0);
+        phone.castShadow = true;
+        phone.userData.parent = g;
+        armR.add(phone);
+        // also tilt head to look down
+        head.position.z = 0.02;
+        head.rotation.x = 0.3;
+      } else if (pose === 'lean') {
+        // lean forward toward table
+        torso.rotation.x = 0.18;
+        head.rotation.x = 0.32;
+        head.position.z = 0.06;
+      } else {
+        // looking down at table
+        head.rotation.x = 0.45;
+        head.position.z = 0.04;
+      }
+
+      g.position.set(x, 0, z);
+      g.rotation.y = rotY;
+      scene.add(g);
+      people.push(g);
+      return g;
+    }
+
+    // place a few around the table
+    createPerson(-1.4, 0.6, Math.PI * 0.3, 'lean');
+    createPerson( 1.5, 0.4, -Math.PI * 0.3, 'phone');
+    createPerson( 0.0, -1.6, 0, 'stand');
+
+    // ---------- VIRTUAL PHONE (free-floating, manipulable) ----------
+    const phoneObj = new THREE.Group();
+    phoneObj.position.set(1.4, 0.85, 0.6);
+    phoneObj.rotation.set(-0.5, -0.4, 0);
+    phoneObj.userData = {
+      selectable: true, kind: 'phone', label: 'Phone',
+      sub: 'companion · 02', allowMove: true, allowRotate: true
+    };
+    scene.add(phoneObj);
+
+    const phoneBody = new THREE.Mesh(
+      new THREE.BoxGeometry(0.075, 0.155, 0.008),
+      new THREE.MeshStandardMaterial({ color: 0x14171c, roughness: 0.4, metalness: 0.4 })
+    );
+    phoneBody.castShadow = true;
+    phoneBody.userData.parent = phoneObj;
+    phoneObj.add(phoneBody);
+    // The phone screen will display what the phone's camera sees, via a WebGLRenderTarget.
+    const phoneScreenRT = new THREE.WebGLRenderTarget(256, 540, {
+      minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
+    });
+    phoneScreenRT.texture.colorSpace = THREE.SRGBColorSpace;
+
+    const phoneScreen = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.068, 0.148),
+      new THREE.MeshBasicMaterial({
+        map: phoneScreenRT.texture,
+        toneMapped: false,
+      })
+    );
+    phoneScreen.position.z = 0.0042;
+    phoneScreen.userData.parent = phoneObj;
+    phoneObj.add(phoneScreen);
+    // back-of-phone camera lens (tiny)
+    const phoneLens = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.005, 0.005, 0.001, 12),
+      new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.2, metalness: 0.8 })
+    );
+    phoneLens.rotation.x = Math.PI/2;
+    phoneLens.position.set(0.022, 0.06, -0.0042);
+    phoneLens.userData.parent = phoneObj;
+    phoneObj.add(phoneLens);
+
+    // Phone camera convention:
+    //   - phone's screen is on +Z face of phoneObj (toward user)
+    //   - lens is on -Z face (away from user, looking out the back)
+    //   - PerspectiveCamera default forward is -Z, so no local rotation needed — the camera
+    //     looks the same way as the lens hole.
+    const phoneCam = new THREE.PerspectiveCamera(60, 9/19.5, 0.05, 30);
+    phoneCam.position.set(0, 0, 0);
+    phoneObj.add(phoneCam);
+
+    // frustum helper for the phone camera — always-on so you can see where it's pointing
+    const phoneCamHelper = new THREE.CameraHelper(phoneCam);
+    phoneCamHelper.material.transparent = true;
+    phoneCamHelper.material.opacity = 0.4;
+    helpers.add(phoneCamHelper);
+
+    // ---------- TRANSFORM CONTROLS ----------
+    // r170 split TransformControls from its visual gizmo — gizmo must be added separately
+    // via getHelper(). Without this, the widget is invisible.
+    const tcontrols = new TransformControls(mainCam, renderer.domElement);
+    tcontrols.size = 0.7;            // sized so handles are easy to grab without dominating the scene
+    tcontrols.setSpace('world');
+    const tcGizmo = tcontrols.getHelper();
+    scene.add(tcGizmo);
+    tcGizmo.visible = false;
+    tcontrols.addEventListener('dragging-changed', e => {
+      orbit.enabled = !e.value;
+    });
+    tcontrols.addEventListener('change', () => {
+      if (selected) {
+        updateInspector(selected);
+        if (selected.userData.kind === 'whiteboard' && selected.userData.snapsToWalls) {
+          snapToNearestWall(selected);
+        }
+      }
+    });
+
+    function snapToNearestWall(wb) {
+      const candidates = [
+        { d: Math.abs(wb.position.x - (-ROOM_HALF)), apply: () => { wb.position.x = -ROOM_HALF + 0.05; wb.rotation.y = Math.PI / 2; } },
+        { d: Math.abs(wb.position.x - ( ROOM_HALF)), apply: () => { wb.position.x =  ROOM_HALF - 0.05; wb.rotation.y = -Math.PI / 2; } },
+        { d: Math.abs(wb.position.z - (-ROOM_DEPTH)), apply: () => { wb.position.z = -ROOM_DEPTH + 0.05; wb.rotation.y = 0; } },
+      ];
+      const best = candidates.sort((a, b) => a.d - b.d)[0];
+      if (best.d < 0.6) best.apply();
+    }
+
+    let selected = null;
+    let mode = 'select';   // select | move | rotate | draw
+
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('.tool').forEach(b => b.classList.toggle('active', b.dataset.tool === m));
+      if (m === 'move') {
+        if (selected) attachTransform(selected, 'translate');
+        else tcontrols.detach();
+      } else if (m === 'rotate') {
+        if (selected) attachTransform(selected, 'rotate');
+        else tcontrols.detach();
+      } else {
+        tcontrols.detach();
+      }
+    }
+
+    function attachTransform(obj, gMode) {
+      if (!obj) return;
+      const ud = obj.userData;
+
+      // For rotate mode on cameras, rotate the HEAD only (so the tripod stays vertical).
+      // Cameras and phones can rotate freely on XYZ; everything else is yaw-only.
+      let attachTo = obj;
+      if (gMode === 'rotate' && ud.kind === 'camera' && ud.head) {
+        attachTo = ud.head;
+      }
+
+      tcontrols.attach(attachTo);
+      tcontrols.setMode(gMode);
+      tcontrols.showX = true; tcontrols.showY = true; tcontrols.showZ = true;
+
+      if (gMode === 'translate' && ud.moveAxis === 'xz') {
+        tcontrols.showY = false;
+      }
+      if (gMode === 'rotate' && !(ud.kind === 'camera' || ud.kind === 'phone')) {
+        // floor-anchored things: yaw only (no flopping over)
+        tcontrols.showX = false; tcontrols.showZ = false; tcontrols.showY = true;
+      }
+      if (gMode === 'translate' && !ud.allowMove) tcontrols.detach();
+      if (gMode === 'rotate' && !ud.allowRotate) tcontrols.detach();
+    }
+
+    // ---------- SELECTION ----------
+    function findSelectableAncestor(obj) {
+      let o = obj;
+      while (o) {
+        if (o.userData?.selectable) return o;
+        if (o.userData?.parent) return o.userData.parent;
+        o = o.parent;
+      }
+      return null;
+    }
+
+    function selectObject(obj) {
+      selected = obj;
+      cameras.forEach(c => c.helper.visible = false);
+      if (obj) {
+        const rig = cameras.find(c => c.mount === obj);
+        if (rig) {
+          rig.helper.visible = true;
+          // Auto-switch the POV panel to whichever camera the user just clicked.
+          const idx = cameras.indexOf(rig);
+          activeRig = rig;
+          activeCamera = rig.cam;
+          const sel = document.getElementById('camSelect');
+          if (sel) sel.value = String(idx);
+          document.getElementById('metaFov').textContent = `${activeCamera.fov.toFixed(0)}°`;
+          // sync aspect
+          const povRect = povCanvas.parentElement.getBoundingClientRect();
+          activeCamera.aspect = povRect.width / povRect.height;
+          activeCamera.updateProjectionMatrix();
+        }
+        if (mode === 'move') attachTransform(obj, 'translate');
+        else if (mode === 'rotate') attachTransform(obj, 'rotate');
+        else tcontrols.detach();
+        showInspector(obj);
+      } else {
+        tcontrols.detach();
+        hideInspector();
+      }
+    }
+
+    // ---------- INSPECTOR UI ----------
+    const insEl = document.getElementById('inspector');
+    const insName = document.getElementById('insName');
+    const insId   = document.getElementById('insId');
+    const insRows = document.getElementById('insRows');
+    const insActions = document.getElementById('insActions');
+
+    function showInspector(obj) {
+      insName.innerHTML = `${obj.userData.label} <em>·</em>`;
+      insId.textContent = obj.userData.sub || '';
+      updateInspector(obj);
+      insEl.classList.add('show');
+    }
+    function hideInspector() {
+      insEl.classList.remove('show');
+    }
+    function updateInspector(obj) {
+      const p = obj.position;
+      const r = obj.rotation;
+      let html = '';
+      html += `<div class="row"><span class="lbl">Pos</span><span class="val"><span class="num">${p.x.toFixed(2)}</span> · <span class="num">${p.y.toFixed(2)}</span> · <span class="num">${p.z.toFixed(2)}</span> m</span></div>`;
+      html += `<div class="row"><span class="lbl">Rot</span><span class="val"><span class="num">${(r.y * 180/Math.PI).toFixed(0)}°</span> y</span></div>`;
+      if (obj.userData.kind === 'camera') {
+        const rigCam = obj.userData.camera;
+        html += `<div class="row"><span class="lbl">FOV</span><span class="val"><input type="range" min="20" max="100" value="${rigCam.fov}" id="fovSlider"></span></div>`;
+      }
+      if (obj.userData.kind === 'whiteboard') {
+        html += `<div class="row"><span class="lbl">Strokes</span><span class="val">${wbStrokes.length}</span></div>`;
+      }
+      insRows.innerHTML = html;
+
+      let actions = `
+        <button class="ctrl" data-act="move">Move · W</button>
+        <button class="ctrl" data-act="rotate">Rotate · E</button>
+      `;
+      if (obj.userData.kind === 'camera') {
+        actions += `<button class="ctrl" data-act="aim-table">Aim · table</button>`;
+        actions += `<button class="ctrl" data-act="aim-board">Aim · board</button>`;
+      }
+      if (obj.userData.removable) {
+        actions += `<button class="ctrl" data-act="remove">Remove</button>`;
+      }
+      insActions.innerHTML = actions;
+
+      insActions.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => {
+          const a = b.dataset.act;
+          if (a === 'move') setMode('move');
+          else if (a === 'rotate') setMode('rotate');
+          else if (a === 'aim-table' && selected.userData.head) {
+            aimHeadAt(selected.userData.head, new THREE.Vector3(0, TABLE_Y, 0));
+          }
+          else if (a === 'aim-board' && selected.userData.head) {
+            aimHeadAt(selected.userData.head, new THREE.Vector3(-ROOM_HALF + 0.1, 1.4, 0));
+          }
+          else if (a === 'remove') {
+            if (selected.userData.kind === 'marker') removeMarker(selected);
+            else if (selected.userData.kind === 'person') {
+              const i = people.indexOf(selected);
+              if (i >= 0) people.splice(i, 1);
+              scene.remove(selected);
+              selected.traverse(o => {
+                if (o.geometry) o.geometry.dispose();
+                if (o.material) o.material.dispose();
+              });
+            }
+            selected = null;
+            hideInspector();
+            tcontrols.detach();
+          }
+        });
+      });
+
+      const fov = document.getElementById('fovSlider');
+      if (fov) fov.addEventListener('input', e => {
+        const rigCam = obj.userData.camera;
+        rigCam.fov = +e.target.value;
+        rigCam.updateProjectionMatrix();
+        if (rigCam === activeCamera) document.getElementById('metaFov').textContent = `${e.target.value}°`;
+      });
+    }
+
+    // ---------- BEAM (computed in world, drawn into projector canvas) ----------
+    function computeBeam() {
+      const emitter = markers.find(m => m.userData.role === 'emitter');
+      if (!emitter) return { points: [], hit: 0, color: 0xffb360 };
+      const pts = [];
+      const start = new THREE.Vector3(emitter.position.x, TABLE_Y + 0.001, emitter.position.z);
+      pts.push(start.clone());
+
+      let dir = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0,1,0), emitter.rotation.y);
+      let pos = start.clone();
+      let color = 0xffb360;
+
+      for (let bounce = 0; bounce < 6; bounce++) {
+        let nearest = null, nearestDist = Infinity, nearestKind = null;
+        for (const m of markers) {
+          if (m === emitter) continue;
+          const toM = new THREE.Vector3(m.position.x - pos.x, 0, m.position.z - pos.z);
+          const d = toM.length();
+          if (d < 0.005) continue;
+          const along = toM.dot(dir);
+          if (along <= 0) continue;
+          const perp = Math.sqrt(Math.max(0, d * d - along * along));
+          if (perp < 0.07 && along < nearestDist) {
+            nearestDist = along;
+            nearest = m;
+            nearestKind = m.userData.role;
+          }
+        }
+        if (!nearest) {
+          const halfW = TABLE_W/2 - 0.02, halfD = TABLE_D/2 - 0.02;
+          let t = 1.0;
+          if (Math.abs(dir.x) > 1e-6) t = Math.min(t, dir.x > 0 ? (halfW - pos.x) / dir.x : (-halfW - pos.x) / dir.x);
+          if (Math.abs(dir.z) > 1e-6) t = Math.min(t, dir.z > 0 ? (halfD - pos.z) / dir.z : (-halfD - pos.z) / dir.z);
+          t = Math.max(0.05, Math.min(t, 1.0));
+          const end = pos.clone().addScaledVector(dir, t);
+          pts.push(end);
+          break;
+        }
+        const hitPos = new THREE.Vector3(nearest.position.x, TABLE_Y + 0.001, nearest.position.z);
+        pts.push(hitPos.clone());
+        if (nearestKind === 'target') break;
+        if (nearestKind === 'mirror') {
+          const normal = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0,1,0), nearest.rotation.y);
+          const dn = dir.dot(normal);
+          dir = dir.clone().addScaledVector(normal, -2 * dn).normalize();
+          pos = hitPos.clone();
+        } else if (nearestKind === 'blocker') break;
+        else if (nearestKind === 'splitter') { pos = hitPos.clone(); }
+        else if (nearestKind === 'filter') {
+          color = 0x6fb9c9;
+          pos = hitPos.clone();
+        } else break;
+      }
+      const targetMarker = markers.find(m => m.userData.role === 'target');
+      let hit = 0;
+      if (targetMarker && pts.length > 1) {
+        const last = pts[pts.length - 1];
+        const d = Math.hypot(targetMarker.position.x - last.x, targetMarker.position.z - last.z);
+        hit = Math.max(0, 1 - d * 8);
+      }
+      return { points: pts, hit, color };
+    }
+
+    // ---------- DRAW PROJECTOR CANVAS (this is what gets projected onto the table) ----------
+    function tableToProjUV(x, z) {
+      // Map table world coords (x in [-TABLE_W/2, TABLE_W/2], z in [-TABLE_D/2, TABLE_D/2])
+      // to canvas pixels [0, W] x [0, H]
+      // Spotlight aperture is square; we draw at the center of the square so the cone covers the table.
+      // Texture U axis maps to projector local +X, V to projector local +Y (which is world -Z when projector looks down).
+      const W = projCanvas.width, H = projCanvas.height;
+      // Center the canvas on table: the canvas spans the full square cone footprint.
+      // Spotlight's projection square at table distance has half-width = distToTable * tan(angle)
+      const halfFoot = distToTable * Math.tan(projAngle * 1.05);
+      // Map: x in world -> u, z in world -> v (note: spotlight Y axis vs world Z relationship)
+      // Empirically (THREE convention), with projector at origin pointing -Y, the texture U corresponds to scene X
+      // and texture V corresponds to scene Z (with V increasing in -z direction). Test and adjust if needed.
+      const u = ((x + halfFoot) / (2 * halfFoot)) * W;
+      const v = ((z + halfFoot) / (2 * halfFoot)) * H;
+      return { u, v, halfFoot };
+    }
+
+    function drawProjectorCanvas(beamPts, beamColor, hit) {
+      const W = projCanvas.width, H = projCanvas.height;
+      // black background — outside-beam areas project no light
+      projCtx.fillStyle = '#000000';
+      projCtx.fillRect(0, 0, W, H);
+
+      // draw a faint instrument grid that will project onto the table as subtle hairlines
+      projCtx.save();
+      projCtx.strokeStyle = 'rgba(40, 28, 18, 1)'; // dim warm
+      projCtx.lineWidth = 1;
+      const halfFootMeters = distToTable * Math.tan(projAngle * 1.05);
+      const halfFootPx = W / 2;
+      const pxPerM = halfFootPx / halfFootMeters;
+      // table outline
+      const tw = TABLE_W * pxPerM, td = TABLE_D * pxPerM;
+      projCtx.strokeStyle = 'rgba(60, 44, 28, 1)';
+      projCtx.lineWidth = 1;
+      projCtx.strokeRect(W/2 - tw/2, H/2 - td/2, tw, td);
+      projCtx.restore();
+
+      // draw the beam, glow + core
+      if (beamPts.length > 1) {
+        const cssColor = '#' + beamColor.toString(16).padStart(6, '0');
+        // outer glow
+        projCtx.save();
+        projCtx.globalCompositeOperation = 'lighter';
+        projCtx.lineCap = 'round';
+        projCtx.lineJoin = 'round';
+        projCtx.strokeStyle = cssColor;
+        projCtx.shadowColor = cssColor;
+        projCtx.shadowBlur = 38;
+        projCtx.lineWidth = 4;
+        projCtx.beginPath();
+        const first = tableToProjUV(beamPts[0].x, beamPts[0].z);
+        projCtx.moveTo(first.u, first.v);
+        for (let i = 1; i < beamPts.length; i++) {
+          const p = tableToProjUV(beamPts[i].x, beamPts[i].z);
+          projCtx.lineTo(p.u, p.v);
+        }
+        projCtx.stroke();
+
+        // brighter inner core
+        projCtx.shadowBlur = 0;
+        projCtx.lineWidth = 1.6;
+        projCtx.strokeStyle = '#fff5e0';
+        projCtx.beginPath();
+        projCtx.moveTo(first.u, first.v);
+        for (let i = 1; i < beamPts.length; i++) {
+          const p = tableToProjUV(beamPts[i].x, beamPts[i].z);
+          projCtx.lineTo(p.u, p.v);
+        }
+        projCtx.stroke();
+        projCtx.restore();
+
+        // hit pulse on target
+        if (hit > 0.5) {
+          const last = tableToProjUV(beamPts[beamPts.length - 1].x, beamPts[beamPts.length - 1].z);
+          projCtx.save();
+          projCtx.globalCompositeOperation = 'lighter';
+          const r = 38 + Math.sin(performance.now() * 0.005) * 4;
+          const grad = projCtx.createRadialGradient(last.u, last.v, 4, last.u, last.v, r);
+          grad.addColorStop(0, 'rgba(255, 220, 160, 0.85)');
+          grad.addColorStop(1, 'rgba(255, 180, 100, 0)');
+          projCtx.fillStyle = grad;
+          projCtx.beginPath();
+          projCtx.arc(last.u, last.v, r, 0, Math.PI * 2);
+          projCtx.fill();
+          projCtx.restore();
+        }
+      }
+
+      // tiny instrument plate at top of projection
+      projCtx.save();
+      projCtx.fillStyle = 'rgba(28, 20, 12, 1)';
+      projCtx.font = "9px 'IBM Plex Mono', monospace";
+      projCtx.textAlign = 'center';
+      projCtx.fillText('LIGHT  ·  LAB  ·  02', W/2, 24);
+      projCtx.restore();
+
+      projTexture.needsUpdate = true;
+    }
+
+    // ---------- WHITEBOARD DRAWING ----------
+    const wbStrokes = [];
+    let wbDrawing = null;
+    function startWbStroke(uvX, uvY) {
+      const stroke = { points: [{ x: uvX, y: uvY }], color: '#1a1410', width: 4 };
+      wbStrokes.push(stroke);
+      wbDrawing = stroke;
+    }
+    function continueWbStroke(uvX, uvY) {
+      if (!wbDrawing) return;
+      const last = wbDrawing.points[wbDrawing.points.length - 1];
+      const d = Math.hypot(uvX - last.x, uvY - last.y);
+      if (d < 1.5) return;
+      wbDrawing.points.push({ x: uvX, y: uvY });
+      // draw on canvas
+      wbCtx.strokeStyle = wbDrawing.color;
+      wbCtx.lineWidth = wbDrawing.width;
+      wbCtx.lineCap = 'round';
+      wbCtx.lineJoin = 'round';
+      wbCtx.beginPath();
+      wbCtx.moveTo(last.x, last.y);
+      wbCtx.lineTo(uvX, uvY);
+      wbCtx.stroke();
+      wbTexture.needsUpdate = true;
+    }
+    function endWbStroke() {
+      if (wbDrawing) {
+        // emit a "whiteboard.stroke.added" event into the detection stream
+        addEvent(`whiteboard.stroke.added · ${wbDrawing.points.length} pts`);
+        wbDrawing = null;
+      }
+    }
+
+    // events tail (for stream)
+    const recentEvents = [];
+    function addEvent(text) {
+      recentEvents.push({ t: new Date(), text });
+      if (recentEvents.length > 4) recentEvents.shift();
+    }
+
+    // ---------- POINTER + RAYCAST + INTERACTION ----------
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+
+    function updateNDC(ev) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      ndc.set(((ev.clientX - rect.left) / rect.width) * 2 - 1,
+              -((ev.clientY - rect.top) / rect.height) * 2 + 1);
+    }
+    function pickSelectable(ev) {
+      updateNDC(ev);
+      raycaster.setFromCamera(ndc, mainCam);
+      // gather candidate meshes from all selectable groups
+      const candidates = [];
+      scene.traverse(o => {
+        if (o.isMesh && (o.userData?.parent?.userData?.selectable || o.userData?.selectable)) {
+          candidates.push(o);
+        }
+      });
+      const hits = raycaster.intersectObjects(candidates, false);
+      for (const hit of hits) {
+        const sel = findSelectableAncestor(hit.object);
+        if (sel) return { sel, hit };
+      }
+      return { sel: null, hit: null };
+    }
+
+    // hover tag
+    const hoverTagEl = document.getElementById('hoverTag');
+    let hoverObj = null;
+    renderer.domElement.addEventListener('pointermove', e => {
+      // ignore while transform-controls is dragging
+      if (tcontrols.dragging) return;
+      const { sel } = pickSelectable(e);
+      if (sel !== hoverObj) {
+        hoverObj = sel;
+        if (sel) {
+          hoverTagEl.textContent = sel.userData.label;
+          hoverTagEl.classList.add('show');
+        } else {
+          hoverTagEl.classList.remove('show');
+        }
+      }
+      if (sel) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        hoverTagEl.style.left = (e.clientX - rect.left) + 'px';
+        hoverTagEl.style.top  = (e.clientY - rect.top) + 'px';
+      }
+      // whiteboard draw mode
+      if (mode === 'draw' && wbDrawing) {
+        const uv = pickWhiteboardUV(e);
+        if (uv) continueWbStroke(uv.x, uv.y);
+      }
+    });
+
+    function pickWhiteboardUV(ev) {
+      updateNDC(ev);
+      raycaster.setFromCamera(ndc, mainCam);
+      const hits = raycaster.intersectObject(wbSurface, false);
+      if (hits.length) {
+        const uv = hits[0].uv;
+        return { x: uv.x * wbCanvas.width, y: (1 - uv.y) * wbCanvas.height };
+      }
+      return null;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      // if transform controls is grabbing the gizmo, let it handle
+      if (tcontrols.dragging) return;
+
+      // Draw mode: start a stroke (and lock orbit so the camera doesn't move)
+      if (mode === 'draw') {
+        const uv = pickWhiteboardUV(e);
+        if (uv) {
+          startWbStroke(uv.x, uv.y);
+          orbit.enabled = false;
+          renderer.domElement.setPointerCapture(e.pointerId);
+          return;
+        }
+      }
+
+      const { sel } = pickSelectable(e);
+      if (sel) {
+        // markers stay simple — direct drag, no transform widget, ever
+        if (sel.userData.kind === 'marker') {
+          startMarkerDrag(sel, e);
+          return;
+        }
+        selectObject(sel);
+      } else {
+        // clicked empty: deselect
+        selectObject(null);
+      }
+    });
+
+    // legacy marker drag (keep the surprise!)
+    let dragMarker = null, dragOffset = new THREE.Vector3();
+    const tablePlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -(TABLE_Y + 0.022));
+    function startMarkerDrag(m, ev) {
+      dragMarker = m;
+      orbit.enabled = false;
+      const pt = pointerToTable(ev);
+      if (pt) dragOffset.set(pt.x - m.position.x, 0, pt.z - m.position.z);
+      renderer.domElement.setPointerCapture(ev.pointerId);
+    }
+    function pointerToTable(ev) {
+      updateNDC(ev);
+      raycaster.setFromCamera(ndc, mainCam);
+      const hit = new THREE.Vector3();
+      if (raycaster.ray.intersectPlane(tablePlane, hit)) return hit;
+      return null;
+    }
+    renderer.domElement.addEventListener('pointermove', e => {
+      if (!dragMarker) return;
+      const pt = pointerToTable(e);
+      if (!pt) return;
+      const halfW = TABLE_W/2 - 0.06, halfD = TABLE_D/2 - 0.06;
+      dragMarker.position.x = Math.max(-halfW, Math.min(halfW, pt.x - dragOffset.x));
+      dragMarker.position.z = Math.max(-halfD, Math.min(halfD, pt.z - dragOffset.z));
+    });
+    renderer.domElement.addEventListener('pointerup', e => {
+      if (dragMarker) { dragMarker = null; orbit.enabled = true; }
+      if (wbDrawing) { endWbStroke(); orbit.enabled = true; }
+    });
+    renderer.domElement.addEventListener('pointercancel', () => {
+      if (dragMarker) { dragMarker = null; orbit.enabled = true; }
+      if (wbDrawing) { endWbStroke(); orbit.enabled = true; }
+    });
+    // wheel rotates a marker if hovered
+    renderer.domElement.addEventListener('wheel', e => {
+      const { sel } = pickSelectable(e);
+      if (sel?.userData?.kind === 'marker') {
+        e.preventDefault();
+        const step = (e.shiftKey ? 0.05 : 0.1) * Math.sign(e.deltaY);
+        sel.rotation.y += step;
+      }
+    }, { passive: false });
+    // double-click marker = remove
+    renderer.domElement.addEventListener('dblclick', e => {
+      const { sel } = pickSelectable(e);
+      if (sel?.userData?.kind === 'marker') removeMarker(sel);
+    });
+
+    // ---------- HOTKEYS ----------
+    window.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'q' || e.key === 'Q') setMode('select');
+      else if (e.key === 'w' || e.key === 'W') setMode('move');
+      else if (e.key === 'e' || e.key === 'E') setMode('rotate');
+      else if (e.key === 'd' || e.key === 'D') setMode('draw');
+      else if (e.key === 'Escape') { selectObject(null); setMode('select'); }
+      else if ((e.key === 'Delete' || e.key === 'Backspace') && selected) {
+        if (selected.userData.kind === 'marker') {
+          removeMarker(selected);
+          selectObject(null);
+        }
+      }
+      else if (e.key === 'f' || e.key === 'F') {
+        if (selected) {
+          orbit.target.copy(selected.position);
+        }
+      }
+    });
+
+    // ---------- TOOLBAR + ADD BUTTONS ----------
+    document.querySelectorAll('.tool[data-tool]').forEach(b => {
+      b.addEventListener('click', () => setMode(b.dataset.tool));
+    });
+    document.querySelector('[data-tool="add-person"]').addEventListener('click', () => {
+      const x = (Math.random() - 0.5) * 3;
+      const z = -1.2 - Math.random() * 0.8;
+      const poses = ['stand', 'lean', 'phone'];
+      createPerson(x, z, Math.random() * Math.PI - Math.PI/2, poses[Math.floor(Math.random() * poses.length)]);
+    });
+
+    document.querySelectorAll('[data-add]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const x = (Math.random() - 0.5) * 0.8;
+        const z = (Math.random() - 0.5) * 0.4;
+        createMarker(btn.dataset.add, x, z, Math.random() * Math.PI);
+      });
+    });
+    document.querySelectorAll('[data-add-prop]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const k = btn.dataset.addProp;
+        if (k === 'person') {
+          const x = (Math.random() - 0.5) * 3;
+          const z = -1.2 - Math.random() * 0.8;
+          createPerson(x, z, Math.random() * Math.PI - Math.PI/2, ['stand','lean','phone'][Math.floor(Math.random()*3)]);
+        } else if (k === 'phone') {
+          // toggle visibility (only one phone for now)
+          phoneObj.visible = !phoneObj.visible;
+        } else if (k === 'clear-board') {
+          wbStrokes.length = 0;
+          clearWhiteboard();
+          addEvent('whiteboard.cleared');
+        }
+      });
+    });
+
+    document.getElementById('btnReset').addEventListener('click', () => {
+      [...markers].forEach(removeMarker);
+      createMarker('emitter', -0.55,  0.10, 0);
+      createMarker('mirror',   0.05, -0.18, -Math.PI/4);
+      createMarker('target',   0.65,  0.10, 0);
+    });
+
+    // dim toggle (Edit mode default: bright; Demo mode: cinematic)
+    let dimLights = false;
+    function applyLighting() {
+      if (dimLights) {
+        ambient.intensity = 0.10;
+        hemi.intensity    = 0.22;
+        key.intensity     = 0.22;
+        fill.intensity    = 0.08;
+        rim.intensity     = 0.10;
+        sunlight.intensity = 0.20;
+        projLight.intensity = 22;
+        projFill.intensity  = 5.5;
+      } else {
+        ambient.intensity = 0.6;
+        hemi.intensity    = 0.85;
+        key.intensity     = 0.95;
+        fill.intensity    = 0.40;
+        rim.intensity     = 0.25;
+        sunlight.intensity = 0.9;
+        projLight.intensity = 12;
+        projFill.intensity  = 2.5;
+      }
+    }
+    applyLighting();
+    document.getElementById('btnLights').addEventListener('click', e => {
+      dimLights = !dimLights;
+      e.target.classList.toggle('active', dimLights);
+      applyLighting();
+    });
+
+    let streamOn = true;
+    document.getElementById('btnStream').addEventListener('click', e => {
+      streamOn = !streamOn;
+      e.target.classList.toggle('active', streamOn);
+    });
+
+    // ---------- DETECTIONS (camera-side) ----------
+    const camRes = { w: 1280, h: 960 };
+    document.getElementById('camRes').textContent = `${camRes.w} × ${camRes.h}`;
+
+    // populate camera dropdown
+    const camSelect = document.getElementById('camSelect');
+    cameras.forEach((c, i) => {
+      const opt = document.createElement('option');
+      opt.value = String(i); opt.textContent = c.name;
+      camSelect.appendChild(opt);
+    });
+    camSelect.value = '0';
+    camSelect.addEventListener('change', e => {
+      const idx = +e.target.value;
+      activeRig = cameras[idx];
+      activeCamera = activeRig.cam;
+      document.getElementById('metaFov').textContent = `${activeCamera.fov.toFixed(0)}°`;
+      // resize the POV renderer aspect for the new camera
+      const povRect = povCanvas.parentElement.getBoundingClientRect();
+      const pw = Math.floor(povRect.width), ph = Math.floor(povRect.height);
+      activeCamera.aspect = pw / ph;
+      activeCamera.updateProjectionMatrix();
+    });
+
+    function projectToCamera(worldPos) {
+      const v = worldPos.clone().project(roomCam);
+      // Pixel-space x,y to match server's expected detection shape.
+      return {
+        x: (v.x * 0.5 + 0.5) * camRes.w,
+        y: (1 - (v.y * 0.5 + 0.5)) * camRes.h,
+        depth: v.z, ndc: { x: v.x, y: v.y }
+      };
+    }
+    function markerCorners(marker) {
+      const { w, h } = marker.userData.bounds;
+      const hw = w/2, hh = h/2;
+      const local = [
+        new THREE.Vector3(-hw, 0,  hh),
+        new THREE.Vector3( hw, 0,  hh),
+        new THREE.Vector3( hw, 0, -hh),
+        new THREE.Vector3(-hw, 0, -hh),
+      ];
+      const m = new THREE.Matrix4().makeRotationY(marker.rotation.y);
+      return local.map(p => p.applyMatrix4(m).add(marker.position));
+    }
+    function generateDetections(cam, res) {
+      const dets = [];
+      cam.updateMatrixWorld();
+      cam.updateProjectionMatrix();
+      for (const m of markers) {
+        const corners = markerCorners(m);
+        const projCenter = projectScreen(m.position, cam, res);
+        if (!projCenter || projCenter.depth < -1 || projCenter.depth > 1) continue;
+        if (projCenter.ndc.x < -1.05 || projCenter.ndc.x > 1.05 ||
+            projCenter.ndc.y < -1.05 || projCenter.ndc.y > 1.05) continue;
+        const projCorners = corners.map(c => projectScreen(c, cam, res));
+        const dx = projCorners[1].x - projCorners[0].x;
+        const dy = projCorners[1].y - projCorners[0].y;
+        const angle = Math.atan2(dy, dx);
+        const conf = +(0.92 + Math.random() * 0.06).toFixed(3);
+        const surfaceX = (m.position.x + TABLE_W/2) / TABLE_W;
+        const surfaceY = (m.position.z + TABLE_D/2) / TABLE_D;
+        // Server's `fiducial.detections.ingest` expects center/corners as { x, y }.
+        dets.push({
+          tagId: m.userData.tagId, role: m.userData.role,
+          center: { x: +projCenter.x.toFixed(1), y: +projCenter.y.toFixed(1) },
+          corners: projCorners.map(p => ({ x: +p.x.toFixed(1), y: +p.y.toFixed(1) })),
+          angle: +angle.toFixed(3), confidence: conf,
+          surface: { x: +surfaceX.toFixed(3), y: +surfaceY.toFixed(3) }
+        });
+      }
+      return dets;
+    }
+    function projectScreen(worldPos, cam, res) {
+      const v = worldPos.clone().project(cam);
+      return {
+        x: (v.x * 0.5 + 0.5) * res.w,
+        y: (1 - (v.y * 0.5 + 0.5)) * res.h,
+        depth: v.z, ndc: { x: v.x, y: v.y }
+      };
+    }
+
+    // ---------- POV overlay ----------
+    const povOverlay = document.getElementById('povOverlay');
+    const octx = povOverlay.getContext('2d');
+    function drawPovOverlay(dets) {
+      const w = povOverlay.width, h = povOverlay.height;
+      octx.clearRect(0, 0, w, h);
+      const sx = w / camRes.w, sy = h / camRes.h;
+      for (const d of dets) {
+        octx.strokeStyle = 'rgba(127,188,210,0.85)'; octx.lineWidth = 1;
+        octx.beginPath();
+        d.corners.forEach((c, i) => {
+          const x = c.x * sx, y = c.y * sy;
+          if (i === 0) octx.moveTo(x, y); else octx.lineTo(x, y);
+        });
+        octx.closePath(); octx.stroke();
+        const lbl = `${d.tagId} · ${d.confidence}`;
+        octx.font = "9px 'IBM Plex Mono', monospace";
+        const x0 = d.corners[0].x * sx, y0 = d.corners[0].y * sy;
+        octx.fillStyle = 'rgba(5,7,9,0.85)';
+        octx.fillRect(x0, y0 - 14, octx.measureText(lbl).width + 8, 12);
+        octx.fillStyle = '#7fbcd2'; octx.fillText(lbl, x0 + 4, y0 - 4);
+      }
+      octx.strokeStyle = 'rgba(245,239,226,0.18)'; octx.lineWidth = 0.6;
+      octx.beginPath();
+      octx.moveTo(w/2 - 6, h/2); octx.lineTo(w/2 + 6, h/2);
+      octx.moveTo(w/2, h/2 - 6); octx.lineTo(w/2, h/2 + 6);
+      octx.stroke();
+    }
+
+    // phone overlay (lens reticle)
+    const phoneOverlay = document.getElementById('phoneOverlay');
+    const phctx = phoneOverlay.getContext('2d');
+    function drawPhoneOverlay(dets) {
+      const w = phoneOverlay.width, h = phoneOverlay.height;
+      phctx.clearRect(0, 0, w, h);
+      // tiny reticle in center
+      phctx.strokeStyle = 'rgba(255, 179, 96, 0.7)';
+      phctx.lineWidth = 1;
+      const cx = w/2, cy = h/2, sz = 24;
+      phctx.beginPath();
+      phctx.moveTo(cx - sz, cy - sz + 6); phctx.lineTo(cx - sz, cy - sz); phctx.lineTo(cx - sz + 6, cy - sz);
+      phctx.moveTo(cx + sz, cy - sz + 6); phctx.lineTo(cx + sz, cy - sz); phctx.lineTo(cx + sz - 6, cy - sz);
+      phctx.moveTo(cx - sz, cy + sz - 6); phctx.lineTo(cx - sz, cy + sz); phctx.lineTo(cx - sz + 6, cy + sz);
+      phctx.moveTo(cx + sz, cy + sz - 6); phctx.lineTo(cx + sz, cy + sz); phctx.lineTo(cx + sz - 6, cy + sz);
+      phctx.stroke();
+
+      // detection boxes
+      const sx = w / camRes.w, sy = h / camRes.h;
+      let aimText = '—';
+      let bestDet = null, bestDist = Infinity;
+      for (const d of dets) {
+        // offset corners scaled to phone view (we recompute from phone cam, so use d directly here? No — these dets are roomCam ones)
+      }
+      // We'll recompute detections from phoneCam separately
+    }
+
+    // detections from phone POV — draws bounding boxes + (when a marker is centered) the
+    // arc-dial control overlay we designed in ideas/phone-lens.html.
+    // NOTE: detection here uses raycast/projection — replace with real BarcodeDetector
+    //       or AprilTag wasm lib once the phone lens UI is wired to a real camera.
+    function drawPhoneDetections(dets) {
+      const w = phoneOverlay.width, h = phoneOverlay.height;
+      const sx = w / camRes.w, sy = h / camRes.h;
+      let bestDet = null, bestDist = Infinity;
+      const cx = w/2, cy = h/2;
+
+      for (const d of dets) {
+        phctx.strokeStyle = 'rgba(255, 179, 96, 0.85)'; phctx.lineWidth = 1;
+        phctx.beginPath();
+        d.corners.forEach((c, i) => {
+          const x = c.x * sx, y = c.y * sy;
+          if (i === 0) phctx.moveTo(x, y); else phctx.lineTo(x, y);
+        });
+        phctx.closePath(); phctx.stroke();
+
+        const cu = d.center.x * sx, cv = d.center.y * sy;
+        const dist = Math.hypot(cu - cx, cv - cy);
+        if (dist < bestDist) { bestDist = dist; bestDet = d; }
+
+        const lbl = `${d.tagId}`;
+        phctx.font = "9px 'IBM Plex Mono', monospace";
+        const x0 = d.corners[0].x * sx, y0 = d.corners[0].y * sy;
+        phctx.fillStyle = 'rgba(5,7,9,0.85)';
+        phctx.fillRect(x0, y0 - 14, phctx.measureText(lbl).width + 8, 12);
+        phctx.fillStyle = '#ffb360'; phctx.fillText(lbl, x0 + 4, y0 - 4);
+      }
+
+      // ----- ACQUIRED OVERLAY -----
+      // When a marker is near the center, treat it as "acquired" and show controls.
+      const acquired = bestDet && bestDist < Math.min(w, h) * 0.30 ? bestDet : null;
+      if (acquired) {
+        document.getElementById('phoneAim').textContent = `${acquired.role} · ${acquired.tagId}`;
+
+        // locking corner reticle
+        const sz = 28;
+        phctx.strokeStyle = '#ffb360'; phctx.lineWidth = 1.5;
+        const corners = [[-1,-1],[1,-1],[1,1],[-1,1]];
+        corners.forEach(([dx, dy]) => {
+          const x0 = cx + dx*sz, y0 = cy + dy*sz;
+          phctx.beginPath();
+          phctx.moveTo(x0, y0 - dy*8);
+          phctx.lineTo(x0, y0);
+          phctx.lineTo(x0 - dx*8, y0);
+          phctx.stroke();
+        });
+
+        // tag annotation above
+        phctx.font = "9px 'IBM Plex Mono', monospace";
+        phctx.fillStyle = '#ffb360';
+        phctx.textAlign = 'center';
+        phctx.fillText(acquired.role.toUpperCase() + ' · ' + acquired.tagId, cx, cy - sz - 12);
+        phctx.fillStyle = 'rgba(245,239,226,0.6)';
+        phctx.font = "8px 'IBM Plex Mono', monospace";
+        phctx.fillText(`conf ${acquired.confidence}`, cx, cy - sz - 2);
+
+        // arc dial wrapping the marker — angle reads from the marker's actual rotation
+        const ang = (acquired.angle * 180 / Math.PI);
+        const r = sz + 20;
+        // draw arc from -135° to +135° (270° arc opening at bottom)
+        phctx.strokeStyle = 'rgba(245,239,226,0.18)';
+        phctx.lineWidth = 1;
+        phctx.beginPath();
+        phctx.arc(cx, cy, r, Math.PI * 0.75, Math.PI * 0.25, false);
+        phctx.stroke();
+
+        // value arc from start to current angle
+        const t = (Math.max(-90, Math.min(90, ang)) + 90) / 180; // 0..1
+        const startA = Math.PI * 0.75;
+        const endA = startA + Math.PI * 1.5 * t;
+        phctx.strokeStyle = '#ffb360'; phctx.lineWidth = 1.5;
+        phctx.beginPath();
+        phctx.arc(cx, cy, r, startA, endA, false);
+        phctx.stroke();
+
+        // handle dot
+        const hx = cx + Math.cos(endA) * r;
+        const hy = cy + Math.sin(endA) * r;
+        phctx.fillStyle = '#ffb360';
+        phctx.beginPath(); phctx.arc(hx, hy, 3.5, 0, Math.PI * 2); phctx.fill();
+
+        // big value below
+        phctx.font = "italic 22px 'Fraunces', serif";
+        phctx.fillStyle = '#f5efe2';
+        phctx.fillText((ang >= 0 ? '+' : '−') + Math.abs(ang).toFixed(0) + '°', cx, cy + r + 22);
+        phctx.font = "8px 'IBM Plex Mono', monospace";
+        phctx.fillStyle = 'rgba(245,239,226,0.5)';
+        phctx.fillText('ANGLE', cx, cy + r + 32);
+
+        phctx.textAlign = 'left';
+      } else {
+        document.getElementById('phoneAim').textContent = '—';
+      }
+    }
+
+    // ---------- DETECTION STREAM UI ----------
+    const streamEl = document.getElementById('stream');
+    let lastSent = 0;
+    let postsThisSec = 0, postsRate = 0, lastSecMark = performance.now();
+
+    function renderDetections(dets) {
+      streamEl.innerHTML = '';
+      const sortedDets = [...dets].sort((a, b) => a.tagId - b.tagId);
+      for (const d of sortedDets) {
+        const el = document.createElement('div');
+        el.className = 'det';
+        el.innerHTML = `
+          <span class="id">${String(d.tagId).padStart(2, '0')}</span>
+          <span class="role">${d.role}</span>
+          <span class="pose">θ ${(d.angle * 180 / Math.PI).toFixed(0)}° · x ${Math.round(d.center.x)} · y ${Math.round(d.center.y)} · c ${d.confidence}</span>
+        `;
+        streamEl.appendChild(el);
+      }
+      // append recent named events at the bottom
+      for (const ev of recentEvents.slice(-3)) {
+        const el = document.createElement('div');
+        el.className = 'det';
+        el.innerHTML = `
+          <span class="id" style="color: var(--cyan)">EV</span>
+          <span class="role">${ev.text}</span>
+          <span class="pose">${ev.t.toLocaleTimeString().slice(0,8)}</span>
+        `;
+        streamEl.appendChild(el);
+      }
+      document.getElementById('detCount').textContent = String(dets.length).padStart(2, '0');
+      const avg = dets.length ? (dets.reduce((s, d) => s + d.confidence, 0) / dets.length).toFixed(2) : '—';
+      document.getElementById('confAvg').textContent = avg;
+      document.getElementById('rateBadge').textContent = `${postsRate}/s`;
+    }
+
+    async function maybePost(dets) {
+      if (!streamOn) return;
+      const now = performance.now();
+      if (now - lastSent < 80) return;
+      lastSent = now;
+      postsThisSec++;
+      // === HOOK POINT ===
+      // Uncomment to wire up:
+      // try {
+      //   await fetch(STREAM_URL, {
+      //     method: 'POST',
+      //     headers: { 'content-type': 'application/json' },
+      //     body: JSON.stringify({
+      //       type: 'fiducial.detections.ingest',
+      //       payload: { surface: 'table', sourceSpace: 'camera', detections: dets }
+      //     })
+      //   });
+      // } catch (e) {}
+    }
+
+    // ---------- RESIZE ----------
+    function resize() {
+      const { clientWidth: w, clientHeight: h } = sceneEl;
+      renderer.setSize(w, h, false);
+      mainCam.aspect = w / h;
+      mainCam.updateProjectionMatrix();
+
+      const povRect = povCanvas.parentElement.getBoundingClientRect();
+      const pw = Math.floor(povRect.width), ph = Math.floor(povRect.height);
+      povRenderer.setSize(pw, ph, false);
+      activeCamera.aspect = pw / ph;
+      activeCamera.updateProjectionMatrix();
+      povOverlay.width = pw; povOverlay.height = ph;
+
+      const phRect = document.querySelector('.phone-frame .screen').getBoundingClientRect();
+      const ww = Math.max(1, Math.floor(phRect.width));
+      const hh = Math.max(1, Math.floor(phRect.height));
+      phoneRenderer.setSize(ww, hh, false);
+      phoneCam.aspect = ww / hh;
+      phoneCam.updateProjectionMatrix();
+      phoneOverlay.width = ww; phoneOverlay.height = hh;
+    }
+    window.addEventListener('resize', resize);
+    new ResizeObserver(resize).observe(sceneEl);
+    setTimeout(resize, 50);
+
+    // ---------- RENDER LOOP ----------
+    let lastT = performance.now(), frames = 0, fpsEma = 60;
+    const fpsEl = document.getElementById('fps');
+    const clockEl = document.getElementById('clock');
+
+    function animate(now) {
+      frames++;
+      const dt = now - lastT;
+      if (dt >= 250) {
+        const fps = (frames * 1000) / dt;
+        fpsEma = fpsEma * 0.7 + fps * 0.3;
+        fpsEl.textContent = fpsEma.toFixed(1);
+        frames = 0; lastT = now;
+      }
+      if (now - lastSecMark >= 1000) {
+        postsRate = postsThisSec; postsThisSec = 0; lastSecMark = now;
+      }
+
+      orbit.update();
+
+      // beam → projector canvas → texture
+      const { points: beamPts, hit, color } = computeBeam();
+      drawProjectorCanvas(beamPts, color, hit);
+
+      // keep projector light position synced if user moved the projector
+      projLight.position.copy(projector.position);
+      projFill.position.copy(projector.position);
+
+      // gizmo visibility tied to transform mode + selection
+      tcGizmo.visible = (selected != null && (mode === 'move' || mode === 'rotate'));
+
+      // main render
+      renderer.render(scene, mainCam);
+
+      // ----- Off-screen renders (POV panels + phone screen). Hide UI helpers/gizmos
+      // and the phone itself so it doesn't appear in its own camera view.
+      const wasGizmoVisible = tcGizmo.visible;
+      tcGizmo.visible = false;
+      cameras.forEach(c => c.helper.visible = false);
+      const wasPhoneHelperVisible = phoneCamHelper.visible;
+      phoneCamHelper.visible = false;
+      const wasPhoneVisible = phoneObj.visible;
+
+      // 1. Right-rail "Camera POV"
+      povRenderer.render(scene, activeCamera);
+
+      // 2. Right-rail "Phone lens" preview
+      phoneObj.visible = false;
+      phoneRenderer.render(scene, phoneCam);
+
+      // 3. Render the same phone POV onto the actual phone screen mesh in the 3D scene
+      renderer.setRenderTarget(phoneScreenRT);
+      renderer.clear();
+      renderer.render(scene, phoneCam);
+      renderer.setRenderTarget(null);
+
+      phoneObj.visible = wasPhoneVisible;
+      phoneCamHelper.visible = wasPhoneHelperVisible;
+
+      // restore visibility for next main render frame
+      tcGizmo.visible = wasGizmoVisible;
+      const selectedRig = cameras.find(c => c.mount === selected);
+      if (selectedRig) selectedRig.helper.visible = true;
+
+      // detections from active camera
+      const dets = generateDetections(activeCamera, camRes);
+      renderDetections(dets);
+      drawPovOverlay(dets);
+
+      // detections from phoneCam
+      const phoneDets = generateDetections(phoneCam, camRes);
+      // clear & redraw phone overlay (also drawing reticle)
+      drawPhoneOverlay(phoneDets);
+      drawPhoneDetections(phoneDets);
+
+      maybePost(dets);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    function tick() {
+      const d = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      clockEl.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    setInterval(tick, 1000); tick();
+  </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+{
+  "schema": "smart-classroom-week-evidence/v0.1",
+  "weekId": "interactive-spaces",
+  "label": "Class · Interactive Spaces",
+  "subtitle": "Projection mapping, camera-based touch, voice-controlled surfaces",
+  "date": "2026-04-14",
+  "duration": "2:15:00",
+  "format": "Lecture + Demos",
+  "instructor": "Brett",
+  "verdict": "Lecture-heavy. Solid lineage from PixelSense → Xperia → today; homography section needed a second pass on the math. Pre-filled from slide deck — no transcript captured.",
+  "sections": [
+    { "id": "big-idea",      "label": "The big idea · surfaces as interfaces",       "minutes": 12, "summary": "A projector + a camera + software turns any surface into an interface. No screens, no bezels — the interface dissolves into the room.", "engagement": "high" },
+    { "id": "precedents",    "label": "Precedents · who's done this?",                "minutes": 12, "summary": "Microsoft PixelSense (2007), Sony Xperia Touch (2017), Disney's Living Surfaces, Lightform. The dream is older than the hype.", "engagement": "med" },
+    { "id": "approach",      "label": "Approach · our stack",                          "minutes": 12, "summary": "Browser + projector + webcam. MediaPipe for hands and faces. AprilTags for objects. WebSockets for state. Zero-install and live-reload.", "engagement": "med" },
+    { "id": "homography",    "label": "Math · homography",                              "minutes": 18, "summary": "Four corner points + a 3×3 matrix maps a tilted projector image onto a flat surface. Worked through the math live; class needed two passes.", "engagement": "low", "issue": "math-pacing" },
+    { "id": "architecture",  "label": "Architecture · two windows, one channel",       "minutes": 12, "summary": "Editor window edits, projector window projects, BroadcastChannel keeps them in sync. One canvas, two views.", "engagement": "med" },
+    { "id": "tools",         "label": "Tools · public entry points",                   "minutes": 12, "summary": "Live demo of the public Surface Studio entry point + the archived prototypes index — a graveyard of one-off ideas worth raiding.", "engagement": "high" },
+    { "id": "widgets",       "label": "Widgets + actions",                              "minutes": 22, "summary": "Walked through the widget palette and the TouchOSC-style action graph. Class wanted to build immediately — saved for the next session.", "engagement": "high" },
+    { "id": "tracking",      "label": "Hand + face tracking",                           "minutes": 15, "summary": "MediaPipe in the browser — 30 fps, 21 hand keypoints, 478 face keypoints. Live demo on the projector worked perfectly.", "engagement": "high" },
+    { "id": "voice-llm",     "label": "Voice + LLM",                                     "minutes": 12, "summary": "Web Speech + Ollama for room voice commands. Showed “make it red” → action wired. Latency made it feel less magical than it should.", "engagement": "med" },
+    { "id": "demo-exercise", "label": "Live walkthrough + try it",                       "minutes": 10, "summary": "Quick exercise: each pair sketched a one-widget surface that would solve a real classroom moment.", "engagement": "high" }
+  ],
+  "assignments": [
+    {
+      "id": "is-precedent",
+      "title": "Pick a precedent, write 200 words",
+      "type": "writing",
+      "due": "Next class",
+      "spec": "Pick one historical interactive-spaces project (PixelSense, Xperia Touch, Living Surfaces, etc.). Write 200 words on what it got right and what killed it.",
+      "rubric": [
+        "Names the project with year and team.",
+        "Identifies what worked and what didn't — with evidence.",
+        "Connects to one of our class's own affordance themes."
+      ]
+    },
+    {
+      "id": "is-homography-walkthrough",
+      "title": "Homography walkthrough",
+      "type": "exercise",
+      "due": "Next class",
+      "spec": "Re-do the homography math on paper. Map four projector-corner points onto four surface corners. Submit a photo of the worked solution.",
+      "rubric": [
+        "Four point pairs labelled.",
+        "3×3 matrix solved (showing your work).",
+        "One sanity-check transformation applied."
+      ],
+      "ambiguity": "If you've done this in another class, just attach a one-sentence note saying so — no need to redo it."
+    },
+    {
+      "id": "is-sketch",
+      "title": "Sketch a one-widget surface",
+      "type": "sketch",
+      "due": "Next class",
+      "spec": "One widget, one surface, one classroom moment it solves. Hand-drawn or digital, doesn't matter.",
+      "rubric": [
+        "Widget purpose clear in one sentence.",
+        "Names which sensing channel feeds it (hand / face / voice / tag).",
+        "Names the failure mode."
+      ]
+    }
+  ],
+  "grammar": [
+    {
+      "moment": "≈00:38",
+      "section": "homography",
+      "issue": "Homography matrix derivation lost the back of the room.",
+      "fix": "Pre-render the worked example as a slide; walk through the answer rather than the derivation.",
+      "severity": "warn",
+      "category": "pacing"
+    }
+  ],
+  "ideas": [
+    { "title": "Whiteboard-as-surface",     "by": "Lena",   "quadrant": "person · aware",   "summary": "Project annotations onto the whiteboard and let the marker actually become an input device. Camera sees the stroke, projection responds.", "followup": true },
+    { "title": "Door-frame greeter",        "by": "Sara",   "quadrant": "system · unaware", "summary": "Project soft welcome onto the wall by the door when the room recognises someone arriving — recognised because their tag is in the doorway.", "followup": true },
+    { "title": "Light-mood by sound",        "by": "Marc",   "quadrant": "system · unaware", "summary": "Web Speech listens for room volume; projector dims when class quiets down.", "followup": false }
+  ],
+  "engagement": [
+    { "label": "Demos run live",     "value": "5", "tone": "good", "note": "All five planned demos ran without falling back to slides." },
+    { "label": "Hands raised on math","value": "low", "tone": "warn", "note": "Homography section had visibly fewer questions than usual." },
+    { "label": "Sketch ideas fielded","value": "12", "tone": "good", "note": "Twelve viable one-widget ideas surfaced in the closing exercise." }
+  ],
+  "actions": [
+    { "id": "homography-redo", "title": "Re-author the homography slide as a worked example",  "owner": "Brett", "due": "before next class", "status": "open" },
+    { "id": "post-demos",      "title": "Push demo links to Slack — public-entry index",         "owner": "Brett", "due": "this week",         "status": "open" },
+    { "id": "ollama-warmup",   "title": "Pre-warm Ollama on lab Mac before the next session",   "owner": "TA",    "due": "before next class", "status": "open" }
+  ],
+  "quotes": [
+    { "speaker": "Mark Weiser", "text": "The most profound technologies are those that disappear. They weave themselves into the fabric of everyday life." },
+    { "speaker": "Brett",        "text": "A projector turns any surface into an interface. The trick is the camera that watches what people do with it." },
+    { "speaker": "Brett",        "text": "We're building connections and experiences between people. The technology is the seam." }
+  ]
+}

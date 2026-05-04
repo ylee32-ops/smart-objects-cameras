@@ -1,0 +1,81 @@
+{
+  "schema": "smart-classroom-week-evidence/v0.1",
+  "weekId": "surface-studio",
+  "label": "Class · Surface Studio",
+  "subtitle": "Unified projection-mapping studio · widgets, hand tracking, voice, Ollama",
+  "date": "2026-04-28",
+  "duration": "2:10:00",
+  "format": "Lecture + Lab + Live build",
+  "instructor": "Brett",
+  "verdict": "Hands-on session. Surface Studio walkthrough plus three-widget composition lab. Good engagement on the widget mapping; voice/Ollama segment needs trimming next time. Pre-filled from slide deck — no transcript captured.",
+  "sections": [
+    { "id": "overview",       "label": "Overview · what is Surface Studio",           "minutes": 10, "summary": "The studio in one slide: a unified projection-mapping playground — quads, widgets, actions, sensing all in one canvas.", "engagement": "med" },
+    { "id": "quickstart",     "label": "Quick start · getting running",               "minutes": 10, "summary": "Zero-install. Open the page, point a projector, calibrate the quad, drop a widget. Class members got their first quad mapped within 8 minutes.", "engagement": "high" },
+    { "id": "modes",          "label": "Three modes",                                  "minutes": 10, "summary": "Edit · Run · Present. Different defaults, same canvas — the same composition behaves differently depending on the mode you load it in.", "engagement": "med" },
+    { "id": "architecture",   "label": "Architecture · editor + menus",                "minutes": 15, "summary": "Editor panel layout, widget palette, action wiring, the broadcast channel between editor and projector windows.", "engagement": "med" },
+    { "id": "widgets-lab",    "label": "Widgets + properties · lab",                   "minutes": 25, "summary": "Hands-on: each student composed a 3-widget surface with quads + properties. The class produced 14 working compositions.", "engagement": "high" },
+    { "id": "actions",        "label": "Actions · TouchOSC-style wiring",              "minutes": 15, "summary": "Action graph live-wired during class. Tag-to-widget bindings worked first try; tag-to-action chains needed two passes.", "engagement": "med", "issue": "wiring-confusion" },
+    { "id": "tracking",       "label": "Hand + face tracking + calibration",          "minutes": 20, "summary": "MediaPipe-backed tracking demoed on the lab projector. Calibration drift mid-session was the only real glitch.", "engagement": "high" },
+    { "id": "voice-llm",      "label": "Voice + Ollama LLM integration",              "minutes": 15, "summary": "Local LLM commands the studio. Demo worked but took 6s to respond — the section ran long. Trim to 8 minutes next time.", "engagement": "low", "issue": "rushed" },
+    { "id": "demo-exercise",  "label": "Live walkthrough + try-it",                   "minutes": 10, "summary": "Class shared their compositions. Two stood out — the projected Forest canopy overlay and the gesture-driven slideshow.", "engagement": "high" }
+  ],
+  "assignments": [
+    {
+      "id": "ss-composition",
+      "title": "Three-widget Surface Studio composition",
+      "type": "build",
+      "due": "Next class",
+      "spec": "Compose a working surface with three widgets. At least one must be wired to an action; at least one must respond to hand-tracking or voice.",
+      "rubric": [
+        "Three widgets present, each with a clear purpose.",
+        "One TouchOSC-style action wired end-to-end.",
+        "One sensing channel (hand, face, or voice) feeding a widget."
+      ]
+    },
+    {
+      "id": "ss-video",
+      "title": "30-second walkthrough video",
+      "type": "video",
+      "due": "Next class",
+      "spec": "Record a 30s screen capture of your composition running, narrating what each widget does.",
+      "rubric": [
+        "Composition is visibly running, not just static.",
+        "Narration names each widget."
+      ]
+    },
+    {
+      "id": "ss-action-pair",
+      "title": "Pair an action with a tag",
+      "type": "experiment",
+      "due": "Next class",
+      "spec": "Print a single AprilTag, place it on the projected surface, wire it to an action that visibly changes the composition.",
+      "rubric": [
+        "Tag is detected by the camera.",
+        "Action fires with a visible response."
+      ]
+    }
+  ],
+  "grammar": [],
+  "ideas": [
+    { "title": "Projected slideshow",         "by": "Sara",   "quadrant": "person · aware",   "summary": "Hand-driven slide advancement — wave to move forward, fist to step back. Worked first try.", "followup": true },
+    { "title": "Forest canopy projection",    "by": "Tomas",  "quadrant": "system · unaware", "summary": "The Forest project re-rendered as a projected canopy on the table; intensity drives brightness.", "followup": true },
+    { "title": "Voice-to-quad",               "by": "Lena",   "quadrant": "person · aware",   "summary": "Speak the name of a widget to bring it to focus. Idea floated, not built.", "followup": false }
+  ],
+  "engagement": [
+    { "label": "Compositions built",  "value": "14",   "tone": "good", "note": "All 14 students got a working surface up." },
+    { "label": "Widget actions wired","value": "11+",  "tone": "good", "note": "Most students wired at least one action." },
+    { "label": "Calibration drifts",  "value": "2",    "tone": "warn", "note": "Lab projector slipped twice; needs anchor tape." },
+    { "label": "Voice latency",       "value": "6s",   "tone": "warn", "note": "Ollama section ran long — local model is slow on the lab Mac." }
+  ],
+  "actions": [
+    { "id": "fix-calibration-drift", "title": "Anchor the lab projector — gaffer tape on the mount",   "owner": "Brett",  "due": "before next class", "status": "open" },
+    { "id": "trim-ollama",           "title": "Trim Ollama segment to 8 minutes; pre-warm the model", "owner": "Brett",  "due": "before next class", "status": "open" },
+    { "id": "publish-deck",          "title": "Push the Surface Studio deck to Canvas",               "owner": "Brett",  "due": "this week",         "status": "open" },
+    { "id": "tag-print-pack",        "title": "Print the action-tag pack for next class",             "owner": "TA",     "due": "before next class", "status": "open" }
+  ],
+  "quotes": [
+    { "speaker": "Brett",         "text": "Surface Studio is one canvas — quads, widgets, actions, sensing. The fewer apps you switch, the faster you compose." },
+    { "speaker": "Sara",          "text": "I want to make the slides advance with my hand and not realise I'm doing it." },
+    { "speaker": "Mark Weiser",   "text": "The most profound technologies are those that disappear." }
+  ]
+}

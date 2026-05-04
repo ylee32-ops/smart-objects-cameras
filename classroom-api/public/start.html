@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Start</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .start-shell {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 28px 24px 56px;
+      display: grid;
+      gap: 18px;
+    }
+    .start-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .start-card {
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: 3px;
+      padding: 14px;
+      display: grid;
+      gap: 9px;
+      align-content: start;
+      min-height: 170px;
+    }
+    .start-card h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .loop-line {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+    .loop-step {
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      padding: 11px 12px;
+      background: var(--bg-soft);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+    .loop-step strong {
+      display: block;
+      color: var(--cyan);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .start-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 6px;
+    }
+    @media (max-width: 860px) {
+      .start-grid,
+      .loop-line {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-page="start">
+  <header class="topbar">
+    <div class="brand">Smart Classroom</div>
+    <nav class="nav">
+      <a class="active" href="/start.html">Start</a>
+      <a href="/interaction.html">Grammar</a>
+      <a href="/">Console</a>
+      <a href="/board.html">Board</a>
+      <a href="/tag-reference.html">Tags</a>
+      <a href="/projects.html">Projects</a>
+      <a href="/report.html">Report</a>
+      <a href="/cameras.html">Cameras</a>
+      <a href="/events.html">Events</a>
+      <a href="/projector.html">Projector</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="status-dot" data-connection-dot></span>
+  </header>
+
+  <main class="start-shell">
+    <section class="hero-line">
+      <div class="eyebrow">Student Start</div>
+      <h1>Build one room interaction at a time.</h1>
+      <p>For tomorrow: print tags, open the virtual room, map the projector quad, then test one tag interaction end to end.</p>
+    </section>
+
+    <section class="panel">
+      <h2>The Room Loop</h2>
+      <div class="panel-body loop-line">
+        <div class="loop-step"><strong>1. Action</strong>Click a board object, move a marker, run a project packet, or post a detector frame.</div>
+        <div class="loop-step"><strong>2. State</strong>The server updates the shared room state and writes one event to the log.</div>
+        <div class="loop-step"><strong>3. Screens</strong>Projector, board, phone, and event inspector update from the same stream.</div>
+      </div>
+    </section>
+
+    <section class="start-grid">
+      <article class="start-card">
+        <span class="eyebrow cy">First</span>
+        <h2>Print the tags</h2>
+        <p class="small">Use the board tag sheet for calibration tags, focus, write, erase, slides, video, zones, and actions.</p>
+        <div class="start-actions">
+          <a href="/tag-reference.html"><button class="primary">Tag Reference</button></a>
+          <a href="/generated-tags/board-tags.html" target="_blank"><button>Print Sheet</button></a>
+        </div>
+      </article>
+
+      <article class="start-card">
+        <span class="eyebrow cy">Then</span>
+        <h2>Map the room</h2>
+        <p class="small">Open the virtual room, switch to 2D, use Map mode, and drag the projector quad until it matches the board.</p>
+        <div class="start-actions">
+          <a href="/ideas/virtualroom/"><button class="primary">Virtual Room</button></a>
+          <a href="/projector.html"><button>Projector</button></a>
+        </div>
+      </article>
+
+      <article class="start-card">
+        <span class="eyebrow cy">After</span>
+        <h2>Run a student loop</h2>
+        <p class="small">Move a tag, watch the projection react, then confirm the same event appears in the room log.</p>
+        <div class="start-actions">
+          <a href="/projects.html"><button class="primary">Projects</button></a>
+          <a href="/events.html"><button>Events</button></a>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Useful Rule</h2>
+      <div class="panel-body">
+        <div class="event-json">POST /api/action -> pushEvent() -> SSE /api/events -> replay JSONL</div>
+        <div class="start-actions">
+          <a href="/report.html"><button>Check Readiness</button></a>
+          <a href="/interaction.html"><button>Interaction Grammar</button></a>
+          <a href="/api/projects/smart-stage/contract.md" target="_blank"><button>Example Contract Prompt</button></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script>
+    Room.connect();
+  </script>
+</body>
+</html>

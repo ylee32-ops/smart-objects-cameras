@@ -1,0 +1,92 @@
+{
+  "schema": "smart-classroom-week-evidence/v0.1",
+  "weekId": "ai-elephant",
+  "label": "Class · The Elephant in the Room",
+  "subtitle": "AI, smart objects & your career — what to actually believe",
+  "date": "2026-04-07",
+  "duration": "1:50:00",
+  "format": "Lecture + Discussion",
+  "instructor": "Brett & Carrie",
+  "verdict": "The deferred AI talk, finally given. Frames AI in the lineage that started week 1 — not hype, not doom. Strong opening; the “interview script” section landed best. Pre-filled from slide deck — no transcript captured.",
+  "sections": [
+    { "id": "career-stakes",   "label": "Why this matters for your career",         "minutes": 12, "summary": "Everyone in your interviews will say “AI-first.” You'll say “Xerox PARC built this in 1973.” The hype gets you in the door; the history makes you the one they remember.", "engagement": "high" },
+    { "id": "interview-script","label": "Interview script · the full answer",       "minutes": 10, "summary": "A reusable answer for the inevitable “what do you think about AI?” interview question. Practiced in pairs.", "engagement": "high" },
+    { "id": "limitation-audit","label": "AI limitation audit",                       "minutes": 15, "summary": "Walk through three real product failures where AI was loud but the design was quiet wrong. Affordances first, models second.", "engagement": "med" },
+    { "id": "editing",          "label": "Editing · before / after examples",        "minutes": 10, "summary": "Side-by-side AI-edited vs human-edited interaction copy. The class voted on which read better — and why.", "engagement": "med" },
+    { "id": "prompt-arch",      "label": "Prompt architecture",                       "minutes": 12, "summary": "How a prompt is a UI for the model. System prompt = product voice. User prompt = customer input. Output schema = data contract.", "engagement": "high" },
+    { "id": "norman-applied",   "label": "Norman's vocabulary applied to AI",        "minutes": 12, "summary": "Affordances, signifiers, mappings, feedback — what each means when the “object” is a model.", "engagement": "high" },
+    { "id": "spectrum",         "label": "Where AI falls on the calm/loud spectrum","minutes": 10, "summary": "Most AI products are loud by default. Calm-tech principles applied: only as much attention as the moment deserves.", "engagement": "med" },
+    { "id": "attention-problem","label": "The attention problem",                    "minutes": 15, "summary": "AI is the latest in a long line of attention-extracting designs. Where do we draw the line? Class-wide discussion ran long.", "engagement": "high", "issue": "ran-long" },
+    { "id": "two-visions",      "label": "Two visions of AI",                         "minutes": 8,  "summary": "Agent (does things for you) vs material (something you compose with). Most students felt the second framing was new.", "engagement": "high" },
+    { "id": "design-challenge", "label": "Smart objects + AI · our design challenge","minutes": 10, "summary": "What's the smart-objects move under AI? Implicit context for the model; explicit handles for the person.", "engagement": "med" },
+    { "id": "thats-why",        "label": "That's why we build",                       "minutes": 6,  "summary": "Closing: build the thing, then critique it. Models change quarterly; principles stay.", "engagement": "high" }
+  ],
+  "assignments": [
+    {
+      "id": "ai-interview-script",
+      "title": "Write your own interview script",
+      "type": "writing",
+      "due": "Next class",
+      "spec": "Two paragraphs. The first answers “what do you think about AI?” in your voice. The second cites one historical reference and one current example.",
+      "rubric": [
+        "First-person voice (yours, not a model's).",
+        "One pre-2000 reference, one post-2024.",
+        "Names the affordance you care about."
+      ]
+    },
+    {
+      "id": "ai-limitation-audit",
+      "title": "Audit one product",
+      "type": "audit",
+      "due": "Next class",
+      "spec": "Pick a real AI feature in a shipping product. Apply Norman's vocabulary. Where are the affordances strong? Where do they fail? 250 words max.",
+      "rubric": [
+        "Names a specific feature, not the whole product.",
+        "Identifies signifier, feedback, mapping, failure mode.",
+        "Includes one image or screenshot."
+      ]
+    },
+    {
+      "id": "ai-prompt-as-ui",
+      "title": "Prompt-as-UI sketch",
+      "type": "sketch",
+      "due": "Next class",
+      "spec": "Sketch one of your project's prompts as a piece of UI. System prompt as the product voice; user prompt as the input field; output as a card.",
+      "rubric": [
+        "All three layers labelled.",
+        "Identifies what changes if the user is wrong, vs the model is wrong."
+      ]
+    }
+  ],
+  "grammar": [
+    {
+      "moment": "≈01:18",
+      "section": "attention-problem",
+      "issue": "The attention discussion ran 8 minutes over and ate the closing.",
+      "fix": "Cap at 12 min; surface the longer version as a Slack thread.",
+      "severity": "warn",
+      "category": "pacing"
+    }
+  ],
+  "ideas": [
+    { "title": "AI-as-material",          "by": "Class consensus", "quadrant": "person · aware",   "summary": "Treat the model as a material — like ink or thread — that you compose with. Reframes most of our project briefs.", "followup": true },
+    { "title": "The interview answer",    "by": "Brett",           "quadrant": "person · aware",   "summary": "A one-page reusable answer for AI questions in interviews — class wanted this canonised on the wiki.", "followup": true },
+    { "title": "Calm prompt ladder",       "by": "Lena",            "quadrant": "system · unaware", "summary": "Tiered prompts: ambient (no response), notice (one-line), conversation (full). Maps to Norman's spectrum.", "followup": true }
+  ],
+  "engagement": [
+    { "label": "Hands during discussion",  "value": "high", "tone": "good",  "note": "More questions than any session this term." },
+    { "label": "Pair script practice",     "value": "16",   "tone": "good",  "note": "All pairs produced an interview answer in 8 min." },
+    { "label": "Discussion overrun",       "value": "8m",   "tone": "warn",  "note": "Attention section ate the wrap-up." }
+  ],
+  "actions": [
+    { "id": "ai-canon-script",   "title": "Canonise the interview answer on the wiki",            "owner": "Brett",  "due": "this week", "status": "open" },
+    { "id": "ai-cap-discussion", "title": "Cap attention discussion at 12 min next time",         "owner": "Brett",  "due": "ongoing",   "status": "open" },
+    { "id": "ai-slack-thread",   "title": "Open a Slack thread for the longer attention argument","owner": "Brett",  "due": "this week", "status": "open" }
+  ],
+  "quotes": [
+    { "speaker": "Brett",       "text": "Everyone will say AI-first. You'll say Xerox PARC built this in 1973. That's how you stand out." },
+    { "speaker": "Brett",       "text": "The hype gets you in the door. The history makes you the one they remember." },
+    { "speaker": "Don Norman",  "text": "Affordances exist whether or not they are visible. When they are visible, they are signifiers." },
+    { "speaker": "Class",       "text": "AI is a material, not an agent — that's the move." }
+  ]
+}

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tag Debugger</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .tag-debug-shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+    .tag-debug-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.8fr);
+      gap: 14px;
+    }
+    .tag-debug-view {
+      position: relative;
+      overflow: hidden;
+      min-height: 420px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #020617;
+    }
+    #tagDebugVideo,
+    #tagDebugOverlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #tagDebugVideo {
+      object-fit: contain;
+      background: #000;
+    }
+    #tagDebugOverlay {
+      cursor: crosshair;
+      pointer-events: auto;
+    }
+    .tag-debug-panel {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+    .tag-debug-controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .tag-debug-controls label {
+      display: grid;
+      gap: 4px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .tag-debug-controls input,
+    .tag-debug-controls select {
+      width: 100%;
+      min-width: 0;
+    }
+    .tag-debug-link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+    .tag-debug-status {
+      min-height: 52px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: var(--bg-panel);
+      border-radius: 6px;
+      color: var(--ink-soft);
+    }
+    .sticky-sample {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--bg-panel);
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .sticky-swatch {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--line-hi);
+      background: #111827;
+    }
+    .tag-debug-list {
+      display: grid;
+      gap: 8px;
+    }
+    .tag-debug-card {
+      border: 1px solid var(--line);
+      border-left: 6px solid var(--green);
+      background: var(--bg-panel);
+      border-radius: 5px;
+      padding: 10px;
+      display: grid;
+      gap: 5px;
+    }
+    .tag-debug-card strong {
+      color: var(--ink);
+      font-size: 18px;
+    }
+    .tag-debug-card .meta {
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    @media (max-width: 860px) {
+      .tag-debug-grid { grid-template-columns: 1fr; }
+      .tag-debug-view { min-height: 58svh; }
+    }
+  </style>
+</head>
+<body data-page="tag-debugger">
+  <header class="topbar">
+    <div class="brand">Tag Debugger</div>
+    <nav class="nav"></nav>
+    <div class="spacer"></div>
+    <span class="pill" id="tagDebugConnection">idle</span>
+  </header>
+
+  <main class="tag-debug-shell">
+    <section class="hero-line">
+      <div class="eyebrow">AprilTag Camera Test</div>
+      <h1>Show tags to the webcam and check detection distance.</h1>
+      <p>Use this before calibration. It draws detected tag corners, names the mapped room object, and reports approximate image size.</p>
+    </section>
+
+    <section class="tag-debug-grid">
+      <div class="tag-debug-view">
+        <video id="tagDebugVideo" playsinline muted></video>
+        <canvas id="tagDebugOverlay"></canvas>
+      </div>
+
+      <aside class="tag-debug-panel">
+        <div class="tag-debug-controls">
+          <button id="startTagDebug" class="primary" type="button">Start Camera</button>
+          <button id="stopTagDebug" type="button">Stop</button>
+          <a class="tag-debug-link-button" href="/tag-board.html" target="_blank">Phone Board</a>
+          <button id="calibrateVisibleBoard" class="primary" type="button">Calibrate Board</button>
+          <button id="sampleStickyColor" type="button">Sample Sticky</button>
+          <label>
+            Camera
+            <select id="tagDebugDevice"></select>
+          </label>
+          <label>
+            Tag size mm
+            <input id="tagDebugSize" type="number" value="80" min="10" step="5">
+          </label>
+          <label>
+            Camera HFOV
+            <input id="tagDebugFov" type="number" value="70" min="20" max="120" step="1">
+          </label>
+          <label>
+            Scan ms
+            <input id="tagDebugInterval" type="number" value="300" min="200" max="3000" step="50">
+          </label>
+        </div>
+        <div id="tagDebugStatus" class="tag-debug-status">Start camera, then hold a tag flat in view.</div>
+        <div class="sticky-sample">
+          <div id="stickySampleSwatch" class="sticky-swatch"></div>
+          <div id="stickySampleText">Point at a sticky note and tap the video, or press Sample Sticky for the center color.</div>
+        </div>
+        <div id="tagDebugList" class="tag-debug-list"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/tag-debugger.js"></script>
+</body>
+</html>

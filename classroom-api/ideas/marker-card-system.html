@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marker Cards — System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1612;
+      --ink-soft: rgba(26, 22, 18, 0.62);
+      --ink-faint: rgba(26, 22, 18, 0.30);
+      --ink-rule: rgba(26, 22, 18, 0.12);
+      --paper: #f5efe2;
+      --paper-2: #ede5d2;
+      --bg: #14110d;
+      --amber: #c8842b;
+      --cyan: #4a7d8a;
+      --emerald: #4a7a55;
+      --plum: #7a4a6e;
+      --slate: #404a55;
+      --coral: #b04848;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--paper);
+      font-family: 'IBM Plex Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background:
+        radial-gradient(1200px 800px at 80% 10%, rgba(255, 200, 130, 0.05), transparent 60%),
+        var(--bg);
+      position: relative;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' seed='12'/><feColorMatrix values='0 0 0 0 0.96  0 0 0 0 0.94  0 0 0 0 0.86  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      opacity: 0.5;
+      mix-blend-mode: screen;
+      z-index: 90;
+    }
+
+    /* corner registration */
+    .reg {
+      position: fixed;
+      width: 16px; height: 16px;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .reg::before, .reg::after {
+      content: "";
+      position: absolute;
+      background: rgba(245, 239, 226, 0.18);
+    }
+    .reg::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .reg::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .reg.tl { top: 22px; left: 22px; }
+    .reg.tr { top: 22px; right: 22px; }
+    .reg.bl { bottom: 22px; left: 22px; }
+    .reg.br { bottom: 22px; right: 22px; }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 80px 64px 100px;
+      position: relative;
+      z-index: 5;
+    }
+
+    /* === MASTHEAD === */
+    .masthead {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(245, 239, 226, 0.15);
+      margin-bottom: 48px;
+    }
+    .masthead .eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.5);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .masthead .eyebrow::after {
+      content: "";
+      width: 64px; height: 1px;
+      background: rgba(245, 239, 226, 0.3);
+    }
+    .masthead h1 {
+      margin: 0;
+      font-family: 'Fraunces', serif;
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(40px, 5.5vw, 76px);
+      letter-spacing: -0.015em;
+      line-height: 0.95;
+      color: var(--paper);
+    }
+    .masthead h1 em { font-style: italic; color: rgba(245, 239, 226, 0.65); font-weight: 300; }
+    .masthead .meta {
+      text-align: right;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.55);
+      line-height: 1.8;
+    }
+    .masthead .meta .key { color: rgba(245, 239, 226, 0.3); margin-right: 8px; }
+    .masthead .meta strong { color: var(--paper); font-weight: 500; }
+
+    /* === HERO CARD WITH ANNOTATIONS === */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0;
+      align-items: center;
+      margin-bottom: 80px;
+    }
+    .hero .left, .hero .right {
+      padding: 0 32px;
+    }
+    .hero .right { text-align: left; }
+    .hero .left { text-align: right; }
+
+    .hero .annot {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.7);
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .hero .annot .key { color: rgba(245, 239, 226, 0.4); display: block; margin-bottom: 6px; letter-spacing: 0.32em; }
+    .hero .annot strong { color: var(--paper); font-weight: 500; display: block; font-size: 14px; letter-spacing: 0.15em; margin-bottom: 4px; }
+    .hero .annot p { margin: 0; color: rgba(245, 239, 226, 0.55); letter-spacing: 0.04em; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; line-height: 1.6; text-transform: none; max-width: 30ch; }
+    .hero .left .annot p { margin-left: auto; }
+
+    /* === CARD === */
+    .card {
+      width: 280px;
+      aspect-ratio: 3 / 4;
+      background: var(--paper);
+      color: var(--ink);
+      position: relative;
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.5),
+        0 0 0 0.5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 18px;
+      gap: 0;
+      overflow: hidden;
+    }
+    .card.hero-card {
+      width: 360px;
+      transform: rotate(-1.5deg);
+    }
+    .card .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    /* AprilTag block */
+    .card .tag {
+      width: 90px;
+      height: 90px;
+      background:
+        repeating-conic-gradient(#0a0a0a 0% 25%, #f5efe2 0% 50%) 50% 50% / 18px 18px;
+      border: 8px solid #f5efe2;
+      outline: 3px solid #0a0a0a;
+      flex-shrink: 0;
+    }
+    .card.hero-card .tag {
+      width: 116px;
+      height: 116px;
+      border-width: 10px;
+    }
+    .card .tag-id {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      text-align: right;
+      line-height: 1.4;
+    }
+    .card .tag-id strong {
+      display: block;
+      font-family: 'Fraunces', serif;
+      font-variation-settings: "opsz" 9;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 22px;
+      color: var(--ink);
+      letter-spacing: 0;
+    }
+
+    .card .glyph-area {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      position: relative;
+      padding: 12px 0;
+    }
+    .card .glyph-area svg { width: 70%; height: auto; max-height: 100%; }
+
+    .card .bottom {
+      border-top: 0.5px solid var(--ink-rule);
+      padding-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .card .role-name {
+      font-family: 'Fraunces', serif;
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 24px;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .card.hero-card .role-name { font-size: 32px; }
+    .card .role-meta {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      text-align: right;
+      line-height: 1.5;
+    }
+
+    /* color band per role on left edge */
+    .card .band {
+      position: absolute;
+      top: 0; bottom: 0; left: 0;
+      width: 6px;
+      background: var(--amber);
+    }
+    .card.role-emitter  .band { background: var(--amber); }
+    .card.role-mirror   .band { background: var(--slate); }
+    .card.role-filter   .band { background: var(--cyan); }
+    .card.role-splitter .band { background: var(--plum); }
+    .card.role-blocker  .band { background: var(--coral); }
+    .card.role-target   .band { background: var(--emerald); }
+    .card.role-function .band { background: #b08a4a; }
+
+    /* corner crop marks on the card itself */
+    .card .crop {
+      position: absolute;
+      width: 12px; height: 12px;
+      border: 0.5px solid var(--ink-rule);
+    }
+    .card .crop.tl { top: 8px; left: 14px; border-right: none; border-bottom: none; }
+    .card .crop.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+    .card .crop.bl { bottom: 8px; left: 14px; border-right: none; border-top: none; }
+    .card .crop.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+    /* hero card center */
+    .hero-center {
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    /* === GRID OF ALL CARDS === */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin: 80px 0 36px;
+    }
+    .section-title h2 {
+      margin: 0;
+      font-family: 'Fraunces', serif;
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(24px, 3vw, 36px);
+      letter-spacing: -0.005em;
+      color: var(--paper);
+    }
+    .section-title h2 em { font-style: italic; color: rgba(245, 239, 226, 0.6); }
+    .section-title .num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.4);
+    }
+    .section-title .rule {
+      flex: 1;
+      height: 1px;
+      background: rgba(245, 239, 226, 0.15);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 36px 28px;
+      margin-bottom: 80px;
+    }
+    .card-grid .card {
+      width: 100%;
+      transform: none;
+    }
+    .card-grid .card .tag {
+      width: 76px; height: 76px;
+      border-width: 7px;
+    }
+    .card-grid .card .role-name { font-size: 22px; }
+
+    /* === SHEET PREVIEW === */
+    .sheet-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      margin-bottom: 80px;
+    }
+    .sheet {
+      background: var(--paper);
+      color: var(--ink);
+      aspect-ratio: 8.5 / 11;
+      width: 100%;
+      max-width: 480px;
+      padding: 28px;
+      position: relative;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .sheet .crop {
+      position: absolute;
+      width: 14px; height: 14px;
+      pointer-events: none;
+    }
+    .sheet .crop::before, .sheet .crop::after {
+      content: "";
+      position: absolute;
+      background: var(--ink-faint);
+    }
+    .sheet .crop::before { top: 0; left: 50%; bottom: 0; width: 0.5px; }
+    .sheet .crop::after  { left: 0; top: 50%; right: 0; height: 0.5px; }
+    .sheet .crop.tl { top: 6px; left: 6px; }
+    .sheet .crop.tr { top: 6px; right: 6px; }
+    .sheet .crop.bl { bottom: 6px; left: 6px; }
+    .sheet .crop.br { bottom: 6px; right: 6px; }
+
+    .sheet .mini-card {
+      border: 0.5px dashed var(--ink-rule);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+    .sheet .mini-card .mini-tag {
+      width: 36px; height: 36px;
+      background: repeating-conic-gradient(#0a0a0a 0% 25%, #f5efe2 0% 50%) 50% 50% / 8px 8px;
+      border: 4px solid #f5efe2;
+      outline: 1.5px solid #0a0a0a;
+    }
+    .sheet .mini-card .mini-name {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 14px;
+      color: var(--ink);
+      margin-top: auto;
+    }
+    .sheet .mini-card .mini-id {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 7px;
+      letter-spacing: 0.3em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+    }
+
+    .sheet-info h3 {
+      margin: 0 0 18px;
+      font-family: 'Fraunces', serif;
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(22px, 2.4vw, 32px);
+      letter-spacing: -0.005em;
+      color: var(--paper);
+    }
+    .sheet-info h3 em { font-style: italic; color: rgba(245, 239, 226, 0.6); }
+    .sheet-info p {
+      margin: 0 0 16px;
+      color: rgba(245, 239, 226, 0.65);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 36ch;
+    }
+    .specs {
+      display: grid;
+      gap: 12px;
+      margin-top: 28px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.6);
+    }
+    .specs .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(245, 239, 226, 0.1);
+    }
+    .specs .row strong { color: var(--paper); font-weight: 500; }
+
+    /* === SYSTEM RULES === */
+    .system {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 36px;
+      margin-bottom: 80px;
+    }
+    .rule-block {
+      padding: 28px 0 0;
+      border-top: 1px solid rgba(245, 239, 226, 0.15);
+    }
+    .rule-block h4 {
+      margin: 0 0 18px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.55);
+    }
+    .rule-block .swatches {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .swatch {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.7);
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(245, 239, 226, 0.08);
+    }
+    .swatch .chip {
+      width: 32px; height: 16px;
+    }
+    .swatch .hex { color: rgba(245, 239, 226, 0.4); font-size: 9px; }
+
+    .type-spec {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .type-spec .ex {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(245, 239, 226, 0.08);
+    }
+    .type-spec .ex .label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.4);
+      margin-bottom: 6px;
+    }
+    .type-spec .ex .sample.serif {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 28px;
+      color: var(--paper);
+      line-height: 1;
+    }
+    .type-spec .ex .sample.mono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--paper);
+    }
+    .type-spec .ex .sample.sans {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 16px;
+      color: var(--paper);
+    }
+
+    .dont-do {
+      display: grid;
+      gap: 12px;
+    }
+    .dont-do .item {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 12px;
+      align-items: start;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(245, 239, 226, 0.7);
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(245, 239, 226, 0.08);
+    }
+    .dont-do .item .mark {
+      width: 14px; height: 14px;
+      border: 1px solid currentColor;
+      position: relative;
+      margin-top: 2px;
+    }
+    .dont-do .item.do .mark::after {
+      content: "";
+      position: absolute;
+      top: 1px; left: 4px;
+      width: 4px; height: 8px;
+      border-right: 1.5px solid var(--emerald);
+      border-bottom: 1.5px solid var(--emerald);
+      transform: rotate(45deg);
+    }
+    .dont-do .item.do .mark { color: var(--emerald); }
+    .dont-do .item.dont .mark::before,
+    .dont-do .item.dont .mark::after {
+      content: "";
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 10px; height: 1.5px;
+      background: var(--coral);
+    }
+    .dont-do .item.dont .mark::before { transform: translate(-50%, -50%) rotate(45deg); }
+    .dont-do .item.dont .mark::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+    .dont-do .item.dont .mark { color: var(--coral); }
+
+    /* footer meta */
+    .foot {
+      padding-top: 36px;
+      border-top: 1px solid rgba(245, 239, 226, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 226, 0.45);
+    }
+    .foot .key { color: rgba(245, 239, 226, 0.3); margin-right: 8px; }
+    .foot strong { color: var(--paper); font-weight: 500; }
+
+    @media (max-width: 1100px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero .left, .hero .right { text-align: left; padding: 24px 0; }
+      .system { grid-template-columns: 1fr; }
+      .sheet-wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+
+  <div class="container">
+
+    <header class="masthead">
+      <div>
+        <div class="eyebrow">Marker · Card · System</div>
+        <h1>Tags are <em>cards.</em><br>Not stickers.</h1>
+      </div>
+      <div class="meta">
+        <div><span class="key">Family</span><strong>tag36h11</strong></div>
+        <div><span class="key">Stock</span><strong>110 lb · matte</strong></div>
+        <div><span class="key">Spec</span><strong>0.4 · ideas</strong></div>
+      </div>
+    </header>
+
+    <!-- HERO CARD with annotations -->
+    <section class="hero">
+      <div class="left">
+        <div class="annot">
+          <span class="key">i.</span>
+          <strong>The fiducial</strong>
+          <p>The AprilTag itself stays untouched. Black border, white quiet margin, square. No icons inside. No rounded corners. No gradients.</p>
+        </div>
+        <div class="annot">
+          <span class="key">ii.</span>
+          <strong>Role band</strong>
+          <p>A 6 mm color band on the leading edge tells a human across a table what kind of card this is. Same color in the tag map.</p>
+        </div>
+      </div>
+      <div class="hero-center">
+        <div class="card hero-card role-mirror">
+          <span class="band"></span>
+          <span class="crop tl"></span><span class="crop tr"></span>
+          <span class="crop bl"></span><span class="crop br"></span>
+          <div class="top">
+            <div class="tag"></div>
+            <div class="tag-id">
+              Tag · ID
+              <strong>11</strong>
+            </div>
+          </div>
+          <div class="glyph-area">
+            <svg viewBox="0 0 200 140">
+              <line x1="20" y1="100" x2="180" y2="40" stroke="#1a1612" stroke-width="2.6"/>
+              <line x1="20" y1="106" x2="180" y2="46" stroke="rgba(26,22,18,0.35)" stroke-width="0.7"/>
+              <circle cx="100" cy="70" r="2.5" fill="#1a1612"/>
+              <line x1="100" y1="70" x2="135" y2="35" stroke="#1a1612" stroke-width="0.5" stroke-dasharray="2 3"/>
+              <text x="138" y="34" font-family="IBM Plex Mono" font-size="7" letter-spacing="2" fill="rgba(26,22,18,0.55)">N</text>
+            </svg>
+          </div>
+          <div class="bottom">
+            <div class="role-name">Mirror</div>
+            <div class="role-meta">
+              θ 045°<br>
+              Reflective
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="annot">
+          <span class="key">iii.</span>
+          <strong>Role glyph</strong>
+          <p>An iconographic line drawing of what the object does. The mirror shows the reflective face and its surface normal. Not branding. A diagram.</p>
+        </div>
+        <div class="annot">
+          <span class="key">iv.</span>
+          <strong>Type</strong>
+          <p>Fraunces italic for the role name. Plex Mono for tag ID and metadata. Cards read at a glance from across the room and at any rotation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROLE GRID -->
+    <div class="section-title">
+      <span class="num">02</span>
+      <h2>The <em>seven</em> cards</h2>
+      <span class="rule"></span>
+    </div>
+
+    <div class="card-grid">
+
+      <div class="card role-emitter">
+        <span class="band"></span>
+        <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+        <div class="top">
+          <div class="tag"></div>
+          <div class="tag-id">Tag<strong>10</strong></div>
+        </div>
+        <div class="glyph-area">
+          <svg viewBox="0 0 200 140">
+            <circle cx="60" cy="70" r="14" fill="#1a1612"/>
+            <line x1="74" y1="70" x2="180" y2="70" stroke="#1a1612" stroke-width="2"/>
+            <polygon points="180,70 168,64 168,76" fill="#1a1612"/>
+            <line x1="74" y1="70" x2="170" y2="50" stroke="rgba(26,22,18,0.3)" stroke-width="0.6" stroke-dasharray="2 3"/>
+            <line x1="74" y1="70" x2="170" y2="90" stroke="rgba(26,22,18,0.3)" stroke-width="0.6" stroke-dasharray="2 3"/>
+          </svg>
+        </div>
+        <div class="bottom">
+          <div class="role-name">Emitter</div>
+          <div class="role-meta">605 nm<br>Source</div>
+        </div>
+      </div>
+
+      <div class="card role-mirror">
+        <span class="band"></span>
+        <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+        <div class="top">
+          <div class="tag"></div>
+          <div class="tag-id">Tag<strong>11</strong></div>
+        </div>
+        <div class="glyph-area">
+          <svg viewBox="0 0 200 140">
+            <line x1="30" y1="100" x2="170" y2="40" stroke="#1a1612" stroke-width="2.6"/>
+            <line x1="30" y1="106" x2="170" y2="46" stroke="rgba(26,22,18,0.35)" stroke-width="0.7"/>
+          </svg>
+        </div>
+        <div class="bottom">
+          <div class="role-name">Mirror</div>
+          <div class="role-meta">θ free<br>Reflect</div>
+        </div>
+      </div>
+
+      <div class="card role-filter">
+        <span class="band"></span>
+        <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+        <div class="top">
+          <div class="tag"></div>
+          <div class="tag-id">Tag<strong>12</strong></div>
+        </div>
+        <div class="glyph-area">
+          <svg viewBox="0 0 200 140">
+            <rect x="40" y="40" width="120" height="60" stroke="#1a1612" stroke-width="1.4" fill="none"/>
+            <g stroke="#1a1612" stroke-width="1">
+              <line x1="50" y1="50" x2="150" y2="50"/>
+              <line x1="50" y1="60" x2="150" y2="60" stroke-width="0.7"/>
+              <line x1="50" y1="70" x2="150" y2="70"/>
+              <line x1="50" y1="80" x2="150" y2="80" stroke-width="0.7"/>
+              <line x1="50" y1="90" x2="150" y2="90"/>
+            </g>
+          </svg>
+        </div>
+        <div class="bottom">
+          <div class="role-name">Filter</div>
+          <div class="role-meta">430–470 nm<br>Blue</div>
+        </div>
+      </div>
+
+      <div class="card role-splitter">
+        <span class="band"></span>
+        <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+        <div class="top">
+          <div class="tag"></div>
+          <div class="tag-id">Tag<strong>13</strong></div>
+        </div>
+        <div class="glyph-area">
+          <svg viewBox="0 0 200 140">
+            <line x1="30" y1="40" x2="170" y2="100" stroke="#1a1612" stroke-width="1.8"/>
+            <line x1="170" y1="40" x2="30" y2="100" stroke="#1a1612" stroke-width="1.8"/>
+            <line x1="30" y1="46" x2="170" y2="106" stroke="rgba(26,22,18,0.3)" stroke-width="0.6" stroke-dasharray="2 3"/>
+            <line x1="170" y1="46" x2="30" y2="106" stroke="rgba(26,22,18,0.3)" stroke-width="0.6" stroke-dasharray="2 3"/>
+          </svg>
+        </div>
+        <div class="bottom">
+          <div class="role-name">Splitter</div>
+          <div class="role-meta">0.5 / 0.5<br>Bisect</div>
+        </div>
+      </div>
+
+      <div class="card role-blocker">
+        <span class="band"></span>
+        <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+        <div class="top">
+          <div class="tag"></div>
+          <div class="tag-id">Tag<strong>14</strong></div>
+        </div>
+        <div class="glyph-area">
+          <svg viewBox="0 0 200 140">
+            <rect x="60" y="40" width="80" height="60" fill="#1a1612"/>
+            <line x1="20" y1="70" x2="58" y2="70" stroke="#1a1612" stroke-width="1.6"/>
+            <line x1="142" y1="70" x2="180" y2="70" stroke="rgba(26,22,18,0.25)" stroke-width="1.2" stroke-dasharray="3 3"/>
+          </svg>
+        </div>
+        <div class="bottom">
+          <div class="role-name">Blocker</div>
+          <div class="role-meta">opaque<br>Halt</div>
+        </div>
+      </div>
+
+      <div class="card role-target">
+        <span class="band"></span>
+        <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+        <div class="top">
+          <div class="tag"></div>
+          <div class="tag-id">Tag<strong>15</strong></div>
+        </div>
+        <div class="glyph-area">
+          <svg viewBox="0 0 200 140">
+            <circle cx="100" cy="70" r="38" fill="none" stroke="#1a1612" stroke-width="1.4"/>
+            <circle cx="100" cy="70" r="22" fill="none" stroke="#1a1612" stroke-width="1.4"/>
+            <circle cx="100" cy="70" r="6" fill="#1a1612"/>
+            <line x1="50" y1="70" x2="62" y2="70" stroke="#1a1612" stroke-width="1"/>
+            <line x1="138" y1="70" x2="150" y2="70" stroke="#1a1612" stroke-width="1"/>
+            <line x1="100" y1="20" x2="100" y2="32" stroke="#1a1612" stroke-width="1"/>
+            <line x1="100" y1="108" x2="100" y2="120" stroke="#1a1612" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="bottom">
+          <div class="role-name">Target</div>
+          <div class="role-meta">receiver<br>Goal</div>
+        </div>
+      </div>
+
+      <div class="card role-function">
+        <span class="band"></span>
+        <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+        <div class="top">
+          <div class="tag"></div>
+          <div class="tag-id">Tag<strong>16</strong></div>
+        </div>
+        <div class="glyph-area">
+          <svg viewBox="0 0 200 140">
+            <text x="100" y="78" text-anchor="middle"
+                  font-family="Fraunces, serif" font-style="italic" font-weight="300"
+                  font-size="36" fill="#1a1612">explain.</text>
+            <line x1="40" y1="100" x2="160" y2="100" stroke="#1a1612" stroke-width="0.6"/>
+          </svg>
+        </div>
+        <div class="bottom">
+          <div class="role-name">Function</div>
+          <div class="role-meta">verb<br>Action</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SHEET PREVIEW -->
+    <div class="section-title">
+      <span class="num">03</span>
+      <h2>Print <em>sheet</em></h2>
+      <span class="rule"></span>
+    </div>
+
+    <section class="sheet-wrap">
+      <div class="sheet">
+        <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+        <div class="mini-card"><div class="mini-tag"></div><div class="mini-name">Emitter</div><div class="mini-id">Tag · 10</div></div>
+        <div class="mini-card"><div class="mini-tag"></div><div class="mini-name">Mirror</div><div class="mini-id">Tag · 11</div></div>
+        <div class="mini-card"><div class="mini-tag"></div><div class="mini-name">Filter</div><div class="mini-id">Tag · 12</div></div>
+        <div class="mini-card"><div class="mini-tag"></div><div class="mini-name">Splitter</div><div class="mini-id">Tag · 13</div></div>
+        <div class="mini-card"><div class="mini-tag"></div><div class="mini-name">Blocker</div><div class="mini-id">Tag · 14</div></div>
+        <div class="mini-card"><div class="mini-tag"></div><div class="mini-name">Target</div><div class="mini-id">Tag · 15</div></div>
+      </div>
+      <div class="sheet-info">
+        <h3>Six up. <em>Letter.</em><br>Crop marks at corners.</h3>
+        <p>Six cards per US Letter sheet, dashed score lines for cutting, registration crosses at the corners. Print at 100% — no scaling — to preserve tag size and quiet margin.</p>
+        <div class="specs">
+          <div class="row"><span>Card size</span><strong>76 × 102 mm</strong></div>
+          <div class="row"><span>Tag size</span><strong>32 × 32 mm</strong></div>
+          <div class="row"><span>Quiet margin</span><strong>4 mm white</strong></div>
+          <div class="row"><span>Role band</span><strong>6 mm leading edge</strong></div>
+          <div class="row"><span>Bleed</span><strong>3 mm</strong></div>
+          <div class="row"><span>Cards / sheet</span><strong>6</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SYSTEM RULES -->
+    <div class="section-title">
+      <span class="num">04</span>
+      <h2>System <em>rules</em></h2>
+      <span class="rule"></span>
+    </div>
+
+    <section class="system">
+
+      <div class="rule-block">
+        <h4>Palette · roles</h4>
+        <div class="swatches">
+          <div class="swatch"><span class="chip" style="background: var(--amber)"></span><span>Emitter</span><span class="hex">#C8842B</span></div>
+          <div class="swatch"><span class="chip" style="background: var(--slate)"></span><span>Mirror</span><span class="hex">#404A55</span></div>
+          <div class="swatch"><span class="chip" style="background: var(--cyan)"></span><span>Filter</span><span class="hex">#4A7D8A</span></div>
+          <div class="swatch"><span class="chip" style="background: var(--plum)"></span><span>Splitter</span><span class="hex">#7A4A6E</span></div>
+          <div class="swatch"><span class="chip" style="background: var(--coral)"></span><span>Blocker</span><span class="hex">#B04848</span></div>
+          <div class="swatch"><span class="chip" style="background: var(--emerald)"></span><span>Target</span><span class="hex">#4A7A55</span></div>
+          <div class="swatch"><span class="chip" style="background: #b08a4a"></span><span>Function</span><span class="hex">#B08A4A</span></div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <h4>Type · system</h4>
+        <div class="type-spec">
+          <div class="ex">
+            <div class="label">Display · role name</div>
+            <div class="sample serif">Mirror</div>
+          </div>
+          <div class="ex">
+            <div class="label">Mono · tag id</div>
+            <div class="sample mono">Tag · 11</div>
+          </div>
+          <div class="ex">
+            <div class="label">Sans · body / instructions</div>
+            <div class="sample sans">Place the card flat. Camera reads the tag.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <h4>Do · do not</h4>
+        <div class="dont-do">
+          <div class="item do"><span class="mark"></span><span>Keep tag border, square shape, and 4 mm quiet margin.</span></div>
+          <div class="item do"><span class="mark"></span><span>Color the role band, the role name, and the glyph only.</span></div>
+          <div class="item do"><span class="mark"></span><span>Print on matte stock at 100% scale.</span></div>
+          <div class="item dont"><span class="mark"></span><span>Don't place icons or color inside the tag.</span></div>
+          <div class="item dont"><span class="mark"></span><span>Don't round the tag corners or laminate with glare.</span></div>
+          <div class="item dont"><span class="mark"></span><span>Don't crop the white quiet margin around the tag.</span></div>
+        </div>
+      </div>
+
+    </section>
+
+    <footer class="foot">
+      <div><span class="key">Doc</span><strong>marker-cards / 02</strong></div>
+      <div><span class="key">Build</span><strong>0.4.1 · ideas</strong></div>
+    </footer>
+
+  </div>
+</body>
+</html>

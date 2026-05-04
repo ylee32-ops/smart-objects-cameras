@@ -1,229 +1,204 @@
 # Smart Classroom API
 
-The event bus for the multi-agent smart classroom.
-Cameras, detectors, and student projects all connect here.
+This folder is the current room runtime for the Smart Classroom demo. It owns the classroom bus, timeline, project contracts, mock events, OAK-D bridge, and readiness report.
 
----
+It is the layer that lets us run the class demo even when hardware or student projects are incomplete:
 
-## Instructor quick start
+- timeline/run-of-show cues
+- student project roster and contract packets
+- project heartbeats and mock events
+- OAK-D / detector state pushes
+- SSE event streams for listeners
+- readiness report and event evidence for critique
 
-```bash
+## Start Here
+
+```powershell
 cd classroom-api
-pip install -r requirements.txt
-
-# Windows
-set CLASSROOM_API_KEY=testkey
-python classroom_api.py
-
-# Mac / Linux
-CLASSROOM_API_KEY=testkey python classroom_api.py
+npm start
 ```
-
-No Supabase required. State persists automatically to `.local/classroom-api/snapshot.json`.
-
-> **Network IP note:** When students connect from their own laptops they need your
-> machine's IP, not `localhost`. Find it with `ipconfig` (Windows) or `ifconfig`
-> (Mac) and share it: `http://YOUR_IP:8766`. The server listens on `0.0.0.0`
-> so it is reachable from any machine on the same network.
-
-Open the console:
-
-```
-http://localhost:8766/console
-```
-
----
-
-## Browser shortcuts
-
-| URL | Purpose |
-|-----|---------|
-| `/console` | Live room state, phase controls, event bus, mock demo button |
-| `/heartbeat` | Student check-in page — no code required |
-| `/showcase/report` | Evidence report for critique and portfolio |
-| `/showcase/demo-script` | Run-of-show script for Monday |
-| `/projects/readiness` | Which projects are live / stale / missing |
-| `/projects/nudges.md` | Per-project next actions in plain text |
-| `/projects/{id}/packet.md` | One student's full check-in packet |
-| `/projects/roster.csv` | Roster export for grading |
-
----
-
-## Running the mock demo
-
-Press **Run full script** on the console, or run it from the terminal:
-
-```bash
-CLASSROOM_API_URL=http://localhost:8766 CLASSROOM_API_KEY=testkey python mock_classroom_driver.py --speed 3
-```
-
-The driver walks through arrival → lecture → activity → conclude.
-All student project events are included in the script — you will see them in
-the console event bus and in the showcase report.
-
----
-
-## Project roster
-
-| Project ID | Student | Connects via | Contract |
-|---|---|---|---|
-| `seren-room` | Yuxuan (Seren) | Python / p5.js | room_mode_change → ambience.changed |
-| `forest-classroom` | Sophie Lee | Python / p5.js | person_change → forest.mood_set |
-| `focus-beam` | Feifey | Python / Pi | probe_classification → beam.pointed |
-| `tony` | Ramon Naula | Python / hardware | room_mode_change → calm.activated |
-| `echodesk` | Kathy Choi | Python / browser | agent.message → question.displayed |
-| `imprint` | Darren Chia | Python / Pi | whiteboard_change → handwriting.captured |
-| `gesture-timer` | Phil | Python / Pi | timer.offer → timer.started / timer.done |
-| `smart-stage` | Gordon | Python / Pi | fiducial.detected → stage.ready |
-| `assignment-tracker` | Shuyang Tian | Python / Pi | whiteboard_change → assignment.suggested |
-| `gus-mode` | Juju | Python / VIAM | person_change → gus.present / gus.excited |
-| `horizon` | System | Pi camera | fiducial.request → fiducial.detected |
-| `gravity` | System | Pi camera | fiducial.request → fiducial.detected |
-
-Student API key: `testkey` — same for everyone in local mode.
-
----
-
-## Grading criteria (finals)
-
-The showcase report at `/showcase/report` is the grade sheet.
-Score is calculated automatically (0–5 points per project):
-
-| Points | What it means |
-|--------|---------------|
-| 1 | Project is registered (declared what it listens for) |
-| 2 | Contract exists (declared consumes and emits) |
-| 3 | Heartbeat sent + at least one event in the bus |
-| 4 | Contract + heartbeat + event (demonstrated the loop) |
-| 5 | Live at critique time + contract + event |
-
-**Minimum passing score for finals: 3/5**
-(Heartbeat sent, at least one event proves the interaction happened)
-
-**Full credit: 5/5**
-(Live at critique time with a complete consume → emit loop on the bus)
-
-The bus records evidence even when hardware fails.
-A mock event with the right payload counts the same as real hardware —
-the contract is the project, not the device.
-
----
-
-## Sending a heartbeat for a student (if their code isn't working)
 
 Open:
 
+```text
+http://localhost:4177
 ```
-http://localhost:8766/heartbeat
+
+From another laptop or Raspberry Pi, replace `localhost` with the room computer IP:
+
+```text
+http://ROOM_PC_IP:4177
 ```
 
-Enter their project ID and capabilities. That counts as evidence.
+## Pages To Use In Class
 
-Or run the heartbeat script directly:
+| Page | Use |
+| --- | --- |
+| `/` | Main dashboard: live status, projects, recent events |
+| `/timeline.html` | Run-of-show. Scrub, play, and manually emit class/project cues |
+| `/projects.html` | All project packets and featured mock scenarios |
+| `/project.html?id=smart-stage` | One project contract, controls, live mock, and prompt |
+| `/heartbeat` | No-code student check-in page |
+| `/report.html` | Readiness / critique evidence |
+| `/events.html` | Live event stream and replay inspection |
+| `/cameras.html` | OAK-D state, camera commands, and camera request events |
+| `/projector.html` | Projector output |
+| `/board.html` | Board state, notes, tags, and manual inputs |
 
-```bash
-set CLASSROOM_API=http://localhost:8766
-set PROJECT_ID=seren-room
-set PROJECT_API_KEY=testkey
-set CAPABILITIES=ambience,ambience.changed,room.adapted
-set CONSUMES=person_change,probe_classification,room_mode_change
-set EMITS=ambience.changed,room.adapted
+## Student Project Loop
+
+Each project only needs to prove one loop:
+
+1. Send a heartbeat.
+2. Listen for events it cares about.
+3. Emit one event back.
+4. Verify it appears in `/report.html` or `/events.html`.
+
+The no-code fallback is:
+
+```text
+http://localhost:4177/heartbeat
+```
+
+Python fallback:
+
+```powershell
+cd classroom-api
+$env:CLASSROOM_API="http://localhost:4177"
+$env:PROJECT_ID="smart-stage"
+$env:CAPABILITIES="board.scene.requested,session.timer.offered"
+$env:CONSUMES="board.zone.activated,board.tag.detected,session.mode.changed"
+$env:EMITS="board.scene.requested,session.timer.offered"
 python student_heartbeat.py
 ```
 
----
+Open each student's exact contract prompt:
 
-## API key
-
-The classroom API key for local demo is `testkey`.
-Any student project that sends `X-API-Key: testkey` will be accepted.
-
-For a real deployment, set `CLASSROOM_API_KEY=your-secret` in the environment
-before starting the API.
-
----
-
-## Resetting the room between demos
-
-```bash
-curl -X POST http://localhost:8766/mock/reset \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: testkey" \
-  -d "{}"
+```text
+http://localhost:4177/api/projects/PROJECT_ID/contract.md
 ```
 
-Or press **Reset room** on the console.
+The roster and contract source lives in:
 
----
-
-## Checking what the room knows right now
-
-```bash
-curl http://localhost:8766/room/context
-curl http://localhost:8766/projects/readiness
-curl http://localhost:8766/capabilities
+```text
+public/project-packets.json
+data/project-tags.json
 ```
 
----
+To adapt this for a new class, update those two files first.
 
-## File map
+## Current Project Roster
 
+| Project ID | Project | Student(s) |
+| --- | --- | --- |
+| `smart-stage` | Smart Stage | Gordon Cheng |
+| `focus-beam` | Focus Beam | Feifey Wang |
+| `forest-classroom` | Forest in the Classroom | Sophie Lee |
+| `imprint` | Imprint | Darren Chia |
+| `nodcheck` | NodCheck | Kathy Choi |
+| `tony-ramon` | Tony the Bot | Ramon Naula |
+| `tony-shuyang` | Tony the Bot (Emotion Layer) | Shuyang Tian |
+| `grammar-coach` | English Communication Coach (Lumi) | Yuxuan Chen |
+| `gesture-timer` | Timer | Phil Cote |
+| `gus-mode` | Gus Mode / Virtual Gus | Juju Kim, Kathy Choi, Seren Kim |
+| `seren-room` | A Room (Context-Aware Classroom) | Seren Kim |
+
+## OAK-D / Detector Compatibility
+
+Old detector workers can keep posting to the classroom API shape:
+
+```text
+POST http://localhost:4177/push/state
 ```
-classroom-api/
-  classroom_api.py        — the server (FastAPI + orchestrator + contracts)
-  orchestrator.py         — phase state and salience routing logic
-  mock_classroom_driver.py — demo script: runs a full class session
-  student_heartbeat.py    — minimum heartbeat client (Python, no SSE)
-  student_template.py     — full integration template with SSE listener
-  student_heartbeat.html  — minimum heartbeat (browser, no code)
-  student_template.html   — full integration template (browser, p5.js)
-  console.html            — instructor console
-  requirements.txt        — pip dependencies
-  .local/classroom-api/   — local snapshot (auto-created, not committed)
 
-docs/
-  CLASSROOM_CONTRACTS.md  — event envelope spec and per-project contracts
-  STUDENT_BUS_GUIDE.md    — student step-by-step + per-project Claude prompts
+Example payload:
+
+```json
+{
+  "camera_id": "orbit",
+  "person_detected": true,
+  "person_count": 12,
+  "predicted_class": "presentation",
+  "prediction_confidence": 0.88,
+  "whiteboard_text_detected": true,
+  "whiteboard_text": ["contracts", "room state"]
+}
 ```
 
----
+The server maps that into room events such as:
 
-## Endpoints reference
+- `class.presence.changed`
+- `classifier.probe.changed`
+- `session.mode.changed`
+- `whiteboard.changed`
+- `attention.direction.changed`
 
+Run the no-hardware OAK rehearsal:
+
+```powershell
+npm run simulate:oaks
 ```
-GET  /health                          service status
-GET  /state                           all camera states + room mode
-GET  /mode                            room mode only
-GET  /phase                           current session phase
-GET  /room/context                    summarized room context for agents
-GET  /contracts                       all project contracts
-GET  /capabilities                    live capability index
 
-GET  /projects                        project registry
-GET  /projects/readiness              readiness table (use for grading)
-GET  /projects/nudges.md              plain-text next actions per project
-GET  /projects/roster.csv             roster CSV export
-GET  /projects/{id}/packet.md         one student's check-in packet
-GET  /projects/{id}/events            a project's event history
+## Mock The Whole Class
 
-POST /projects/{id}/heartbeat         project check-in
-POST /projects/{id}/events            project publishes an event
-POST /contracts/validate              validate an event payload
-POST /capabilities/route              resolve a capability to a project
+Keep all submitted student projects live with mock heartbeats and scenario events:
 
-GET  /subscribe/state                 SSE: room state changes
-GET  /subscribe/events?subscriber_id= SSE: routed project events
-
-GET  /showcase/report                 evidence report (Markdown)
-GET  /showcase/demo-script            run-of-show script
-GET  /showcase/report.json            evidence report (JSON)
-
-POST /phase                           set session phase
-POST /push/state                      detector pushes camera state
-POST /mock/scenario                   run a built-in demo script
-POST /mock/reset                      reset room to unknown phase
-POST /labs/import                     import objects.json from labs repo
-
-GET  /console                         instructor console (HTML)
-GET  /heartbeat                       student check-in page (HTML)
+```powershell
+npm run mock:projects
 ```
+
+Use `/timeline.html` when you want the demo to follow the class schedule. Turn on **Emit while playing** to fire cues automatically, or press **Emit** on individual cues when something needs to be forced manually.
+
+## API Surface
+
+Compatibility endpoints kept for old scripts:
+
+```text
+GET  /health
+GET  /state
+GET  /mode
+GET  /room/context
+GET  /projects
+GET  /projects/readiness
+GET  /projects/{id}/packet.md
+GET  /subscribe/events?subscriber_id=PROJECT_ID
+POST /push/state
+POST /projects/{id}/heartbeat
+POST /projects/{id}/events
+POST /phase
+```
+
+Current endpoints:
+
+```text
+GET  /api/state
+GET  /api/projects
+GET  /api/projects/readiness
+GET  /api/projects/{id}/contract.md
+GET  /api/events/recent
+GET  /api/cameras
+POST /api/projects/{id}/heartbeat
+POST /api/projects/{id}/events
+POST /api/cameras/{id}/command
+POST /api/action
+```
+
+## Checks
+
+Syntax and local data checks:
+
+```powershell
+npm run check
+npm run test:projects
+npm run test:readiness
+npm run test:classroom-api-compat
+```
+
+Smoke checks need the server running:
+
+```powershell
+npm start
+npm run test:smoke
+```
+
+Port `4177` is the new classroom API port. The old `8766` FastAPI service has been retired in this folder.

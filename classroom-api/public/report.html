@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Class Readiness · Critique Evidence</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .report-shell {
+      max-width: var(--shell-width);
+      margin: 0 auto;
+      padding: var(--shell-pad-y) var(--shell-pad-x) var(--shell-pad-y-bottom);
+      display: grid;
+      gap: 0;
+    }
+
+    .summary-deck {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .summary-deck .cell {
+      display: grid;
+      gap: 8px;
+      padding: 22px 18px 24px;
+      border-right: 1px solid var(--line);
+      min-width: 0;
+    }
+    .summary-deck .cell:last-child { border-right: 0; }
+    .summary-deck .cell .key {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .summary-deck .cell .val {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 32px;
+      line-height: 1;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+    .summary-deck .cell.live .val { color: var(--green); }
+    .summary-deck .cell.warn .val { color: var(--amber); }
+    .summary-deck .cell.bad  .val { color: var(--coral); }
+
+    /* spec-sheet table — hairlines only, generous padding */
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .spec-table th,
+    .spec-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 16px 14px;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    .spec-table thead th {
+      border-bottom-color: var(--line-hi);
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.32em;
+    }
+    .spec-table .proj-name {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 20px;
+      line-height: 1.05;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+    }
+    .spec-table .proj-by {
+      margin-top: 4px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .spec-table .proj-meta {
+      margin-top: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-soft);
+    }
+    .spec-table .contract-lines {
+      display: grid;
+      gap: 4px;
+      min-width: 220px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--ink-soft);
+    }
+    .spec-table .contract-lines strong {
+      color: var(--ink-faint);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-right: 6px;
+      font-weight: 400;
+    }
+    .spec-table .score {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: -0.005em;
+      color: var(--amber);
+    }
+    .spec-table td .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .sources {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 28px;
+      padding-top: 20px;
+    }
+    .sources .src .key {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 8px;
+    }
+    .sources .src .val {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--ink);
+      word-break: break-all;
+    }
+
+    @media (max-width: 1100px) {
+      .summary-deck { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .summary-deck .cell:nth-child(3n) { border-right: 0; }
+      .sources { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .report-shell { padding: 36px 22px 64px; }
+      .summary-deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .summary-deck .cell:nth-child(odd) { border-right: 1px solid var(--line); }
+      .summary-deck .cell:nth-child(even) { border-right: 0; }
+      .spec-table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body data-page="report">
+  <header class="topbar">
+    <a class="brand" href="/">Smart Classroom</a>
+    <nav class="nav nav-primary"></nav>
+    <nav class="nav-secondary"></nav>
+    <button class="log-toggle" type="button" data-log-toggle>
+      <span class="live-dot"></span><span>Log</span><span class="count" data-log-count>0</span>
+    </button>
+  </header>
+
+  <main class="report-shell">
+    <section class="masthead">
+      <div>
+        <div class="eyebrow">Critique Evidence · Readiness</div>
+        <h1>The class, <em>read back.</em></h1>
+        <p>One spec sheet per submitted project — contract, heartbeat, emitted events, acceptance. This is the consolidated readiness view that the room shows in critique. Linked from each Project row; printed for paper review.</p>
+      </div>
+      <div class="meta">
+        <div><span class="key">Built</span><strong id="reportBuilt">—</strong></div>
+        <div><span class="key">Source</span><strong>/api/projects/readiness</strong></div>
+      </div>
+    </section>
+
+    <header class="zone-head">
+      <span class="zone-label">Class summary</span>
+      <span class="zone-rule"></span>
+    </header>
+
+    <section class="summary-deck" id="summaryGrid"></section>
+
+    <header class="zone-head">
+      <span class="zone-label">Submitted projects</span>
+      <span class="zone-rule"></span>
+      <span class="zone-meta"><span class="key">Sort</span><strong>readiness</strong></span>
+    </header>
+
+    <section>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Contract</th>
+            <th>Evidence</th>
+            <th>Acceptance</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="readinessRows"></tbody>
+      </table>
+    </section>
+
+    <header class="zone-head">
+      <span class="zone-label">Sources of truth</span>
+      <span class="zone-rule"></span>
+    </header>
+
+    <section class="sources" id="sourceStrip"></section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/report.js"></script>
+</body>
+</html>

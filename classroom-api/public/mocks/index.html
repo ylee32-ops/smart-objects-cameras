@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Direction mocks · Smart Classroom</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #f5efe2;
+      --ink-soft: rgba(245, 239, 226, 0.74);
+      --ink-faint: rgba(245, 239, 226, 0.42);
+      --ink-dim: rgba(245, 239, 226, 0.18);
+      --bg: #060709;
+      --amber: #ffb360;
+      --serif: 'Fraunces', Georgia, serif;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    body {
+      min-height: 100vh;
+      padding: 80px 56px 80px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .reg { position: fixed; width: 16px; height: 16px; pointer-events: none; }
+    .reg::before, .reg::after { content: ""; position: absolute; background: var(--ink-faint); }
+    .reg::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .reg::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .reg.tl { top: 22px; left: 22px; }
+    .reg.tr { top: 22px; right: 22px; }
+    .reg.bl { bottom: 22px; left: 22px; }
+    .reg.br { bottom: 22px; right: 22px; }
+
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--amber);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .eyebrow::after { content: ""; flex: 0 0 56px; height: 1px; background: rgba(255, 179, 96, 0.4); }
+    h1 {
+      margin: 12px 0 14px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(36px, 4.6vw, 56px);
+      line-height: 1.0;
+      letter-spacing: -0.014em;
+    }
+    h1 em { font-style: italic; color: var(--ink-soft); font-weight: 300; }
+    .lede {
+      max-width: 60ch;
+      color: var(--ink-soft);
+      font-size: 15.5px;
+      line-height: 1.7;
+      margin: 0 0 56px;
+    }
+
+    .mocks {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--ink-dim);
+    }
+    .mock {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1.4fr) minmax(0, 1.6fr) auto;
+      gap: 36px;
+      align-items: baseline;
+      padding: 36px 0;
+      border-bottom: 1px solid var(--ink-dim);
+      text-decoration: none;
+      color: inherit;
+      transition: padding-left .25s ease;
+    }
+    .mock:hover { padding-left: 12px; }
+    .mock .num {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      color: var(--ink-faint);
+      padding-top: 8px;
+    }
+    .mock h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: 36px;
+      line-height: 1.05;
+      letter-spacing: -0.012em;
+      color: var(--ink);
+    }
+    .mock h2 em { font-style: italic; color: var(--ink-soft); }
+    .mock:hover h2 { color: var(--amber); }
+    .mock h2 + .ref {
+      margin-top: 6px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .mock .summary {
+      max-width: 56ch;
+      color: var(--ink-soft);
+      font-size: 14.5px;
+      line-height: 1.65;
+    }
+    .mock .arrow {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 32px;
+      color: var(--ink-faint);
+      padding-top: 4px;
+    }
+    .mock:hover .arrow { color: var(--amber); }
+    .foot {
+      margin-top: 56px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .foot a { color: var(--ink-soft); text-decoration: none; }
+    .foot a:hover { color: var(--amber); }
+
+    @media (max-width: 720px) {
+      body { padding: 36px 22px 64px; }
+      .mock { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 14px; }
+      .mock .summary { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+
+  <div class="eyebrow">Direction mocks · 2026-04</div>
+  <h1>Three roads <em>out of dashboard.</em></h1>
+  <p class="lede">Three standalone mockups, each rendering the same class moment in a different spatial language. None hooks into the API; they're for picking a direction. Open them side-by-side and tell me which one to build against.</p>
+
+  <nav class="mocks">
+    <a class="mock" href="/mocks/a-stage.html">
+      <span class="num">A.</span>
+      <div>
+        <h2>Stage <em>instrument</em></h2>
+        <div class="ref">Ref · light-lab-stage.html</div>
+      </div>
+      <div class="summary">The page is the room. Class as a polar dial: phases as arcs around the centre, projects orbiting the rim, the now-pointer rotating through. Ambient meta in four corners, registration marks at the edges, a cue strip pinned at the bottom. No panels — content is at coordinates, not in cards.</div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="mock" href="/mocks/b-spread.html">
+      <span class="num">B.</span>
+      <div>
+        <h2>Editorial <em>spread</em></h2>
+        <div class="ref">Ref · marker-card-system.html</div>
+      </div>
+      <div class="summary">The class as a printed magazine — Vol. 02, No. 12. Big Fraunces cover, asymmetric pages, paper-card project portraits with rotation, pull-quote spreads, marginalia in the gutters. Long scroll, dramatic typography. Reads like an issue you'd keep.</div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="mock" href="/mocks/c-lens.html">
+      <span class="num">C.</span>
+      <div>
+        <h2>Lens + <em>canvas</em></h2>
+        <div class="ref">Ref · phone-lens.html × reveal-overlay.html</div>
+      </div>
+      <div class="summary">A fixed instrument pane on the left (the room's current focus, with arc dial and big serif reading) and a blueprint-grid canvas on the right where projects live as positioned objects with leader lines, phase ribbons, and a slow scan line. Click an object on the canvas, the lens snaps to it.</div>
+      <span class="arrow">→</span>
+    </a>
+  </nav>
+
+  <div class="foot">
+    <span><a href="/">← back to live app</a></span>
+  </div>
+</body>
+</html>

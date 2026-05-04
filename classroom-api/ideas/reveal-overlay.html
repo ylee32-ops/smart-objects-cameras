@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reveal — Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #e6efef;
+      --ink-soft: rgba(230, 239, 239, 0.55);
+      --ink-faint: rgba(230, 239, 239, 0.20);
+      --ink-rule: rgba(230, 239, 239, 0.10);
+      --bg: #050709;
+      --grid: rgba(127, 188, 210, 0.14);
+      --grid-soft: rgba(127, 188, 210, 0.06);
+      --cyan: #7fbcd2;
+      --cyan-bright: #b6e2ee;
+      --amber: #ffb360;
+      --coral: #ff7a6b;
+      --emerald: #74c896;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Sans', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* blueprint background: cyan grid */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, var(--grid-soft) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-soft) 1px, transparent 1px),
+        linear-gradient(to right, var(--grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+      background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+      mask-image: radial-gradient(120% 90% at 50% 50%, #000 60%, transparent 100%);
+      z-index: 0;
+    }
+
+    /* a slow scan line — subtle, like a survey laser passing */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent 0%, rgba(127, 188, 210, 0.05) 50%, transparent 100%);
+      height: 240px;
+      animation: scan 9s linear infinite;
+      z-index: 1;
+    }
+    @keyframes scan {
+      0%   { transform: translateY(-260px); }
+      100% { transform: translateY(105vh); }
+    }
+
+    /* corner registration */
+    .reg {
+      position: fixed;
+      width: 18px; height: 18px;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .reg::before, .reg::after {
+      content: "";
+      position: absolute;
+      background: var(--cyan);
+      opacity: 0.5;
+    }
+    .reg::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .reg::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .reg.tl { top: 28px; left: 28px; }
+    .reg.tr { top: 28px; right: 28px; }
+    .reg.bl { bottom: 28px; left: 28px; }
+    .reg.br { bottom: 28px; right: 28px; }
+
+    /* top header strip — meta about the reveal */
+    .header {
+      position: fixed;
+      top: 28px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .header h1 {
+      margin: 0;
+      font-family: 'Fraunces', serif;
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(20px, 2.8vw, 32px);
+      letter-spacing: -0.005em;
+      color: var(--ink);
+      line-height: 1.05;
+    }
+    .header h1 em {
+      font-style: italic;
+      color: var(--cyan-bright);
+      font-weight: 300;
+    }
+    .header .eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .header .eyebrow::after {
+      content: "";
+      width: 64px; height: 1px;
+      background: var(--cyan);
+      opacity: 0.5;
+    }
+    .header .right {
+      text-align: right;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      line-height: 1.7;
+    }
+    .header .right .key { color: var(--ink-faint); margin-right: 8px; }
+    .header .right strong { color: var(--cyan-bright); font-weight: 500; }
+
+    /* main canvas */
+    .canvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(82vw, 1100px);
+      aspect-ratio: 16 / 10;
+      z-index: 2;
+    }
+    .canvas svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* surface plate */
+    .surface {
+      stroke: rgba(230, 239, 239, 0.32);
+      stroke-width: 0.7;
+      fill: none;
+    }
+
+    /* tag annotations */
+    .tag-cross {
+      stroke: var(--cyan);
+      stroke-width: 0.9;
+      fill: none;
+    }
+    .tag-square {
+      stroke: var(--cyan);
+      stroke-width: 0.7;
+      fill: rgba(127, 188, 210, 0.04);
+    }
+    .tag-id {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      fill: var(--cyan-bright);
+    }
+
+    /* corner registration L marks for surface */
+    .corner-mark {
+      stroke: var(--cyan);
+      stroke-width: 0.9;
+      fill: none;
+    }
+
+    /* objects & beams */
+    .object-shape {
+      stroke: var(--ink);
+      stroke-width: 0.9;
+      fill: none;
+    }
+    .object-fill {
+      fill: var(--bg);
+    }
+
+    .beam-core {
+      stroke: var(--amber);
+      stroke-width: 1.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-dasharray: 1500;
+      stroke-dashoffset: 1500;
+      animation: drawBeam 2.4s cubic-bezier(.2,.8,.2,1) 0.5s forwards;
+    }
+    .beam-glow {
+      stroke: var(--amber);
+      stroke-width: 5;
+      fill: none;
+      filter: blur(5px);
+      opacity: 0.42;
+      stroke-linecap: round;
+      stroke-dasharray: 1500;
+      stroke-dashoffset: 1500;
+      animation: drawBeam 2.4s cubic-bezier(.2,.8,.2,1) 0.5s forwards;
+    }
+    @keyframes drawBeam { to { stroke-dashoffset: 0; } }
+
+    /* annotation hairlines pointing at things */
+    .leader { stroke: rgba(230, 239, 239, 0.5); stroke-width: 0.5; fill: none; }
+    .leader-dot { fill: var(--cyan-bright); }
+
+    .annot {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      fill: var(--ink);
+      text-transform: uppercase;
+    }
+    .annot .key { fill: var(--ink-faint); }
+    .annot .val { fill: var(--cyan-bright); }
+    .annot .num { fill: var(--amber); }
+    .annot .err { fill: var(--coral); }
+
+    /* tags around objects */
+    .obj-tag-corner {
+      stroke: var(--cyan);
+      stroke-width: 0.6;
+      fill: rgba(127, 188, 210, 0.05);
+    }
+
+    /* lost tag */
+    .lost {
+      stroke: var(--coral);
+      stroke-width: 0.7;
+      fill: none;
+      stroke-dasharray: 3 3;
+      animation: pulseLost 2.2s ease-in-out infinite;
+    }
+    @keyframes pulseLost {
+      0%, 100% { opacity: 0.4; }
+      50%      { opacity: 1; }
+    }
+    .lost-text { fill: var(--coral); }
+
+    /* event log on the right */
+    .events {
+      position: fixed;
+      top: 124px;
+      right: 64px;
+      width: 280px;
+      max-height: 60vh;
+      z-index: 5;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--ink-soft);
+      pointer-events: none;
+    }
+    .events h4 {
+      margin: 0 0 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .events h4::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--ink-rule);
+    }
+    .event {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--ink-rule);
+      align-items: baseline;
+      animation: eventIn 0.6s ease both;
+    }
+    .event .t { color: var(--ink-faint); font-size: 9px; letter-spacing: 0.18em; }
+    .event .m { color: var(--ink); }
+    .event .m em { color: var(--cyan-bright); font-style: normal; }
+    .event .m .err { color: var(--coral); }
+    .event .m .ok { color: var(--emerald); }
+    @keyframes eventIn {
+      from { opacity: 0; transform: translateX(8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* legend bottom-left */
+    .legend {
+      position: fixed;
+      bottom: 56px;
+      left: 64px;
+      z-index: 5;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .legend .item { display: flex; gap: 8px; align-items: center; }
+    .legend .swatch { width: 14px; height: 1px; }
+    .legend .swatch.beam   { background: var(--amber); height: 1px; box-shadow: 0 0 8px var(--amber); }
+    .legend .swatch.tag    { background: var(--cyan); }
+    .legend .swatch.lost   { background: repeating-linear-gradient(to right, var(--coral) 0 3px, transparent 3px 6px); }
+    .legend .swatch.bound  { background: var(--emerald); }
+
+    /* bottom-right footer meta */
+    .footer-meta {
+      position: fixed;
+      bottom: 56px;
+      right: 64px;
+      z-index: 5;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      text-align: right;
+      line-height: 1.7;
+    }
+    .footer-meta .key { color: var(--ink-faint); margin-right: 8px; }
+    .footer-meta strong { color: var(--cyan-bright); font-weight: 500; }
+
+    /* enter animations */
+    .header, .events, .legend, .footer-meta, .reg {
+      animation: fadeIn 1.4s ease both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* hover info card */
+    .info-card {
+      position: absolute;
+      pointer-events: none;
+      padding: 10px 14px;
+      border: 1px solid var(--cyan);
+      background: rgba(5, 7, 9, 0.85);
+      backdrop-filter: blur(4px);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--ink);
+      text-transform: uppercase;
+      min-width: 160px;
+      animation: fadeIn 0.6s ease 1.6s both;
+    }
+    .info-card .row { display: flex; justify-content: space-between; gap: 18px; margin: 3px 0; }
+    .info-card .key { color: var(--ink-faint); }
+    .info-card .val { color: var(--cyan-bright); }
+    .info-card .num { color: var(--amber); }
+    .info-card .err { color: var(--coral); }
+    .info-card::before, .info-card::after,
+    .info-card .ne, .info-card .nw {
+      content: "";
+      position: absolute;
+      width: 6px; height: 6px;
+      border: 1px solid var(--cyan);
+    }
+    .info-card::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+    .info-card::after  { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+  </style>
+</head>
+<body>
+
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+
+  <header class="header">
+    <div>
+      <div class="eyebrow">Reveal · Survey Mode</div>
+      <h1>The room <em>shows its work.</em></h1>
+    </div>
+    <div class="right">
+      <div><span class="key">Mode</span><strong>Light Lab</strong></div>
+      <div><span class="key">Surface</span><strong>Table · 1800 × 900 mm</strong></div>
+      <div><span class="key">Cal · err</span><strong>0.42 px rms</strong></div>
+      <div><span class="key">Tags</span><strong id="tagCount">5 / 6 active</strong></div>
+    </div>
+  </header>
+
+  <main class="canvas">
+    <svg viewBox="0 0 1100 688" preserveAspectRatio="xMidYMid meet">
+
+      <!-- surface frame -->
+      <rect class="surface" x="60" y="60" width="980" height="568"/>
+
+      <!-- corner L marks -->
+      <g class="corner-mark">
+        <path d="M 42 60 L 60 60 M 60 42 L 60 60"/>
+        <path d="M 1058 60 L 1040 60 M 1040 42 L 1040 60"/>
+        <path d="M 1058 628 L 1040 628 M 1040 628 L 1040 646"/>
+        <path d="M 42 628 L 60 628 M 60 628 L 60 646"/>
+      </g>
+
+      <!-- calibration tags 0-3 (corners) -->
+      <g>
+        <g transform="translate(60 60)">
+          <rect class="tag-square" x="-8" y="-8" width="16" height="16"/>
+          <line class="tag-cross" x1="-12" y1="0" x2="-9" y2="0"/>
+          <line class="tag-cross" x1="9"  y1="0" x2="12" y2="0"/>
+          <line class="tag-cross" x1="0"  y1="-12" x2="0" y2="-9"/>
+          <line class="tag-cross" x1="0"  y1="9"  x2="0" y2="12"/>
+          <text class="tag-id" x="22" y="-12">CAL · 00</text>
+          <text class="tag-id" x="22" y="-2">0.97</text>
+        </g>
+        <g transform="translate(1040 60)">
+          <rect class="tag-square" x="-8" y="-8" width="16" height="16"/>
+          <line class="tag-cross" x1="-12" y1="0" x2="-9" y2="0"/>
+          <line class="tag-cross" x1="9"  y1="0" x2="12" y2="0"/>
+          <line class="tag-cross" x1="0"  y1="-12" x2="0" y2="-9"/>
+          <line class="tag-cross" x1="0"  y1="9"  x2="0" y2="12"/>
+          <text class="tag-id" x="-22" y="-12" text-anchor="end">CAL · 01</text>
+          <text class="tag-id" x="-22" y="-2"  text-anchor="end">0.96</text>
+        </g>
+        <g transform="translate(1040 628)">
+          <rect class="tag-square" x="-8" y="-8" width="16" height="16"/>
+          <line class="tag-cross" x1="-12" y1="0" x2="-9" y2="0"/>
+          <line class="tag-cross" x1="9"  y1="0" x2="12" y2="0"/>
+          <line class="tag-cross" x1="0"  y1="-12" x2="0" y2="-9"/>
+          <line class="tag-cross" x1="0"  y1="9"  x2="0" y2="12"/>
+          <text class="tag-id" x="-22" y="22" text-anchor="end">CAL · 02</text>
+          <text class="tag-id" x="-22" y="32" text-anchor="end">0.94</text>
+        </g>
+        <g transform="translate(60 628)">
+          <rect class="tag-square" x="-8" y="-8" width="16" height="16"/>
+          <line class="tag-cross" x1="-12" y1="0" x2="-9" y2="0"/>
+          <line class="tag-cross" x1="9"  y1="0" x2="12" y2="0"/>
+          <line class="tag-cross" x1="0"  y1="-12" x2="0" y2="-9"/>
+          <line class="tag-cross" x1="0"  y1="9"  x2="0" y2="12"/>
+          <text class="tag-id" x="22" y="22">CAL · 03</text>
+          <text class="tag-id" x="22" y="32">0.95</text>
+        </g>
+      </g>
+
+      <!-- emitter at (200, 440), tag corners drawn -->
+      <g transform="translate(200 440)">
+        <!-- tag bbox -->
+        <rect class="obj-tag-corner" x="-26" y="-26" width="52" height="52"/>
+        <line class="tag-cross" x1="-32" y1="0" x2="-30" y2="0"/>
+        <line class="tag-cross" x1="30" y1="0" x2="32" y2="0"/>
+        <line class="tag-cross" x1="0" y1="-32" x2="0" y2="-30"/>
+        <line class="tag-cross" x1="0" y1="30" x2="0" y2="32"/>
+        <!-- object glyph: emitter -->
+        <circle class="object-fill" r="22"/>
+        <circle r="22" class="object-shape"/>
+        <circle r="4" fill="var(--amber)"/>
+        <!-- centroid leader -->
+        <line class="leader" x1="0" y1="0" x2="0" y2="-90"/>
+        <circle class="leader-dot" cx="0" cy="-90" r="1.6"/>
+        <text class="annot" x="-46" y="-100">
+          <tspan class="key">TAG</tspan> <tspan class="val">10</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="val">EMITTER</tspan>
+        </text>
+        <text class="annot" x="-46" y="-86">
+          <tspan class="key">CONF</tspan> <tspan class="num">0.97</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="key">θ</tspan> <tspan class="num">000°</tspan>
+        </text>
+      </g>
+
+      <!-- mirror at (560, 240) -->
+      <g transform="translate(560 240)">
+        <rect class="obj-tag-corner" x="-30" y="-30" width="60" height="60" transform="rotate(-45)"/>
+        <g transform="rotate(-45)">
+          <line x1="-44" y1="0" x2="44" y2="0" class="object-shape" stroke-width="2.4"/>
+          <line x1="-44" y1="5" x2="44" y2="5" stroke="rgba(230,239,239,0.4)" stroke-width="0.5"/>
+        </g>
+        <!-- normal vector -->
+        <line x1="0" y1="0" x2="32" y2="-32" stroke="var(--cyan)" stroke-width="0.6" stroke-dasharray="2 3"/>
+        <text class="annot" x="38" y="-36">
+          <tspan class="key">N</tspan>
+        </text>
+        <!-- leader -->
+        <line class="leader" x1="0" y1="0" x2="-90" y2="-100"/>
+        <circle class="leader-dot" cx="-90" cy="-100" r="1.6"/>
+        <text class="annot" x="-180" y="-110">
+          <tspan class="key">TAG</tspan> <tspan class="val">11</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="val">MIRROR</tspan>
+        </text>
+        <text class="annot" x="-180" y="-96">
+          <tspan class="key">θ</tspan> <tspan class="num">−45°</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="key">CONF</tspan> <tspan class="num">0.92</tspan>
+        </text>
+      </g>
+
+      <!-- splitter at (760, 240) -->
+      <g transform="translate(760 240)">
+        <rect class="obj-tag-corner" x="-22" y="-22" width="44" height="44" transform="rotate(45)"/>
+        <g transform="rotate(45)">
+          <line x1="-30" y1="0" x2="30" y2="0" stroke="var(--cyan)" stroke-width="1.6"/>
+          <line x1="-30" y1="-3" x2="30" y2="-3" stroke="var(--cyan)" stroke-width="0.5" stroke-dasharray="2 3"/>
+        </g>
+        <line class="leader" x1="0" y1="0" x2="80" y2="-80"/>
+        <circle class="leader-dot" cx="80" cy="-80" r="1.6"/>
+        <text class="annot" x="86" y="-92">
+          <tspan class="key">TAG</tspan> <tspan class="val">13</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="val">SPLITTER</tspan>
+        </text>
+        <text class="annot" x="86" y="-78">
+          <tspan class="key">RATIO</tspan> <tspan class="num">0.5 / 0.5</tspan>
+        </text>
+      </g>
+
+      <!-- target at (940, 440) -->
+      <g transform="translate(940 440)">
+        <rect class="obj-tag-corner" x="-32" y="-32" width="64" height="64"/>
+        <circle r="28" class="object-shape"/>
+        <circle r="14" class="object-shape"/>
+        <line x1="-32" y1="0" x2="-20" y2="0" class="object-shape"/>
+        <line x1="20"  y1="0" x2="32"  y2="0" class="object-shape"/>
+        <line x1="0" y1="-32" x2="0" y2="-20" class="object-shape"/>
+        <line x1="0" y1="20"  x2="0" y2="32"  class="object-shape"/>
+        <circle r="3" fill="var(--amber)"/>
+
+        <line class="leader" x1="0" y1="0" x2="0" y2="80"/>
+        <circle class="leader-dot" cx="0" cy="80" r="1.6"/>
+        <text class="annot" x="0" y="100" text-anchor="middle">
+          <tspan class="key">TAG</tspan> <tspan class="val">15</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="val">TARGET</tspan>
+        </text>
+        <text class="annot" x="0" y="116" text-anchor="middle">
+          <tspan class="key">HIT</tspan> <tspan class="num">0.948</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="key">Δ</tspan> <tspan class="num">+1.2°</tspan>
+        </text>
+      </g>
+
+      <!-- LOST blocker at (560, 480) — was tag 14 -->
+      <g transform="translate(420 520)">
+        <rect class="lost" x="-26" y="-26" width="52" height="52"/>
+        <line class="lost" x1="-26" y1="-26" x2="26" y2="26"/>
+        <line class="lost" x1="26" y1="-26" x2="-26" y2="26"/>
+        <line class="leader" x1="0" y1="0" x2="-90" y2="60"/>
+        <circle class="leader-dot" cx="-90" cy="60" r="1.6"/>
+        <text class="annot lost-text" x="-180" y="58">
+          <tspan class="key">TAG</tspan> <tspan class="err">14</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="err">BLOCKER</tspan>
+        </text>
+        <text class="annot lost-text" x="-180" y="72">
+          <tspan class="key">LOST</tspan> <tspan class="err">2.4 s</tspan>
+          <tspan class="key" dx="6">·</tspan> <tspan class="key">LAST KNOWN</tspan>
+        </text>
+      </g>
+
+      <!-- beam: emitter -> mirror -> target -->
+      <path class="beam-glow" d="M 200 440 L 560 240 L 940 440"/>
+      <path class="beam-core" d="M 200 440 L 560 240 L 940 440"/>
+
+      <!-- splitter branch -->
+      <path class="beam-glow" d="M 760 240 L 760 440" style="opacity: 0.25"/>
+      <path class="beam-core" d="M 760 240 L 760 440" style="stroke: var(--cyan); animation-delay: 1.6s;"/>
+
+      <!-- vertex hairlines + segment annotations -->
+      <g>
+        <!-- segment 1: emitter -> mirror, midpoint -->
+        <g>
+          <line class="leader" x1="380" y1="340" x2="320" y2="280"/>
+          <circle class="leader-dot" cx="320" cy="280" r="1.4"/>
+          <text class="annot" x="312" y="270" text-anchor="end">
+            <tspan class="key">SEG · 1</tspan>
+          </text>
+          <text class="annot" x="312" y="282" text-anchor="end">
+            <tspan class="num">412 mm</tspan> <tspan class="key" dx="4">·</tspan> <tspan class="num">605 nm</tspan>
+          </text>
+        </g>
+
+        <!-- segment 2 -->
+        <g>
+          <line class="leader" x1="750" y1="340" x2="820" y2="384"/>
+          <circle class="leader-dot" cx="820" cy="384" r="1.4"/>
+          <text class="annot" x="828" y="382">
+            <tspan class="key">SEG · 2</tspan>
+          </text>
+          <text class="annot" x="828" y="394">
+            <tspan class="num">438 mm</tspan> <tspan class="key" dx="4">·</tspan> <tspan class="num">90.0%</tspan>
+          </text>
+        </g>
+
+        <!-- splitter branch annot -->
+        <g>
+          <line class="leader" x1="760" y1="340" x2="690" y2="380"/>
+          <circle class="leader-dot" cx="690" cy="380" r="1.4"/>
+          <text class="annot" x="684" y="378" text-anchor="end">
+            <tspan class="key">BRANCH</tspan>
+          </text>
+          <text class="annot" x="684" y="390" text-anchor="end">
+            <tspan style="fill: var(--cyan-bright);">200 mm</tspan> <tspan class="key" dx="4">·</tspan> <tspan style="fill: var(--cyan-bright);">50%</tspan>
+          </text>
+        </g>
+      </g>
+
+      <!-- compass / scale at bottom -->
+      <g transform="translate(60 660)">
+        <line x1="0" y1="0" x2="180" y2="0" stroke="var(--cyan)" stroke-width="0.6"/>
+        <line x1="0" y1="-4" x2="0" y2="4" stroke="var(--cyan)" stroke-width="0.6"/>
+        <line x1="60" y1="-3" x2="60" y2="3" stroke="var(--cyan)" stroke-width="0.6"/>
+        <line x1="120" y1="-3" x2="120" y2="3" stroke="var(--cyan)" stroke-width="0.6"/>
+        <line x1="180" y1="-4" x2="180" y2="4" stroke="var(--cyan)" stroke-width="0.6"/>
+        <text class="annot" x="0" y="18">0</text>
+        <text class="annot" x="60" y="18" text-anchor="middle">300</text>
+        <text class="annot" x="120" y="18" text-anchor="middle">600</text>
+        <text class="annot" x="180" y="18">900 MM</text>
+      </g>
+
+    </svg>
+
+    <!-- info card hover example, anchored to mirror — positioned in % of canvas -->
+    <div class="info-card" style="left: 32%; top: 12%;">
+      <div class="row"><span class="key">Tag</span><span class="val">11 · MIRROR</span></div>
+      <div class="row"><span class="key">θ</span><span class="num">−45.0°</span></div>
+      <div class="row"><span class="key">Conf</span><span class="num">0.92</span></div>
+      <div class="row"><span class="key">Last seen</span><span class="val">0.04 s</span></div>
+      <div class="row"><span class="key">Bound</span><span class="val">slide · 03 / refl.</span></div>
+    </div>
+  </main>
+
+  <aside class="events">
+    <h4>Stream</h4>
+    <div class="event"><span class="t">19:42:01</span><span class="m">fiducial.detected · <em>tag 10</em></span></div>
+    <div class="event"><span class="t">19:42:01</span><span class="m">light.object.placed · <em>emitter</em></span></div>
+    <div class="event"><span class="t">19:42:02</span><span class="m">fiducial.detected · <em>tag 11</em></span></div>
+    <div class="event"><span class="t">19:42:02</span><span class="m">light.ray.updated · <span class="ok">routed</span></span></div>
+    <div class="event"><span class="t">19:42:03</span><span class="m">fiducial.detected · <em>tag 13</em></span></div>
+    <div class="event"><span class="t">19:42:04</span><span class="m">light.target.hit · <span class="ok">0.948</span></span></div>
+    <div class="event"><span class="t">19:42:07</span><span class="m">fiducial.lost · <span class="err">tag 14</span></span></div>
+    <div class="event"><span class="t">19:42:09</span><span class="m">character.suggestion · <em>add blocker</em></span></div>
+  </aside>
+
+  <div class="legend">
+    <div class="item"><span class="swatch beam"></span><span>Beam</span></div>
+    <div class="item"><span class="swatch tag"></span><span>Tag</span></div>
+    <div class="item"><span class="swatch lost"></span><span>Lost</span></div>
+    <div class="item"><span class="swatch bound"></span><span>Bound</span></div>
+  </div>
+
+  <div class="footer-meta">
+    <div><span class="key">FPS</span><strong id="fps">— —</strong></div>
+    <div><span class="key">Build</span><strong>0.4.1 · ideas</strong></div>
+  </div>
+
+  <script>
+    // animate FPS counter (cosmetic)
+    const fpsEl = document.getElementById('fps');
+    let last = performance.now(), frames = 0, ema = 60;
+    function loop(now) {
+      frames++;
+      const dt = now - last;
+      if (dt >= 250) {
+        const fps = (frames * 1000) / dt;
+        ema = ema * 0.7 + fps * 0.3;
+        fpsEl.textContent = ema.toFixed(1);
+        frames = 0;
+        last = now;
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    // append a few delayed events to feel live
+    const eventsEl = document.querySelector('.events');
+    const samples = [
+      ['19:42:11', 'phone.target.selected · <em>mirror</em>'],
+      ['19:42:13', 'object.angle.updated · <span class="ok">−43.5°</span>'],
+      ['19:42:15', 'light.target.hit · <span class="ok">0.962</span>'],
+    ];
+    let i = 0;
+    setInterval(() => {
+      if (i >= samples.length) return;
+      const [t, m] = samples[i++];
+      const ev = document.createElement('div');
+      ev.className = 'event';
+      ev.innerHTML = `<span class="t">${t}</span><span class="m">${m}</span>`;
+      eventsEl.appendChild(ev);
+    }, 2200);
+  </script>
+</body>
+</html>

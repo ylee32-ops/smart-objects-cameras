@@ -1,0 +1,20 @@
+# Default to LF for all text files. Stops the CRLF/LF churn between
+# Windows and Linux checkouts of this repo.
+* text=auto eol=lf
+
+# Windows-only scripts must keep CRLF.
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary types — never normalize.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.mp4 binary
+*.mov binary
+*.mkv binary
+*.cer binary

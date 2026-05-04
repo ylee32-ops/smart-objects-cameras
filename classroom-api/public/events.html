@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Event Console</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .event-list {
+      max-height: calc(100vh - 220px);
+      overflow: auto;
+      gap: 3px;
+    }
+    .event-row {
+      display: grid;
+      gap: 3px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      padding: 7px 9px;
+      background: var(--bg-panel);
+      cursor: pointer;
+      transition: border-color .12s ease, background .12s ease;
+    }
+    .event-row:hover { border-color: var(--ink-faint); }
+    .event-row.active {
+      border-color: var(--amber);
+      background: rgba(224, 168, 94, 0.05);
+    }
+    .event-row .event-type { color: var(--cyan); }
+    .event-row.active .event-type { color: var(--amber); }
+    .event-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+    .state-table { display: grid; gap: 3px; }
+    .state-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) auto auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      padding: 7px 9px;
+      background: var(--bg-panel);
+      cursor: pointer;
+    }
+    .state-row:hover { border-color: var(--ink-faint); }
+    .state-row strong {
+      display: block;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .timeline { width: 100%; }
+    .reaction-card {
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: var(--bg-soft);
+      padding: 10px;
+      display: grid;
+      gap: 4px;
+    }
+    .reaction-card strong {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--amber);
+    }
+    #summaryLine {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--ink-soft);
+    }
+  </style>
+</head>
+<body data-page="events">
+  <header class="topbar">
+    <div class="brand">Smart Classroom</div>
+    <nav class="nav">
+      <a href="/start.html">Start</a>
+      <a href="/">Console</a>
+      <a href="/class-objects.html">Objects</a>
+      <a href="/projects.html">Projects</a>
+      <a href="/report.html">Report</a>
+      <a href="/cameras.html">Cameras</a>
+      <a href="/events.html" class="active">Events</a>
+      <a href="/projector.html">Projector</a>
+      <a href="/board.html">Board</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="status-dot" data-connection-dot></span>
+  </header>
+
+  <main class="events-shell">
+    <section class="panel">
+      <h2>Instruments</h2>
+      <div class="panel-body stack">
+        <div class="filter-grid">
+          <label class="form-row">
+            <span>Type</span>
+            <select id="typeFilter"></select>
+          </label>
+          <label class="form-row">
+            <span>Source</span>
+            <select id="sourceFilter"></select>
+          </label>
+        </div>
+        <label class="form-row">
+          <span>Search</span>
+          <input id="searchFilter" placeholder="ambient, gesture, safety, ...">
+        </label>
+        <div class="row">
+          <button id="loadReplayBtn" class="primary">Load Replay</button>
+          <button id="clearLiveBtn" class="warn">Clear Live</button>
+        </div>
+        <div class="stack" style="gap:4px">
+          <span class="eyebrow">Timeline</span>
+          <input id="timeline" class="timeline" type="range" min="0" max="0" value="0">
+          <div id="timelineLabel" class="small">live</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Stream</h2>
+      <div class="panel-body stack">
+        <div id="summaryLine">No events yet.</div>
+        <div id="eventList" class="event-list"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Inspector</h2>
+      <div class="panel-body stack">
+        <span class="eyebrow">Reaction</span>
+        <div id="reactionSummary" class="reaction-card small">No reaction selected.</div>
+        <div class="row">
+          <button id="copyEventBtn">Copy JSON</button>
+          <button id="openReplayBtn">Open Replay JSON</button>
+        </div>
+        <span class="eyebrow">Payload</span>
+        <pre id="eventJson" class="event-json">Select an event.</pre>
+        <span class="eyebrow">Latest Class Object State</span>
+        <div id="classStateTable" class="state-table"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/class-event-effects.js"></script>
+  <script src="/events.js"></script>
+</body>
+</html>

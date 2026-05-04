@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Classroom API · Projects</title>
+  <link rel="stylesheet" href="/shared.css">
+  <style>
+    body { padding: 0; }
+
+    .hub-shell {
+      max-width: var(--shell-width);
+      margin: 0 auto;
+      padding: var(--shell-pad-y) var(--shell-pad-x) var(--shell-pad-y-bottom);
+      display: grid;
+      gap: 0;
+    }
+
+    /* a single-line "right now" readout under the masthead — replaces
+       the heavier 5-cell now-strip on the home page so the eye lands on
+       the roster, not on chrome */
+    .nowline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 28px;
+      padding: 18px 0 22px;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .nowline .group { display: inline-flex; align-items: baseline; gap: 8px; }
+    .nowline .key { color: var(--ink-faint); }
+    .nowline strong { color: var(--ink); font-weight: 500; font-feature-settings: "tnum"; }
+    .nowline strong.am { color: var(--amber); }
+    .nowline strong.gn { color: var(--green); }
+    .nowline strong.bad { color: var(--coral); }
+    .nowline .live-dot { margin-right: 4px; }
+    .nowline .nav-arrows { margin-left: auto; display: inline-flex; gap: 4px; }
+    .nowline .bench-toggle {
+      background: transparent;
+      border: 1px solid var(--line-hi);
+      color: var(--ink-soft);
+      cursor: pointer;
+      padding: 6px 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      border-radius: 2px;
+    }
+    .nowline .bench-toggle:hover { color: var(--ink); border-color: var(--ink-soft); }
+    .nowline .bench-toggle.is-open { color: var(--amber); border-color: rgba(255, 179, 96, 0.55); }
+
+    /* readiness summary — fewer cells, bigger numerals, more space */
+    .readiness-deck {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line);
+    }
+    .readiness-deck .cell {
+      padding: 28px 24px 32px;
+      border-right: 1px solid var(--line);
+      display: grid;
+      gap: 10px;
+    }
+    .readiness-deck .cell:last-child { border-right: 0; }
+    .readiness-deck .cell .key {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .readiness-deck .cell .val {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144;
+      font-weight: 300;
+      font-size: clamp(40px, 4.6vw, 56px);
+      line-height: 0.95;
+      letter-spacing: -0.018em;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+    .readiness-deck .cell .val em {
+      font-style: italic;
+      color: var(--ink-faint);
+      font-size: 0.55em;
+      letter-spacing: 0;
+      margin-left: 6px;
+    }
+    .readiness-deck .cell.live  .val { color: var(--green); }
+    .readiness-deck .cell.warn  .val { color: var(--amber); }
+    .readiness-deck .cell.bad   .val { color: var(--coral); }
+    @media (max-width: 720px) {
+      .readiness-deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .readiness-deck .cell:nth-child(2n) { border-right: 0; }
+      .readiness-deck .cell:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    }
+
+    /* Bench is collapsed by default on the home page — revealed on click.
+       Keeps the home from feeling like an instrument panel. */
+    .bench {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      padding: 18px 0 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .bench.is-open { display: flex; }
+    .bench .label {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-right: 6px;
+    }
+    .bench .scenario-buttons { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+    .bench .scenario-buttons:empty::before {
+      content: "no featured";
+      font-family: var(--mono); font-size: 9.5px; color: var(--ink-faint);
+      letter-spacing: 0.32em; text-transform: uppercase;
+    }
+    .bench .toggle-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+    .bench-status {
+      padding: 12px 0 0;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      display: none;
+    }
+    .bench.is-open + .bench-status { display: block; }
+
+    /* roster — much quieter than v1: title + readiness pip + one action.
+       Heartbeat status is a small dot beside the title. */
+    .roster { display: grid; gap: 0; padding-top: 8px; }
+    .roster-row {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1.6fr) minmax(110px, 0.5fr) auto;
+      gap: 22px;
+      align-items: baseline;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .roster-row:first-child { border-top: 1px solid var(--line); }
+    .roster-row.no-num {
+      grid-template-columns: minmax(0, 1.6fr) minmax(110px, 0.5fr) auto;
+    }
+    .roster-row .num {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      color: var(--ink-faint);
+      font-feature-settings: "tnum";
+      padding-top: 6px;
+    }
+    .roster-row .title {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+    .roster-row .title .name-line {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      min-width: 0;
+    }
+    .roster-row .title h3 {
+      margin: 0;
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 18px;
+      line-height: 1.3;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .roster-row .title h3 em { font-style: normal; color: var(--ink-faint); font-weight: 400; }
+    .roster-row .title .by {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .roster-row .live-tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+    .roster-row .live-tag.live { color: var(--green); }
+    .roster-row .live-tag.stale { color: var(--amber); }
+    .roster-row .readiness {
+      display: grid;
+      gap: 4px;
+      justify-items: end;
+      text-align: right;
+    }
+    .roster-row .readiness .pips {
+      font-family: var(--mono);
+      color: var(--green);
+      letter-spacing: 4px;
+      font-feature-settings: "tnum";
+      font-size: 13px;
+    }
+    .roster-row .readiness .pips .off { color: var(--ink-dim); }
+    .roster-row .readiness .score {
+      font-family: var(--mono);
+      font-weight: 400;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      letter-spacing: -0.005em;
+    }
+    .roster-row .actions { display: flex; gap: 6px; padding-top: 4px; }
+
+    .roster-empty {
+      padding: 22px 0;
+      color: var(--ink-faint);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .colophon {
+      padding: 36px 0 0;
+      margin-top: 48px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--ink-faint);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+    }
+    .colophon a { color: var(--ink-soft); text-decoration: none; }
+    .colophon a:hover { color: var(--amber); }
+
+    @media (max-width: 920px) {
+      .hub-shell { padding: 36px 22px 64px; }
+      .nowline { font-size: 9.5px; gap: 18px; letter-spacing: 0.18em; }
+      .nowline .nav-arrows { margin-left: 0; flex: 0 0 100%; }
+      .roster-row {
+        grid-template-columns: 22px minmax(0, 1fr) auto;
+        gap: 12px;
+      }
+      .roster-row .readiness { display: none; }
+      .colophon { flex-direction: column; gap: 10px; letter-spacing: 0.18em; }
+    }
+  </style>
+</head>
+<body data-page="control">
+  <header class="topbar">
+    <a class="brand" href="/">Smart Classroom</a>
+    <nav class="nav nav-primary"></nav>
+    <nav class="nav-secondary"></nav>
+    <button class="log-toggle" type="button" data-log-toggle>
+      <span class="live-dot"></span><span>Log</span><span class="count" data-log-count>0</span>
+    </button>
+  </header>
+
+  <main class="hub-shell">
+    <section class="masthead">
+      <div>
+        <div class="eyebrow">Smart Classroom API · 2025–26</div>
+        <h1>Projects, <em>by the room.</em></h1>
+      </div>
+      <div class="meta">
+        <div><span class="key">T</span><strong id="clock">— —</strong></div>
+        <div><span class="key">Sess</span><strong id="sessId">0x4af1·c2</strong></div>
+        <div><span class="key">Source</span><strong>project-packets.json</strong></div>
+      </div>
+    </section>
+
+    <div class="nowline">
+      <span class="group"><span class="live-dot"></span><span class="key">Phase</span><strong id="phaseLabel" class="am">—</strong></span>
+      <span class="group"><span class="key">Cameras</span><strong id="camerasLine" class="gn">—</strong></span>
+      <span class="group"><span class="key">Roster</span><strong id="rosterLine">—</strong></span>
+      <span class="group"><span class="key">Events</span><strong id="eventsLine">0</strong></span>
+      <div class="nav-arrows">
+        <button class="bench-toggle" id="benchToggle">Bench</button>
+      </div>
+    </div>
+
+    <section class="bench" id="bench">
+      <span class="label">Bench</span>
+      <button id="runAllFeaturedBtn" class="primary">Run All Featured</button>
+      <button id="resetProjectPacketsBtn">Reset Packets</button>
+      <button id="resetClassObjectsBtn">Reset Class Objects</button>
+      <span class="label" style="margin-left: 14px;">Featured</span>
+      <div id="featuredScenarioButtons" class="scenario-buttons"></div>
+      <label class="toggle-line" style="margin-left:auto;"><input id="showLibraryToggle" type="checkbox"> Reference layers</label>
+    </section>
+    <div class="bench-status" id="benchStatus">No featured scenario run yet.</div>
+
+    <header class="zone-head">
+      <span class="zone-label">Readiness</span>
+      <span class="zone-rule"></span>
+    </header>
+
+    <section class="readiness-deck" id="readinessDeck"></section>
+
+    <header class="zone-head">
+      <span class="zone-label">Roster</span>
+      <span class="zone-rule"></span>
+      <span class="zone-meta"><span class="key">Sort</span><strong>live · readiness</strong></span>
+    </header>
+
+    <section id="rosterList" class="roster"></section>
+
+    <footer class="colophon">
+      <span id="runtimeLine">runtime pending</span>
+      <span><a href="/report.html">Spec sheet</a> · <a href="/api/export" target="_blank" rel="noopener">Export class data</a></span>
+    </footer>
+  </main>
+
+  <script src="/shared.js"></script>
+  <script src="/projects.js"></script>
+  <script>
+    "use strict";
+
+    // tiny clock for the topbar
+    const clockEl = document.getElementById("clock");
+    function tickClock() {
+      const d = new Date();
+      const pad = (n) => n.toString().padStart(2, "0");
+      clockEl.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    setInterval(tickClock, 1000); tickClock();
+
+    // bench toggle (collapsed by default — keeps the home calm)
+    const benchEl = document.getElementById("bench");
+    const benchToggleBtn = document.getElementById("benchToggle");
+    benchToggleBtn.addEventListener("click", () => {
+      const open = benchEl.classList.toggle("is-open");
+      benchToggleBtn.classList.toggle("is-open", open);
+      try { localStorage.setItem("smart-classroom.benchOpen", open ? "1" : "0"); } catch {}
+    });
+    try {
+      if (localStorage.getItem("smart-classroom.benchOpen") === "1") {
+        benchEl.classList.add("is-open");
+        benchToggleBtn.classList.add("is-open");
+      }
+    } catch {}
+
+    // The nowline pulls from Room state (subscribed by shared.js's
+    // LogPanel.bind already; we add our own subscriber for the inline
+    // metrics so they stay in sync).
+    Room.onState((state) => {
+      const phase = state.room?.phase || "—";
+      const mode  = state.room?.boardMode || state.room?.activePrototype || "—";
+      document.getElementById("phaseLabel").textContent = `${phase} · ${mode}`;
+
+      const cameraStates = Object.values(state.perception?.cameraStates || {});
+      const live = cameraStates.filter((c) => c?.updatedAt).length;
+      const camLine = document.getElementById("camerasLine");
+      camLine.textContent = live ? `${live} live` : "idle";
+      camLine.className = live ? "gn" : "";
+
+      const rosterCount = state.projectPackets?.length || 0;
+      const liveProjects = Object.keys(state.projectHeartbeats || {}).length;
+      document.getElementById("rosterLine").textContent = `${rosterCount} listed · ${liveProjects} live`;
+
+      document.getElementById("eventsLine").textContent = String(state.events?.length || 0);
+
+      document.getElementById("runtimeLine").textContent = `phase ${state.room?.phase || "unknown"} · ${state.events?.length || 0} cached events`;
+    });
+  </script>
+</body>
+</html>

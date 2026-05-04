@@ -1,0 +1,33 @@
+{
+  "name": "smart-classroom-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local smart classroom room API, timeline, project bus, and OAK-D bridge.",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check server/app.js && node --check server/routes.js && node --check server/http-utils.js && node --check server/static-files.js && node --check server/tag-detector.js",
+    "test:syntax": "node scripts/test-js-syntax.js",
+    "test:calibration": "node scripts/test-calibration.js",
+    "test:board-mode": "node scripts/test-board-mode.js",
+    "test:room-phase": "node scripts/test-room-phase.js",
+    "test:class-objects": "node scripts/test-class-objects.js",
+    "test:projects": "node scripts/test-project-packets.js",
+    "test:readiness": "node scripts/test-project-readiness.js",
+    "test:classroom-api-compat": "node scripts/test-classroom-api-compat.js",
+    "test:timeline": "node scripts/test-timeline-emit.js",
+    "test:smoke": "node scripts/test-http-smoke.js",
+    "test:layout": "node scripts/test-layout-consistency.js",
+    "test:browser-smoke": "node scripts/test-virtualroom-browser-smoke.mjs",
+    "test:featured-scenarios": "node scripts/test-featured-scenarios.js",
+    "test:events": "node scripts/test-events.js",
+    "mock:projects": "node scripts/mock-projects.mjs",
+    "simulate:detections": "node scripts/simulate-detections.js",
+    "simulate:oaks": "node scripts/simulate-oak-system.js",
+    "preflight": "node scripts/preflight.js",
+    "test:all": "npm run check && npm run test:syntax && npm run test:calibration && npm run test:events && npm run test:board-mode && npm run test:room-phase && npm run test:projects && npm run test:featured-scenarios",
+    "solve:calibration": "node scripts/solve-calibration-from-replay.js"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  }
+}
